@@ -1,0 +1,200 @@
+/* Compact election cards in election section */
+.card.border-0.shadow-sm.mb-3, .card.shadow-sm.border-0.h-100, .card.shadow-sm.border-0, .card.border.shadow-sm.h-100, .card.mt-3.border-0.shadow-sm {
+  min-height: 60px;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*{
+  font-family: 'Poppins', Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Poppins', Arial, Helvetica, sans-serif;
+}
+
+.register-container,
+ .form-control,
+.btn,
+.input-group-text,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label {
+  font-family: 'Poppins', Arial, Helvetica, sans-serif !important;
+}
+
+.form-control, .input-group-text, label {
+  font-size: .9rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
+}
+
+/* Optionally, adjust button text size */
+.btn {
+  font-size: 1.1rem;
+}
+
+
+.badge-green {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+td{
+  font-size: 14px !important;
+}
+
+/* For 8 equal columns in a row */
+.col-8th {
+  flex: 0 0 12.5%;
+  max-width: 12.5%;
+}
+@media (max-width: 991.98px) {
+  .col-8th {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+.tight-row {
+  margin-left: -4px;
+  margin-right: -4px;
+}
+.col-8th.tight {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.stat-card {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.stat-card:hover {
+  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12)!important;
+  transform: translateY(-3px) scale(1.03);
+  cursor: pointer;
+}
+
+#font{
+  font-size: .75em !important;
+}
+
+/* Reduce padding inside stat cards */
+.stat-card .card-body {
+  padding: 0.5rem 0.5rem !important; /* Adjust as needed */
+}
+
+@media (min-width: 1200px) {
+  .col-xl-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+}
+.analytics-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.analytics-card.hovered,
+.analytics-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+@media (min-width: 1200px) {
+  .col-xl-1-5 {
+    flex: 0 0 12.5% !important;
+    max-width: 12.5% !important;
+  }
+}
+/* For 8 cards per row on xl screens */
+@media (min-width: 1200px) {
+  .col-xl-1-5 {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
+}
+
+/* Analytics card custom styles */
+.analytics-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  padding: 0rem !important; /* Card padding */
+}
+
+/* Card label font size */
+.analytics-card h6 {
+  font-size: .8em !important; /* Adjust as needed */
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* Card value font size */
+.analytics-card h3 {
+  font-size: 1.5em !important; /* Adjust as needed */
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+/* Dashboard 8 cards only */
+.dashboard-cards-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  justify-content: center;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.dashboard-cards-row::-webkit-scrollbar {
+  display: none;
+}
+.dashboard-card {
+  min-width: 110px;
+  flex: 1 1 11%;
+  max-width: 12.5%;
+  background: #fff;
+  border-radius: 0.5rem;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.7rem 0.3rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+  min-height: 90px;
+  box-shadow: none;
+}
+.dashboard-card:hover {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  transform: translateY(-3px) scale(1.03);
+  cursor: pointer;
+}
+.dashboard-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f0f4fa;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.5rem auto;
+  font-size: 28px;
+}
+.dashboard-card-icon-primary { background: #e3f0ff; color: #2563eb; }
+.dashboard-card-icon-success { background: #e6f9ed; color: #22c55e; }
+.dashboard-card-icon-warning { background: #fff7e0; color: #f59e42; }
+.dashboard-card-icon-secondary { background: #f0f0f0; color: #6c757d; }
+.dashboard-card-icon-info { background: #e6f6ff; color: #0dcaf0; }
+
+
