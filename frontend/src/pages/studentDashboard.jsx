@@ -200,7 +200,7 @@ function StudentDashboard({ user }) {
     setShowProfile(true);
   };
 
-  const handleVote = async (electionId, candidateId) => {
+  const handleVote = async (electionId, candidateId, position, fallbackPosition) => {
     const result = await Swal.fire({
       title: 'Confirm Your Vote',
       text: 'Are you sure you want to cast this vote? This action cannot be undone.',
@@ -215,9 +215,19 @@ function StudentDashboard({ user }) {
     if (!result.isConfirmed) return;
 
     try {
+      const finalPosition = position || fallbackPosition;
+      console.log('Voting with:', { electionId, candidateId, position, fallbackPosition, finalPosition });
+      if (!finalPosition) {
+        Swal.fire({
+          title: 'Error',
+          text: 'No position found for this candidate. Please contact admin or check election setup.',
+          icon: 'error',
+        });
+        return;
+      }
       await axios.post(
         `/api/votes`,
-        { electionId: electionId, candidateId: candidateId },
+        { electionId: electionId, candidateId: candidateId, position: finalPosition },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -643,7 +653,9 @@ function StudentDashboard({ user }) {
                                         className="btn btn-primary btn-sm w-100"
                                         onClick={() => handleVote(
                                           election._id || election.id,
-                                          candidate._id || candidate.id
+                                          candidate._id || candidate.id,
+                                          candidate.position,
+                                          Array.isArray(election.positions) && election.positions.length === 1 ? election.positions[0] : undefined
                                         )}
                                       >
                                         <FaVoteYea className="me-1" /> Vote
@@ -1548,7 +1560,12 @@ function StudentDashboard({ user }) {
                                         className="btn btn-primary w-100"
                                         onClick={() => {
                                           setShowElectionModal(false);
-                                          handleVote(selectedElection._id, candidate._id);
+                                          handleVote(
+                                            selectedElection._id,
+                                            candidate._id,
+                                            candidate.position,
+                                            Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 ? selectedElection.positions[0] : undefined
+                                          );
                                         }}
                                       >
                                         <FaVoteYea className="me-2" /> Vote for {candidate.name}
