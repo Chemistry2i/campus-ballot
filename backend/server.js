@@ -27,6 +27,7 @@ const logRoutes = require("./routes/logRoutes");
 const adminRoutes = require('./routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
+
 // Create Express App
 const app = express();
 
@@ -52,6 +53,9 @@ app.use(cors({
 //   legacyHeaders: false,
 // }));
 
+// Static files
+// app.use(express.static("public"));
+
 // Serve static files from React build
 const path = require("path");
 app.use(express.static(path.join(__dirname, "../frontend/build")));
@@ -62,7 +66,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to the University Voting System API");
 });
 
-// API Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/elections", electionRoutes);
@@ -73,10 +77,17 @@ app.use("/api/logs", logRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 
+
 // Catch-all: send React index.html for any non-API route
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+// });
+
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
+
 
 // --- START SERVER & CONNECT TO DB ---
 app.listen(PORT, async () => {
