@@ -11,7 +11,7 @@ const sendEmail = async ({ to, subject, html }) => {
         });
 
         const mailOptions = {
-            from: `"Kyambogo University Voting System" <${process.env.EMAIL_USER}>`,
+            from: `"Campus Ballot" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             html
