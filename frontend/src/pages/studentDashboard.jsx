@@ -61,7 +61,7 @@ function StudentDashboard({ user }) {
   const [notifications, setNotifications] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
   const [electionStats, setElectionStats] = useState({
     total: 0,
     participated: 0,
@@ -1176,11 +1176,13 @@ function StudentDashboard({ user }) {
       >
         <div className="container-fluid" style={{ maxWidth: "100%", padding: "0 1rem", margin: 0 }}>
           <span className="navbar-brand d-flex align-items-center gap-2">
-            <button 
+            {/* Hamburger menu for mobile */}
+            <button
               className="btn btn-outline-light btn-sm me-2 d-lg-none"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar menu"
             >
-              <FaCog />
+              <FaBars />
             </button>
             <FaUserGraduate size={28} />
             <span className="fw-bold fs-4 d-none d-md-inline">Student Portal</span>
@@ -1255,14 +1257,13 @@ function StudentDashboard({ user }) {
       </nav>
 
       <div className="d-flex" style={{ width: "100vw", maxWidth: "100vw", margin: 0, padding: 0, height: "calc(100vh - 70px)" }}>
-        {/* Sidebar */}
-        <div className={`bg-white shadow-sm border-end ${sidebarCollapsed ? 'd-none' : ''} d-lg-block`}
-             style={{ 
-               width: sidebarCollapsed ? '0' : '250px', 
-               minWidth: sidebarCollapsed ? '0' : '250px',
+        {/* Sidebar for large screens */}
+        <div className="bg-white shadow-sm border-end d-none d-lg-block"
+             style={{
+               width: '250px',
+               minWidth: '250px',
                maxWidth: '250px',
                height: '100%',
-               transition: 'width 0.3s ease',
                flexShrink: 0,
                overflowX: 'hidden',
                margin: 0,
@@ -1298,7 +1299,6 @@ function StudentDashboard({ user }) {
               })}
             </nav>
           </div>
-
           {/* Sidebar Footer */}
           <div className="mt-auto p-3 border-top">
             <div className="d-flex align-items-center gap-2 mb-3">
@@ -1324,7 +1324,6 @@ function StudentDashboard({ user }) {
                   confirmButtonText: 'Yes, logout',
                   cancelButtonText: 'Cancel'
                 });
-                
                 if (result.isConfirmed) {
                   localStorage.removeItem('token');
                   Swal.fire({
@@ -1344,10 +1343,69 @@ function StudentDashboard({ user }) {
             </button>
           </div>
         </div>
+        {/* Sidebar for mobile screens */}
+        <div
+          className={`bg-white shadow-sm border-end position-fixed top-0 start-0 h-100 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
+          style={{
+            width: '80vw',
+            maxWidth: '320px',
+            zIndex: 2000,
+            transition: 'transform 0.3s',
+            transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+            boxShadow: sidebarOpen ? '2px 0 16px rgba(0,0,0,0.08)' : 'none',
+          }}
+        >
+          <div className="p-3">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="text-muted text-uppercase small fw-bold mb-0">Navigation</h6>
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar menu">
+                <FaTimes />
+              </button>
+            </div>
+            <nav className="nav flex-column">
+              {sidebarItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2 ${
+                      activeView === item.id ? 'bg-primary text-white' : 'text-dark'
+                    }`}
+                    onClick={() => {
+                      setActiveView(item.id);
+                      setSidebarOpen(false);
+                    }}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span className="d-flex align-items-center gap-2">
+                      <IconComponent size={16} />
+                      {item.label}
+                    </span>
+                    {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
+                      <span className={`badge ${
+                        activeView === item.id ? 'bg-white text-primary' : 'bg-primary text-white'
+                      } rounded-pill`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+        {/* Backdrop for mobile sidebar */}
+        {sidebarOpen && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100"
+            style={{ background: 'rgba(0,0,0,0.2)', zIndex: 1999 }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* Main Content */}
         <div className="flex-grow-1 p-2 p-md-3" style={{ 
-          width: sidebarCollapsed ? "100vw" : "calc(100vw - 250px)",
+          width: "100vw",
           maxWidth: "100%",
           overflowX: "hidden",
           minWidth: 0,
