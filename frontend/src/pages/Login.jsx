@@ -80,7 +80,7 @@ function Login({ setCurrentUser }) {
       className="d-flex align-items-center justify-content-center"
       style={{ minHeight: "100vh", width: "100vw", backgroundColor: "#f3f4f6" }}
     >
-      <div className="bg-white p-4 rounded-1 shadow" style={{ minWidth: 300, maxWidth: 400, width: "100%" }}>
+      <div className="bg-white p-4 rounded-1 shadow" style={{ minWidth: 300, maxWidth: 300, width: "100%" }}>
         <h2 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
           <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
           Login
