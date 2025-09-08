@@ -1,3 +1,4 @@
+import "./swal-zindex-override.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -1407,6 +1408,9 @@ function StudentDashboard({ user }) {
                     timer: 1800,
                     showConfirmButton: false,
                     timerProgressBar: true,
+                    customClass: {
+                      popup: 'swal-zindex-override'
+                    }
                   });
                   window.location.href = "/login";
                 }}
