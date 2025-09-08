@@ -1397,9 +1397,17 @@ function StudentDashboard({ user }) {
             <div className="mt-4 pt-2 border-top d-lg-none">
               <button
                 className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
-                onClick={() => {
+                onClick={async () => {
                   localStorage.removeItem("token");
                   localStorage.removeItem("currentUser");
+                  await Swal.fire({
+                    title: "Logged Out",
+                    text: "You have logged out successfully.",
+                    icon: "success",
+                    timer: 1800,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                  });
                   window.location.href = "/login";
                 }}
               >
