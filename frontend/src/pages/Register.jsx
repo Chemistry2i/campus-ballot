@@ -17,6 +17,7 @@ import {
   faEye
 } from "@fortawesome/free-solid-svg-icons";
 import "bootstrap/dist/css/bootstrap.min.css";
+import styles from "./Register.module.css";
 import { useNavigate, Link } from "react-router-dom";
 
 // Sample data for faculties and courses
@@ -128,7 +129,7 @@ function Register() {
       style={{ width: "100vw", minHeight: "100vh", backgroundColor: "#f3f4f6", fontFamily: " ''Arial, sans-serif" }}
     >
       <div
-        className="register-container d-flex shadow-lg"
+        className={`register-container d-flex shadow-lg ${styles["register-container"]}`}
         style={{
           borderRadius: 7,
           background: "#fff",
@@ -139,7 +140,7 @@ function Register() {
       >
         {/* Left Panel */}
         <div
-          className="register-left d-flex flex-column align-items-center justify-content-center text-white"
+          className={`register-left d-flex flex-column align-items-center justify-content-center text-white ${styles["register-left"]}`}
           style={{
             background: "linear-gradient(135deg, #2563eb 0%, #2193b0 100%)",
             padding: "40px 30px",
@@ -162,7 +163,7 @@ function Register() {
           </button>
         </div>
         {/* Right Panel (Form) */}
-        <div className="register-right flex-grow-1 p-5">
+  <div className={`register-right flex-grow-1 p-5 ${styles["register-right"]}`}> 
           <h3
             className="mb-4 fw-bold text-center"
             style={{ letterSpacing: 1, color: "#2563eb" }}
