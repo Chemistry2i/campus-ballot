@@ -11,8 +11,8 @@
 
 @media (max-width: 600px) {
   .login-outer-container {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 8px;
+    padding-right: 8px;
     box-sizing: border-box;
   }
   .login-inner-container {
@@ -21,7 +21,16 @@
     width: 100vw !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+    padding-left: 6vw !important;
+    padding-right: 6vw !important;
+    box-sizing: border-box;
+  }
+  .login-inner-container form {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .login-inner-container button[type="submit"] {
+    width: 100% !important;
+    box-sizing: border-box;
   }
 }
