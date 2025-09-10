@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { Bar, Pie } from "react-chartjs-2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChartBar, faDownload, faFilePdf, faSearch, faUsers, faUserCheck, faUserTimes, faVoteYea, faCalendarAlt, faCheckCircle, faTimesCircle, faChartPie, faUserShield, faUserGraduate, faTrophy, faExclamationTriangle, faCalendarPlus, faCalendarMinus
+  faChartBar, faSpinner, faDownload, faFilePdf, faSearch, faUsers, faUserCheck, faUserTimes, faVoteYea, faCalendarAlt, faCheckCircle, faTimesCircle, faChartPie, faUserShield, faUserGraduate, faTrophy, faExclamationTriangle, faCalendarPlus, faCalendarMinus
 } from "@fortawesome/free-solid-svg-icons";
 import {
   Chart as ChartJS,
@@ -118,10 +118,14 @@ function Reports() {
   if (loading)
     return (
       <div className="d-flex flex-column align-items-center justify-content-center py-5">
-        <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }} role="status">
+        {/* <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }} role="status">
           <span className="visually-hidden">Loading...</span>
+        </div> */}
+        <div className="text-center">
+            <FontAwesomeIcon icon={faSpinner} spin size="3x" className="text-primary mb-3" />
+            <p className="fw-bold text-primary">Loading reports and analytics...</p>
         </div>
-        <p className="fw-bold text-primary">Loading reports and analytics...</p>
+        
       </div>
     );
 

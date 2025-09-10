@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSpinner
+} from "@fortawesome/free-solid-svg-icons";
 
 const Users = ({ user }) => {
     const [users, setUsers] = useState([]);
@@ -282,8 +286,12 @@ const Users = ({ user }) => {
     if (loading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
-                <div className="spinner-border text-primary" role="status">
+                {/* <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
+                </div> */}
+                <div className="text-center">
+                    <FontAwesomeIcon icon={faSpinner} spin size="3x" className="text-primary mb-3" />
+                    <p>Loading users...</p>
                 </div>
             </div>
         );
