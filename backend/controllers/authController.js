@@ -387,17 +387,18 @@ const register = asyncHandler(async (req, res) => {
     }
 
     /* ------------------ WELCOME SMS ------------------ */
-    if (newUser.phone) {
-      try {
-        await sendSms(
-          newUser.phone,
-          `Welcome to the Kyambogo University Voting System, ${newUser.name}! Your registration was successful.`
-        );
-        console.log("[REGISTER]: Welcome SMS sent to:", newUser.phone);
-      } catch (err) {
-        console.error("[REGISTER SMS ERROR]:", err.message);
-      }
+   if (newUser.phone) {
+    const smsResult = await sendSms(
+        newUser.phone,
+        `Welcome to the Kyambogo University Voting System, ${newUser.name}! Your registration was successful.`
+    );
+    
+    if (smsResult && smsResult.success) {
+        console.log('[REGISTER]: Welcome SMS sent successfully to:', newUser.phone);
+    } else {
+        console.log('[REGISTER]: Failed to send welcome SMS to:', newUser.phone, 'Error:', smsResult?.error);
     }
+}
 
     /* ------------------ FINAL RESPONSE ------------------ */
     console.log("[REGISTER SUCCESS]:", newUser.email);
@@ -619,6 +620,67 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 /* -------------------------------------------------------
+   @desc   Resend verification email
+--------------------------------------------------------- */
+const resendVerification = asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiry = Date.now() + 1000 * 60 * 60; // 1 hour
+    await user.save();
+
+    // Send verification email
+    const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
+    const html = `
+      <h2>Verify Your Email</h2>
+      <p>Hello ${user.name},</p>
+      <p>Click the link below to verify your email:</p>
+      <a href="${verifyUrl}" target="_blank">Verify Email</a>
+      <p><small>This link will expire in 1 hour.</small></p>
+    `;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your email - New Link",
+        html,
+      });
+      console.log("[RESEND VERIFICATION]: Email sent to:", user.email);
+      
+      res.json({ 
+        message: `New verification link sent to ${email}. Please check your inbox and spam folder.` 
+      });
+    } catch (emailError) {
+      console.error("[RESEND VERIFICATION EMAIL ERROR]:", emailError.message);
+      res.status(500).json({ 
+        message: "Failed to send verification email. Please try again later." 
+      });
+    }
+
+  } catch (error) {
+    console.error("[RESEND VERIFICATION ERROR]:", error.message);
+    res.status(500).json({ message: "Server error during resend verification" });
+  }
+});
+
+
+/* -------------------------------------------------------
    Exports
 --------------------------------------------------------- */
 module.exports = {
@@ -631,5 +693,6 @@ module.exports = {
   getProfile,
   updateProfile,
   changePassword,
+  resendVerification,
 };
 

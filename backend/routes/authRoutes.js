@@ -10,7 +10,8 @@ const {
     resetPassword,
     getProfile,
     updateProfile,
-    changePassword
+    changePassword,
+    resendVerification,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -43,5 +44,10 @@ router.put('/profile', protect, updateProfile);
 
 // Change password for logged-in user
 router.put('/change-password', protect, changePassword);
+
+// Resend verification email
+router.post('/resend-verification', resendVerification);
+
+// Export the router
 
 module.exports = router;
