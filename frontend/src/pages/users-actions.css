@@ -1,0 +1,27 @@
+/* Styles for Users action buttons */
+.action-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  border: none;
+  font-size: 14px;
+}
+.action-btn.cool { background: #2b6cb0; /* blue */ }
+.action-btn.copy { background: #0ea5a0; /* teal */ }
+.action-btn.edit { background: #f59e0b; color: #071426; /* amber */ }
+.action-btn.suspend { background: #f97316; /* orange */ }
+.action-btn.activate { background: #059669; /* green */ }
+.action-btn.verify { background: #2563eb; /* indigo */ }
+.action-btn.delete { background: #dc2626; /* red */ }
+.action-btn.role { background: #6b7280; /* gray */ }
+.action-btn.unverify { background: #059669; /* use success green to match activate */ }
+.action-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
+.action-btn:focus { outline: 2px solid rgba(0,0,0,0.08); }
+/* small adjustments for dropdown toggle */
+.btn-secondary.dropdown-toggle { background: #4b5563; border: none; color: #fff; }

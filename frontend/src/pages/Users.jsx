@@ -3,8 +3,27 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faSpinner
+    faSpinner,
+    faEye,
+    faCopy,
+    faPen,
+    faBan,
+    faCheck,
+    faTimes,
+    faCheckCircle,
+    faTrash,
+    faUserCog
 } from "@fortawesome/free-solid-svg-icons";
+import './users-actions.css';
+
+// Toast helper for non-blocking notifications
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+});
 
 const Users = ({ user }) => {
     const [users, setUsers] = useState([]);
@@ -15,8 +34,6 @@ const Users = ({ user }) => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editUser, setEditUser] = useState({});
     const [roleChangingId, setRoleChangingId] = useState(null);
-    // Define available roles here; update as needed
-    const roles = ['user', 'admin'];
 
     // Debug the user object
     console.log('User object in Users component:', user);
@@ -48,11 +65,11 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Error fetching users:', error);
             if (error.response?.status === 401) {
-                Swal.fire('Error', 'Session expired. Please login again.', 'error');
+                Toast.fire({ icon: 'error', title: 'Session expired. Please login again.' });
                 localStorage.clear();
                 window.location.href = '/login';
             } else {
-                Swal.fire('Error', 'Failed to fetch users', 'error');
+                Toast.fire({ icon: 'error', title: 'Failed to fetch users' });
             }
         } finally {
             setLoading(false);
@@ -106,11 +123,11 @@ const Users = ({ user }) => {
             await axios.put(`http://localhost:5000/api/users/${userId}/suspend`, {}, {
                 headers: getAuthHeaders()
             });
-            Swal.fire('Success', 'User suspended successfully', 'success');
+            Toast.fire({ icon: 'success', title: 'User suspended successfully' });
             fetchUsers();
         } catch (error) {
             console.error('Suspend error:', error);
-            Swal.fire('Error', 'Failed to suspend user', 'error');
+            Toast.fire({ icon: 'error', title: 'Failed to suspend user' });
         }
     };
 
@@ -119,11 +136,11 @@ const Users = ({ user }) => {
             await axios.put(`http://localhost:5000/api/users/${userId}/activate`, {}, {
                 headers: getAuthHeaders()
             });
-            Swal.fire('Success', 'User activated successfully', 'success');
+            Toast.fire({ icon: 'success', title: 'User activated successfully' });
             fetchUsers();
         } catch (error) {
             console.error('Activate error:', error);
-            Swal.fire('Error', 'Failed to activate user', 'error');
+            Toast.fire({ icon: 'error', title: 'Failed to activate user' });
         }
     };
 
@@ -147,66 +164,23 @@ const Users = ({ user }) => {
                 fetchUsers();
             } catch (error) {
                 console.error('Delete error:', error);
-                Swal.fire('Error', 'Failed to delete user', 'error');
+                Toast.fire({ icon: 'error', title: 'Failed to delete user' });
             }
         }
     };
 
-    const handleChangeRole = async (userId, newRole) => {
-        setRoleChangingId(userId);
+    const handleChangeRole = async (userId, newRole, options = { suppressToast: false }) => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${userId}/role`,
-                { role: newRole },
+            await axios.put(`http://localhost:5000/api/users/${userId}/role`, 
+                { role: newRole }, 
                 { headers: getAuthHeaders() }
             );
+            if (!options.suppressToast) Toast.fire({ icon: 'success', title: 'User role updated successfully' });
             await fetchUsers();
-            return true;
         } catch (error) {
             console.error('Role change error:', error);
-            Swal.fire('Error', error.response?.data?.message || 'Failed to update user role', 'error');
-            return false;
-        } finally {
-            setRoleChangingId(null);
-        }
-    };
-
-    const handleChangeRoleConfirm = async (userId, newRole, currentRole) => {
-        if (!userId) return;
-        if (newRole === currentRole) {
-            Swal.fire('Info', `User already has role '${currentRole}'`, 'info');
-            return;
-        }
-
-        const result = await Swal.fire({
-            title: 'Change Role',
-            text: `Change user role to '${newRole}'?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, change role',
-            cancelButtonText: 'Cancel'
-        });
-
-        if (result.isConfirmed) {
-            const ok = await handleChangeRole(userId, newRole);
-            if (ok) {
-                // Show undo option
-                const undo = await Swal.fire({
-                    title: 'Role changed',
-                    text: `Role changed to '${newRole}'.`,
-                    icon: 'success',
-                    showDenyButton: true,
-                    denyButtonText: 'Undo',
-                    confirmButtonText: 'OK',
-                    timer: 5000,
-                    timerProgressBar: true
-                });
-
-                if (undo.isDenied) {
-                    // revert to previous role
-                    await handleChangeRole(userId, currentRole);
-                    Swal.fire('Reverted', `Role reverted to '${currentRole}'`, 'success');
-                }
-            }
+            Toast.fire({ icon: 'error', title: 'Failed to update user role' });
+            throw error;
         }
     };
 
@@ -227,17 +201,17 @@ const Users = ({ user }) => {
                 link.click();
                 link.remove();
                 
-                Swal.fire('Success', 'Users exported successfully', 'success');
+                Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             } catch (exportError) {
                 console.log('Export endpoint not available, creating client-side export');
                 // If export endpoint doesn't exist, create CSV client-side
                 const csvContent = generateCSV(users);
                 downloadCSV(csvContent, `users_${new Date().toISOString().split('T')[0]}.csv`);
-                Swal.fire('Success', 'Users exported successfully', 'success');
+                Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             }
         } catch (error) {
             console.error('Export error:', error);
-            Swal.fire('Error', 'Failed to export users', 'error');
+            Toast.fire({ icon: 'error', title: 'Failed to export users' });
         }
     };
 
@@ -427,6 +401,7 @@ const Users = ({ user }) => {
                                 <table className="table table-striped table-hover">
                                     <thead className="table-light">
                                         <tr>
+                                            {/* ID intentionally hidden; admin can copy via action */}
                                             {/* <th>ID</th> */}
                                             <th>Name</th>
                                             <th>Email</th>
@@ -439,120 +414,137 @@ const Users = ({ user }) => {
                                     </thead>
                                     <tbody>
                                         {users.length > 0 ? (
-                                            users.map((u) => (
-                                                <tr key={u._id || u.id}>
-                                                    {/* <td>{u._id || u.id}</td> */}
-                                                    <td>{u.name}</td>
-                                                    <td>{u.email}</td>
-                                                    <td>{u.studentId || 'N/A'}</td>
-                                                    <td>
-                                                        {/* Role badge with distinct colors */}
-                                                        <span
-                                                            className="badge"
-                                                            style={{
-                                                                backgroundColor: u.role === 'admin' ? '#d9534f' : u.role === 'moderator' ? '#6f42c1' : '#0d6efd',
-                                                                color: '#fff'
-                                                            }}
-                                                        >
-                                                            {u.role}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {/* Status badge with distinct colors */}
-                                                        <span
-                                                            className="badge"
-                                                            style={{
-                                                                backgroundColor: (u.accountStatus || u.status || 'active') === 'active' ? '#198754' : (u.accountStatus || u.status) === 'suspended' ? '#ffc107' : '#6c757d',
-                                                                color: '#fff'
-                                                            }}
-                                                        >
-                                                            {u.accountStatus || u.status || 'active'}
-                                                        </span>
-                                                    </td>
-                                                    <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</td>
-                                                    <td>
-                                                        <div className="btn-group" role="group">
-                                                            <button className="btn btn-info btn-sm" onClick={() => viewUserDetails(u._id || u.id)} title="View Details">
-                                                                <i className="fas fa-eye"></i>
-                                                            </button>
-
-                                                            {/* Copy ID button - visible only to admin users */}
-                                                            {user?.role === 'admin' && (
-                                                                <button
-                                                                    className="btn btn-outline-secondary btn-sm"
-                                                                    title="Copy ID"
-                                                                    onClick={() => {
-                                                                        const idToCopy = u._id || u.id;
-                                                                        navigator.clipboard?.writeText(idToCopy?.toString() || '');
-                                                                        Swal.fire('Copied', 'User ID copied to clipboard', 'success');
-                                                                    }}
-                                                                >
-                                                                    <i className="fas fa-copy"></i>
+                                            users.map((u) => {
+                                                const uid = u._id || u.id;
+                                                return (
+                                                    <tr key={uid}>
+                                                        {/* <td>{uid}</td> */}
+                                                        <td>{u.name}</td>
+                                                        <td>{u.email}</td>
+                                                        <td>{u.studentId || 'N/A'}</td>
+                                                        <td>
+                                                            <span className={`badge ${u.role === 'admin' ? 'bg-danger' : u.role === 'moderator' ? 'bg-warning text-dark' : 'bg-primary'}`}>{u.role}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`badge ${(u.accountStatus || u.status) === 'active' ? 'bg-success' : (u.accountStatus || u.status) === 'suspended' ? 'bg-warning text-dark' : 'bg-secondary'}`}>{u.accountStatus || u.status || 'active'}</span>
+                                                        </td>
+                                                        <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</td>
+                                                        <td>
+                                                            <div className="btn-group" role="group">
+                                                                {/* View */}
+                                                                <button className="action-btn cool" onClick={() => viewUserDetails(uid)} title="View Details">
+                                                                    <FontAwesomeIcon icon={faEye} />
                                                                 </button>
-                                                            )}
 
-                                                            <button className="btn btn-secondary btn-sm" onClick={() => handleEditUser(u)} title="Edit User">
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
+                                                                {/* Copy ID - admin only */}
+                                                                {user?.role === 'admin' && (
+                                                                    <button className="action-btn copy" onClick={async () => {
+                                                                        try {
+                                                                            await navigator.clipboard.writeText(uid);
+                                                                            Swal.fire('Copied', 'User ID copied to clipboard', 'success');
+                                                                        } catch (err) {
+                                                                            console.error('Copy failed', err);
+                                                                            Swal.fire('Error', 'Could not copy ID', 'error');
+                                                                        }
+                                                                    }} title="Copy ID">
+                                                                        <i className="fas fa-copy"></i>
+                                                                    </button>
+                                                                )}
 
-                                                            {(u.accountStatus || u.status || 'active') === 'active' ? (
-                                                                <button className="btn btn-warning btn-sm" onClick={() => handleSuspendUser(u._id || u.id)} title="Suspend User">
-                                                                    <i className="fas fa-pause"></i>
+                                                                {/* Edit */}
+                                                                <button className="action-btn edit" onClick={() => handleEditUser(u)} title="Edit User">
+                                                                    <FontAwesomeIcon icon={faPen} />
                                                                 </button>
-                                                            ) : (
-                                                                <button className="btn btn-success btn-sm" onClick={() => handleActivateUser(u._id || u.id)} title="Activate User">
-                                                                    <i className="fas fa-play"></i>
-                                                                </button>
-                                                            )}
 
-                                                            {/* Verify / Unverify */}
-                                                            {u.isVerified ? (
-                                                                <button className="btn btn-outline-secondary btn-sm" onClick={() => handleVerifyToggle(u._id || u.id, false)} title="Unverify User">
-                                                                    <i className="fas fa-user-times"></i>
-                                                                </button>
-                                                            ) : (
-                                                                <button className="btn btn-success btn-sm" onClick={() => handleVerifyToggle(u._id || u.id, true)} title="Verify User">
-                                                                    <i className="fas fa-check"></i>
-                                                                </button>
-                                                            )}
+                                                                {/* Suspend / Activate */}
+                                                                {(u.accountStatus || u.status) === 'suspended' ? (
+                                                                    <button className="action-btn activate" onClick={() => handleActivateUser(uid)} title="Activate User">
+                                                                        <FontAwesomeIcon icon={faCheck} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <button className="action-btn suspend" onClick={() => handleSuspendUser(uid)} title="Suspend User">
+                                                                        <FontAwesomeIcon icon={faBan} />
+                                                                    </button>
+                                                                )}
 
-                                                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id || u.id)} title="Delete User">
-                                                                <i className="fas fa-trash"></i>
-                                                            </button>
+                                                                {/* Verify / Unverify */}
+                                                                {u.isVerified ? (
+                                                                    <button className="action-btn unverify" onClick={() => handleVerifyToggle(uid, false)} title="Unverify User">
+                                                                        <FontAwesomeIcon icon={faTimes} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <button className="action-btn verify" onClick={() => handleVerifyToggle(uid, true)} title="Verify User">
+                                                                        <FontAwesomeIcon icon={faCheckCircle} />
+                                                                    </button>
+                                                                )}
 
-                                                            {/* Role quick-change dropdown (last) */}
-                                                            <div className="btn-group">
-                                                                <button
-                                                                    type="button"
-                                                                    className="btn btn-outline-primary btn-sm dropdown-toggle"
-                                                                    data-bs-toggle="dropdown"
-                                                                    aria-expanded="false"
-                                                                    title="Change role"
-                                                                    aria-label="Change role"
-                                                                >
-                                                                    <i className="fas fa-user-cog"></i>
+                                                                {/* Delete - second last */}
+                                                                <button className="action-btn delete" onClick={() => handleDeleteUser(uid)} title="Delete User">
+                                                                    <FontAwesomeIcon icon={faTrash} />
                                                                 </button>
-                                                                <ul className="dropdown-menu">
-                                                                    {roles.map((r) => (
-                                                                        <li key={r}>
-                                                                            <button
-                                                                                className="dropdown-item text-capitalize"
-                                                                                disabled={roleChangingId === (u._id || u.id)}
-                                                                                onClick={() => handleChangeRoleConfirm(u._id || u.id, r, u.role)}
-                                                                            >
-                                                                                {roleChangingId === (u._id || u.id) && (
-                                                                                    <span className="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
-                                                                                )}
-                                                                                {r}
-                                                                            </button>
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
+
+                                                                {/* Role dropdown - last */}
+                                                                <div className="btn-group">
+                                                                    <button type="button" className="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <FontAwesomeIcon icon={faUserCog} />
+                                                                    </button>
+                                                                    <ul className="dropdown-menu dropdown-menu-end">
+                                                                        {['user','moderator','admin'].map(r => (
+                                                                            <li key={r}>
+                                                                                <button className="dropdown-item" onClick={async () => {
+                                                                                    const confirm = await Swal.fire({
+                                                                                        title: 'Change role?',
+                                                                                        text: `Change role of ${u.name} to ${r}?`,
+                                                                                        showCancelButton: true,
+                                                                                        confirmButtonText: 'Yes',
+                                                                                    });
+                                                                                    if (confirm.isConfirmed) {
+                                                                                        const previousRole = u.role;
+                                                                                        setRoleChangingId(uid);
+                                                                                        try {
+                                                                                            await handleChangeRole(uid, r, { suppressToast: true });
+
+                                                                                            // show small toast with Undo option
+                                                                                            const { value: undo } = await Swal.fire({
+                                                                                                toast: true,
+                                                                                                position: 'top-end',
+                                                                                                showConfirmButton: true,
+                                                                                                showCancelButton: false,
+                                                                                                confirmButtonText: 'Undo',
+                                                                                                title: `Role changed to ${r}`,
+                                                                                                timer: 5000,
+                                                                                                timerProgressBar: true
+                                                                                            });
+
+                                                                                            if (undo) {
+                                                                                                // revert to previous role
+                                                                                                setRoleChangingId(uid);
+                                                                                                try {
+                                                                                                    await handleChangeRole(uid, previousRole, { suppressToast: true });
+                                                                                                    Toast.fire({ icon: 'info', title: 'Role reverted' });
+                                                                                                } finally {
+                                                                                                    setRoleChangingId(null);
+                                                                                                }
+                                                                                            } else {
+                                                                                                Toast.fire({ icon: 'success', title: `Role changed to ${r}` });
+                                                                                            }
+
+                                                                                        } finally {
+                                                                                            setRoleChangingId(null);
+                                                                                        }
+                                                                                    }
+                                                                                }}>
+                                                                                    {roleChangingId === uid && <FontAwesomeIcon icon={faSpinner} spin className="me-2" />} {r}
+                                                                                </button>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
                                         ) : (
                                             <tr>
                                                 <td colSpan="7" className="text-center text-muted">
