@@ -14,6 +14,9 @@ const Users = ({ user }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editUser, setEditUser] = useState({});
+    const [roleChangingId, setRoleChangingId] = useState(null);
+    // Define available roles here; update as needed
+    const roles = ['user', 'admin'];
 
     // Debug the user object
     console.log('User object in Users component:', user);
@@ -150,16 +153,60 @@ const Users = ({ user }) => {
     };
 
     const handleChangeRole = async (userId, newRole) => {
+        setRoleChangingId(userId);
         try {
-            await axios.put(`http://localhost:5000/api/users/${userId}/role`, 
-                { role: newRole }, 
+            await axios.put(`http://localhost:5000/api/users/${userId}/role`,
+                { role: newRole },
                 { headers: getAuthHeaders() }
             );
-            Swal.fire('Success', 'User role updated successfully', 'success');
-            fetchUsers();
+            await fetchUsers();
+            return true;
         } catch (error) {
             console.error('Role change error:', error);
-            Swal.fire('Error', 'Failed to update user role', 'error');
+            Swal.fire('Error', error.response?.data?.message || 'Failed to update user role', 'error');
+            return false;
+        } finally {
+            setRoleChangingId(null);
+        }
+    };
+
+    const handleChangeRoleConfirm = async (userId, newRole, currentRole) => {
+        if (!userId) return;
+        if (newRole === currentRole) {
+            Swal.fire('Info', `User already has role '${currentRole}'`, 'info');
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Change Role',
+            text: `Change user role to '${newRole}'?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, change role',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
+            const ok = await handleChangeRole(userId, newRole);
+            if (ok) {
+                // Show undo option
+                const undo = await Swal.fire({
+                    title: 'Role changed',
+                    text: `Role changed to '${newRole}'.`,
+                    icon: 'success',
+                    showDenyButton: true,
+                    denyButtonText: 'Undo',
+                    confirmButtonText: 'OK',
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+
+                if (undo.isDenied) {
+                    // revert to previous role
+                    await handleChangeRole(userId, currentRole);
+                    Swal.fire('Reverted', `Role reverted to '${currentRole}'`, 'success');
+                }
+            }
         }
     };
 
@@ -247,7 +294,8 @@ const Users = ({ user }) => {
 
     const handleUpdateUser = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${editUser.id}`, editUser, {
+            const idToUpdate = editUser._id || editUser.id;
+            await axios.put(`http://localhost:5000/api/users/${idToUpdate}`, editUser, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User updated successfully', 'success');
@@ -256,6 +304,19 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Update error:', error);
             Swal.fire('Error', 'Failed to update user', 'error');
+        }
+    };
+
+    const handleVerifyToggle = async (userId, shouldVerify) => {
+        try {
+            await axios.put(`http://localhost:5000/api/users/${userId}`, { isVerified: shouldVerify }, {
+                headers: getAuthHeaders()
+            });
+            Swal.fire('Success', `User ${shouldVerify ? 'verified' : 'unverified'} successfully`, 'success');
+            fetchUsers();
+        } catch (error) {
+            console.error('Verify toggle error:', error);
+            Swal.fire('Error', `Failed to ${shouldVerify ? 'verify' : 'unverify'} user`, 'error');
         }
     };
 
@@ -366,7 +427,7 @@ const Users = ({ user }) => {
                                 <table className="table table-striped table-hover">
                                     <thead className="table-light">
                                         <tr>
-                                            <th>ID</th>
+                                            {/* <th>ID</th> */}
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>Student ID</th>
@@ -378,70 +439,123 @@ const Users = ({ user }) => {
                                     </thead>
                                     <tbody>
                                         {users.length > 0 ? (
-                                            users.map((userItem) => (
-                                                <tr key={userItem.id}>
-                                                    <td>{userItem.id}</td>
-                                                    <td>{userItem.name}</td>
-                                                    <td>{userItem.email}</td>
-                                                    <td>{userItem.studentId || 'N/A'}</td>
+                                            users.map((u) => (
+                                                <tr key={u._id || u.id}>
+                                                    {/* <td>{u._id || u.id}</td> */}
+                                                    <td>{u.name}</td>
+                                                    <td>{u.email}</td>
+                                                    <td>{u.studentId || 'N/A'}</td>
                                                     <td>
-                                                        <span className={`badge ${userItem.role === 'admin' ? 'bg-danger' : 'bg-primary'}`}>
-                                                            {userItem.role}
+                                                        {/* Role badge with distinct colors */}
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                backgroundColor: u.role === 'admin' ? '#d9534f' : u.role === 'moderator' ? '#6f42c1' : '#0d6efd',
+                                                                color: '#fff'
+                                                            }}
+                                                        >
+                                                            {u.role}
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <span className={`badge ${userItem.status === 'active' ? 'bg-danger' : 'bg-success'}`}>
-                                                            {userItem.status || 'active'}
+                                                        {/* Status badge with distinct colors */}
+                                                        <span
+                                                            className="badge"
+                                                            style={{
+                                                                backgroundColor: (u.accountStatus || u.status || 'active') === 'active' ? '#198754' : (u.accountStatus || u.status) === 'suspended' ? '#ffc107' : '#6c757d',
+                                                                color: '#fff'
+                                                            }}
+                                                        >
+                                                            {u.accountStatus || u.status || 'active'}
                                                         </span>
                                                     </td>
-                                                    <td>{userItem.createdAt ? new Date(userItem.createdAt).toLocaleDateString() : 'N/A'}</td>
+                                                    <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</td>
                                                     <td>
                                                         <div className="btn-group" role="group">
-                                                            <button
-                                                                className="btn btn-info btn-sm"
-                                                                onClick={() => viewUserDetails(userItem.id)}
-                                                                title="View Details"
-                                                            >
+                                                            <button className="btn btn-info btn-sm" onClick={() => viewUserDetails(u._id || u.id)} title="View Details">
                                                                 <i className="fas fa-eye"></i>
                                                             </button>
-                                                            <button
-                                                                className="btn btn-secondary btn-sm"
-                                                                onClick={() => handleEditUser(userItem)}
-                                                                title="Edit User"
-                                                            >
+
+                                                            {/* Copy ID button - visible only to admin users */}
+                                                            {user?.role === 'admin' && (
+                                                                <button
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    title="Copy ID"
+                                                                    onClick={() => {
+                                                                        const idToCopy = u._id || u.id;
+                                                                        navigator.clipboard?.writeText(idToCopy?.toString() || '');
+                                                                        Swal.fire('Copied', 'User ID copied to clipboard', 'success');
+                                                                    }}
+                                                                >
+                                                                    <i className="fas fa-copy"></i>
+                                                                </button>
+                                                            )}
+
+                                                            <button className="btn btn-secondary btn-sm" onClick={() => handleEditUser(u)} title="Edit User">
                                                                 <i className="fas fa-edit"></i>
                                                             </button>
-                                                            {(userItem.status === 'active' || !userItem.status) ? (
-                                                                <button
-                                                                    className="btn btn-warning btn-sm"
-                                                                    onClick={() => handleSuspendUser(userItem.id)}
-                                                                    title="Suspend User"
-                                                                >
+
+                                                            {(u.accountStatus || u.status || 'active') === 'active' ? (
+                                                                <button className="btn btn-warning btn-sm" onClick={() => handleSuspendUser(u._id || u.id)} title="Suspend User">
                                                                     <i className="fas fa-pause"></i>
                                                                 </button>
                                                             ) : (
-                                                                <button
-                                                                    className="btn btn-success btn-sm"
-                                                                    onClick={() => handleActivateUser(userItem.id)}
-                                                                    title="Activate User"
-                                                                >
+                                                                <button className="btn btn-success btn-sm" onClick={() => handleActivateUser(u._id || u.id)} title="Activate User">
                                                                     <i className="fas fa-play"></i>
                                                                 </button>
                                                             )}
-                                                            <button
-                                                                className="btn btn-danger btn-sm"
-                                                                onClick={() => handleDeleteUser(userItem.id)}
-                                                                title="Delete User"
-                                                            >
+
+                                                            {/* Verify / Unverify */}
+                                                            {u.isVerified ? (
+                                                                <button className="btn btn-outline-secondary btn-sm" onClick={() => handleVerifyToggle(u._id || u.id, false)} title="Unverify User">
+                                                                    <i className="fas fa-user-times"></i>
+                                                                </button>
+                                                            ) : (
+                                                                <button className="btn btn-success btn-sm" onClick={() => handleVerifyToggle(u._id || u.id, true)} title="Verify User">
+                                                                    <i className="fas fa-check"></i>
+                                                                </button>
+                                                            )}
+
+                                                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id || u.id)} title="Delete User">
                                                                 <i className="fas fa-trash"></i>
                                                             </button>
+
+                                                            {/* Role quick-change dropdown (last) */}
+                                                            <div className="btn-group">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-primary btn-sm dropdown-toggle"
+                                                                    data-bs-toggle="dropdown"
+                                                                    aria-expanded="false"
+                                                                    title="Change role"
+                                                                    aria-label="Change role"
+                                                                >
+                                                                    <i className="fas fa-user-cog"></i>
+                                                                </button>
+                                                                <ul className="dropdown-menu">
+                                                                    {roles.map((r) => (
+                                                                        <li key={r}>
+                                                                            <button
+                                                                                className="dropdown-item text-capitalize"
+                                                                                disabled={roleChangingId === (u._id || u.id)}
+                                                                                onClick={() => handleChangeRoleConfirm(u._id || u.id, r, u.role)}
+                                                                            >
+                                                                                {roleChangingId === (u._id || u.id) && (
+                                                                                    <span className="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                                                                                )}
+                                                                                {r}
+                                                                            </button>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="text-center text-muted">
+                                                <td colSpan="7" className="text-center text-muted">
                                                     {searchTerm ? 'No users found matching your search.' : 'No users found'}
                                                 </td>
                                             </tr>
