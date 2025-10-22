@@ -23,6 +23,7 @@ import Elections from "../pages/Elections"; // Importing the Elections page
 import Logs from "../pages/Logs"; // Importing the Logs page
 import Notifications from "../components/admin/Notifications"; // Importing Notifications component  
 import Reports from "../components/admin/Reports";
+import Results from "../components/admin/Results";
 
 function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
   const navigate = useNavigate();
@@ -364,6 +365,7 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
               <Route path="logs" element={<Logs user={user} />} />
               <Route path="notifications" element={<Notifications user={user} />} />
               <Route path="reports" element={<Reports user={user} />} />
+              <Route path="results" element={<Results user={user} />} />
               {/* Add more admin routes here */}
             </Routes>
           </div>

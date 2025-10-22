@@ -60,6 +60,28 @@ function DashboardCharts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usingDummyData, setUsingDummyData] = useState(false);
+  const [turnoutSeries, setTurnoutSeries] = useState({ labels: [], data: [] });
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const exportTurnoutCSV = () => {
+    try {
+      const rows = [['Timestamp','Votes']];
+      for (let i = 0; i < turnoutSeries.labels.length; i++) {
+        rows.push([`"${turnoutSeries.labels[i]}"`, turnoutSeries.data[i] || 0]);
+      }
+      const csvContent = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `turnout_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Export turnout CSV failed', err);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,6 +177,18 @@ function DashboardCharts() {
                 ? response.data.votesPerElection 
                 : [0]
             });
+            // populate turnoutSeries if present
+            if (response.data.turnoutSeries && Array.isArray(response.data.turnoutSeries)) {
+              const labels = response.data.turnoutSeries.map(p => new Date(p.timestamp).toLocaleString());
+              const data = response.data.turnoutSeries.map(p => p.votes || 0);
+              setTurnoutSeries({ labels, data });
+              setLastUpdated(response.data.lastUpdated || new Date().toISOString());
+            } else {
+              // Derive a simple series from votesPerElection as fallback (not ideal but visible)
+              const derivedLabels = (response.data.electionNames || []).map((n, i) => n);
+              const derivedData = (response.data.votesPerElection || []).map(v => v || 0);
+              setTurnoutSeries({ labels: derivedLabels, data: derivedData });
+            }
           } else {
             console.log('⚠️ Database is empty - Using DUMMY data for demonstration');
             setUsingDummyData(true);
@@ -166,6 +200,9 @@ function DashboardCharts() {
               participationLabels: ['Active Voters', 'Registered Users', 'Eligible Voters'],
               participationData: [150, 250, 300]
             });
+            // dummy turnout series
+            setTurnoutSeries({ labels: ['2024-10-01','2024-10-08','2024-10-15','2024-10-22'], data: [50,120,80,150] });
+            setLastUpdated(new Date().toISOString());
           }
         }
       } catch (err) {
@@ -265,6 +302,21 @@ function DashboardCharts() {
             candidateNames: payload.candidateVotes.map(c => c.name || 'Candidate'),
             candidateVotes: payload.candidateVotes.map(c => c.votes || 0)
           });
+        }
+
+        // realtime turnout point
+        if (payload && payload.turnoutPoint) {
+          // turnoutPoint = { timestamp: '2025-10-22T12:00:00Z', votes: 42 }
+          setTurnoutSeries(prev => {
+            const nextLabels = [...prev.labels, new Date(payload.turnoutPoint.timestamp).toLocaleString()];
+            const nextData = [...prev.data, payload.turnoutPoint.votes];
+            // keep last 200 points to avoid memory blowup
+            if (nextLabels.length > 200) {
+              nextLabels.shift(); nextData.shift();
+            }
+            return { labels: nextLabels, data: nextData };
+          });
+          setLastUpdated(new Date().toISOString());
         }
       } catch (e) {
         console.error('Error applying dashboard update', e);
@@ -521,6 +573,49 @@ function DashboardCharts() {
       </div>
 
       {/* Election Participation */}
+      {/* Turnout Over Time */}
+      <div className="col-12">
+        <div className="card shadow-sm border-0">
+          <div className="card-header d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+            <h5 className="mb-0 fw-bold d-flex align-items-center">
+              <FontAwesomeIcon icon={faChartLine} className="text-info me-2" />
+              Turnout Over Time
+            </h5>
+            <div className="d-flex align-items-center">
+              <small className="text-muted me-3">{lastUpdated ? `Last updated: ${new Date(lastUpdated).toLocaleString()}` : ''}</small>
+              <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => exportTurnoutCSV()} title="Export CSV">Export CSV</button>
+              <a href="/admin/reports" className="btn btn-primary btn-sm">View Reports</a>
+            </div>
+          </div>
+          <div className="card-body">
+            {(turnoutSeries.labels.length > 0) ? (
+              <Line
+                data={{
+                  labels: turnoutSeries.labels,
+                  datasets: [{
+                    label: 'Votes',
+                    data: turnoutSeries.data,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13,110,253,0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: { y: { beginAtZero: true } }
+                }}
+                height={220}
+              />
+            ) : (
+              <div className="text-center text-muted py-4">No turnout data available</div>
+            )}
+          </div>
+        </div>
+      </div>
       <div className="col-12">
         <div className="card shadow-sm border-0">
           <div className="card-header bg-transparent border-0 py-3">
