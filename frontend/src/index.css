@@ -101,6 +101,23 @@ td{
     max-width: 12.5%;
   }
 }
+
+/* Mobile: reduce global font size for phones */
+@media (max-width: 576px) {
+  html, body {
+    font-size: 0.8em !important;
+  }
+
+  /* Tweak some common inputs to scale with the smaller base */
+  .form-control, .input-group-text, label, .btn {
+    font-size: 0.9em !important;
+  }
+
+  /* Slightly reduce table cell text on small screens */
+  td {
+    font-size: 0.75rem !important;
+  }
+}
 .analytics-card {
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
