@@ -18,7 +18,7 @@ const {
     reactivateOwnAccount,
     exportUsers
 } = require('../controllers/userController');
-const { updateUserPhoto } = require('../controllers/userController');
+const { updateUserPhoto, deleteUserPhoto } = require('../controllers/userController');
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -51,6 +51,9 @@ router.put('/me/profile', protect, updateCurrentUserProfile);
 
 // Upload/update profile photo (users can update their own, admins can update any)
 router.put('/:id/photo', protect, upload.single('profilePicture'), updateUserPhoto);
+
+// Delete profile photo (users can delete their own, admins can delete any)
+router.delete('/:id/photo', protect, deleteUserPhoto);
 
 // Admin: Search or filter users
 router.get('/search', protect, adminOnly, searchUsers);

@@ -1,5 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
+const fs = require('fs');
+const path = require('path');
 
 // @desc    Get all users (admin)
 // @route   GET /api/users
@@ -88,6 +90,53 @@ const updateUserPhoto = asyncHandler(async (req, res) => {
     }
 
     res.json({ message: 'Profile picture updated', profilePicture: user.profilePicture });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Delete user's profile photo (admin or owner)
+// @route   DELETE /api/users/:id/photo
+// @access  Protected (admin or owner)
+const deleteUserPhoto = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Authorization: allow if admin or owner
+    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    if (!user.profilePicture) {
+      return res.status(400).json({ message: 'No profile picture to delete' });
+    }
+
+    // Expect profilePicture to be like /uploads/filename
+    const relPath = user.profilePicture.replace(/^\//, ''); // remove leading slash
+    const absolutePath = path.join(__dirname, '..', relPath);
+
+    // Remove file if it exists
+    try {
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    } catch (fsErr) {
+      console.error('Error deleting profile picture file:', fsErr.message);
+      // proceed to clear DB even if file deletion fails
+    }
+
+    user.profilePicture = null;
+    await user.save();
+
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:photo:deleted', { userId: user._id });
+    } catch (e) {
+      console.error('Socket emit error (user photo deleted):', e.message);
+    }
+
+    res.json({ message: 'Profile picture deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -362,4 +411,6 @@ module.exports = {
   reactivateOwnAccount,
   exportUsers,
   updateUserPhoto
+  ,
+  deleteUserPhoto
 };

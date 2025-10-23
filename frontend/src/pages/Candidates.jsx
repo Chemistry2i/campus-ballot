@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import getImageUrl from '../utils/getImageUrl';
 import Select from "react-select";
 
 // Move CreateCandidateModal OUTSIDE of Candidates
@@ -468,11 +469,17 @@ function Candidates({ user }) {
                 <tr key={c._id}>
                   <td>
                     {c.photo ? (
-                      <img
-                        src={c.photo}
+                      (() => {
+                        const imgSrc = getImageUrl(c.photo);
+                        console.debug('[Candidates] candidate', c._id, 'imgSrc:', imgSrc);
+                        return (
+                          <img
+                            src={imgSrc}
                         alt="Candidate"
                         style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%" }}
                       />
+                        );
+                      })()
                     ) : (
                       <span className="text-muted">No Photo</span>
                     )}

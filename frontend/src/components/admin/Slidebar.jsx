@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from 'axios';
 import { useRef, useState } from 'react';
+import getImageUrl from '../../utils/getImageUrl';
 import {
   faTachometerAlt,
   faUsers,
@@ -24,6 +25,9 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [profilePic, setProfilePic] = useState(user?.profilePicture || '/default-avatar.png');
+  const profileImgSrc = getImageUrl(profilePic);
+  // Debug: log resolved image URL
+  console.debug('[Slidebar] resolved profile image URL:', profileImgSrc);
 
   const onChooseFile = () => fileRef.current && fileRef.current.click();
 
@@ -56,7 +60,7 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
           {/* User Avatar */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <img
-              src={profilePic}
+              src={profileImgSrc}
               alt="Admin"
               style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%' }}
               className="mb-2"

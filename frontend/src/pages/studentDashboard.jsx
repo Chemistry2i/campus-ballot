@@ -47,6 +47,7 @@ import {
   FaUser
 } from "react-icons/fa";
 import useSocket from '../hooks/useSocket';
+import getImageUrl from '../utils/getImageUrl';
 
 function StudentDashboard({ user }) {
   const [elections, setElections] = useState([]);
@@ -605,7 +606,7 @@ function StudentDashboard({ user }) {
                                   <div className="card-body p-2 p-md-3">
                                     <div className="d-flex align-items-center mb-2">
                                       <img
-                                        src={candidate.photo || "/default-avatar.png"}
+                                        src={(function(){ const s = getImageUrl(candidate.photo || "/default-avatar.png"); console.debug('[studentDashboard] candidate', candidate._id, 'imgSrc:', s); return s; })()}
                                         alt={candidate.name}
                                         style={{
                                           width: 35,
@@ -825,7 +826,7 @@ function StudentDashboard({ user }) {
             {/* Profile Picture Section */}
             <div className="mb-3">
               <img
-                src={user?.profilePicture || "/default-avatar.png"}
+                src={(function(){ const s = getImageUrl(user?.profilePicture || "/default-avatar.png"); console.debug('[studentDashboard] user profile imgSrc:', s); return s; })()}
                 alt={user?.name}
                 style={{
                   width: 100,
@@ -1594,7 +1595,7 @@ function StudentDashboard({ user }) {
                                   <div className="card-body p-3">
                                     <div className="d-flex align-items-center mb-3">
                                       <img
-                                        src={candidate.photo || "/default-avatar.png"}
+                                        src={getImageUrl(candidate.photo || "/default-avatar.png")}
                                         alt={candidate.name}
                                         style={{
                                           width: 60,
