@@ -11,9 +11,9 @@ const notificationSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    type: { // Category of notification
+    type: { // Category or severity of notification
         type: String,
-        enum: ['election', 'vote', 'candidate', 'general'],
+        enum: ['election', 'vote', 'candidate', 'general', 'info', 'success', 'warning', 'error'],
         required: true
     },
     targetAudience: { // Who should receive this notification

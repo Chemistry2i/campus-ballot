@@ -16,8 +16,10 @@ const getAllNotifications = asyncHandler(async (req, res) => {
         console.log({ message: 'Fetched all notifications' });
         res.status(200).json(notifications);
     } catch (error) {
-        console.log({ message: 'Error fetching notifications', error: error.message });
-        res.status(500).json({ message: error.message });
+        console.error('Error fetching notifications:', error);
+        // Include stack in logs for debugging
+        if (process.env.NODE_ENV === 'development') console.error(error.stack);
+        res.status(500).json({ message: 'Failed to fetch notifications', error: error.message });
     }
 });
 
@@ -41,10 +43,32 @@ const createNotification = asyncHandler(async (req, res) => {
             createdBy: req.user._id
         });
 
+        // Emit socket event to notify connected clients in relevant rooms
+        try {
+            const io = req.app.get('io');
+            if (io) {
+                // broadcast to all clients that match the target audience
+                if (!targetAudience || targetAudience === 'all') {
+                    io.emit('notification:new', notification);
+                } else if (targetAudience === 'admins') {
+                    io.to('admins').emit('notification:new', notification);
+                } else if (targetAudience === 'students') {
+                    io.to('students').emit('notification:new', notification);
+                }
+            }
+        } catch (emitErr) {
+            console.log('Socket emit error (createNotification):', emitErr.message);
+        }
+
         console.log({ message: 'Notification created' });
         res.status(201).json(notification);
     } catch (error) {
-        console.log({ message: 'Error creating notification', error: error.message });
+        // If this is a Mongoose validation error, return 400 with details
+        console.error('Error creating notification:', error);
+        if (error.name === 'ValidationError') {
+            const details = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({ message: 'Validation error', details });
+        }
         res.status(500).json({ message: error.message });
     }
 });
@@ -81,6 +105,16 @@ const markAsRead = asyncHandler(async (req, res) => {
                 notification.readBy.push(req.user._id);
                 await notification.save();
             }
+            // Emit socket event to notify that this notification was read
+            try {
+                const io = req.app.get('io');
+                if (io) {
+                    io.to(req.user._id.toString()).emit('notification:read', { notificationId: notification._id, userId: req.user._id });
+                }
+            } catch (emitErr) {
+                console.log('Socket emit error (markAsRead):', emitErr.message);
+            }
+
             console.log({ message: 'Notification marked as read' });
             res.status(200).json({ message: 'Notification marked as read' });
         } else {
@@ -88,7 +122,11 @@ const markAsRead = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'Notification not found' });
         }
     } catch (error) {
-        console.log({ message: 'Error marking notification as read', error: error.message });
+        console.error('Error marking notification as read:', error);
+        if (error.name === 'ValidationError') {
+            const details = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({ message: 'Validation error', details });
+        }
         res.status(500).json({ message: error.message });
     }
 });
@@ -102,6 +140,16 @@ const deleteNotification = asyncHandler(async (req, res) => {
 
         if (notification) {
             await notification.deleteOne();
+            // Emit socket event so clients can remove the notification from their UI
+            try {
+                const io = req.app.get('io');
+                if (io) {
+                    io.emit('notification:deleted', { notificationId: notification._id });
+                }
+            } catch (emitErr) {
+                console.log('Socket emit error (deleteNotification):', emitErr.message);
+            }
+
             console.log({ message: 'Notification removed successfully' });
             res.status(200).json({ message: 'Notification removed successfully' });
         } else {
@@ -109,7 +157,11 @@ const deleteNotification = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'Notification not found' });
         }
     } catch (error) {
-        console.log({ message: 'Error deleting notification', error: error.message });
+        console.error('Error deleting notification:', error);
+        if (error.name === 'ValidationError') {
+            const details = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({ message: 'Validation error', details });
+        }
         res.status(500).json({ message: error.message });
     }
 });

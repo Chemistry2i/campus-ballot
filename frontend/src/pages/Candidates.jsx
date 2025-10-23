@@ -13,6 +13,7 @@ function CreateCandidateModal({
   setShowCreate,
   users,
   elections,
+  positionsOptions,
 }) {
   const userOptions = users.map((u) => ({
     value: u._id,
@@ -91,13 +92,31 @@ function CreateCandidateModal({
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Position*</label>
-                  <input
-                    className="form-control"
-                    name="position"
-                    value={form.position}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  {positionsOptions && positionsOptions.length > 0 ? (
+                    <select
+                      className="form-select"
+                      name="position"
+                      value={form.position}
+                      onChange={handleFormChange}
+                      required
+                    >
+                      <option value="">Select Position</option>
+                      {positionsOptions.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="form-control"
+                      name="position"
+                      value={form.position}
+                      onChange={handleFormChange}
+                      placeholder="Enter position (no positions found for selected election)"
+                      required
+                    />
+                  )}
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Symbol (Photo)</label>
@@ -170,6 +189,7 @@ function Candidates({ user }) {
   const [showCreate, setShowCreate] = useState(false);
   const [elections, setElections] = useState([]);
   const [users, setUsers] = useState([]);
+  const [positionsOptions, setPositionsOptions] = useState([]);
   const [form, setForm] = useState({
     user: "",
     election: "",
@@ -220,6 +240,13 @@ function Candidates({ user }) {
       ]);
   setElections(electionRes.data.elections || []);
       setUsers(userRes.data);
+      // If a specific election already selected in form, populate positionsOptions
+      if (form.election) {
+        const selected = (electionRes.data.elections || []).find((ev) => ev._id === form.election);
+        if (selected && Array.isArray(selected.positions)) {
+          setPositionsOptions(selected.positions.map((p) => ({ value: p, label: p })));
+        }
+      }
     } catch (err) {
       Swal.fire("Error", "Failed to load elections or users", "error");
     }
@@ -312,6 +339,17 @@ function Candidates({ user }) {
       }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
+      // If election changed, update positionsOptions from elections
+      if (name === 'election') {
+        const selected = elections.find((ev) => ev._id === value);
+        if (selected && Array.isArray(selected.positions)) {
+          setPositionsOptions(selected.positions.map((p) => ({ value: p, label: p })));
+        } else {
+          setPositionsOptions([]);
+        }
+        // clear any previously selected position
+        setForm((prev) => ({ ...prev, position: '' }));
+      }
     }
   };
 
@@ -484,6 +522,7 @@ function Candidates({ user }) {
           setShowCreate={setShowCreate}
           users={users}
           elections={elections}
+          positionsOptions={positionsOptions}
         />
       )}
     </div>

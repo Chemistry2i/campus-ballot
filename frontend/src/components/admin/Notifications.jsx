@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useSocket from '../../hooks/useSocket';
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -107,14 +108,83 @@ function Notifications({ user }) {
       fetchNotifications();
       Swal.fire("Success", "Notification created!", "success");
     } catch (err) {
-      Swal.fire("Error", "Failed to create notification", "error");
+      const serverMsg = err?.response?.data?.message || err?.response?.data?.error || err.message;
+      const details = err?.response?.data?.details ? `<br/><pre>${JSON.stringify(err.response.data.details, null, 2)}</pre>` : '';
+      Swal.fire({ icon: 'error', title: 'Failed to create notification', html: `${serverMsg}${details}` });
     }
   };
 
   useEffect(() => {
     fetchNotifications();
+    // join admin room for real-time updates
+    const s = socketRef?.current;
     // eslint-disable-next-line
   }, []);
+
+  // socket setup for real-time updates (admin)
+  const { socketRef } = useSocket();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const setupSocket = (s) => {
+      if (!mounted || !s) return;
+
+      // join admins room so server can target admin notifications
+      s.emit('join', 'admins');
+
+      const onNew = (notification) => {
+        setNotifications(prev => [notification, ...(prev || [])]);
+      };
+      const onDeleted = ({ notificationId }) => {
+        setNotifications(prev => (prev || []).filter(n => n._id !== notificationId));
+      };
+      const onRead = ({ notificationId, userId }) => {
+        setNotifications(prev => (prev || []).map(n => n._id === notificationId ? { ...n, readBy: [...(n.readBy||[]), userId] } : n));
+      };
+
+      s.on('notification:new', onNew);
+      s.on('notification:deleted', onDeleted);
+      s.on('notification:read', onRead);
+
+      // cleanup helper
+      const cleanup = () => {
+        s.off('notification:new', onNew);
+        s.off('notification:deleted', onDeleted);
+        s.off('notification:read', onRead);
+        try { s.emit('leave', 'admins'); } catch (e) { /* ignore */ }
+      };
+
+      return cleanup;
+    };
+
+    // If socket is ready, attach immediately. Otherwise poll briefly until it appears.
+    if (socketRef.current) {
+      const cleanup = setupSocket(socketRef.current);
+      return () => {
+        mounted = false;
+        if (cleanup) cleanup();
+      };
+    }
+
+    const interval = setInterval(() => {
+      if (socketRef.current) {
+        clearInterval(interval);
+        const cleanup = setupSocket(socketRef.current);
+        // ensure we clean up if the component unmounts later
+        return () => {
+          mounted = false;
+          if (cleanup) cleanup();
+        };
+      }
+    }, 200);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socketRef]);
 
   return (
     <div className="container py-4">

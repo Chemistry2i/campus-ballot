@@ -178,7 +178,7 @@ function OverviewCards({ stats }) {
         ))}
       </div>
       
-      <style jsx>{`
+  <style>{`
         @media (max-width: 1200px) {
           .col-xl-15 {
             flex: 1 1 25% !important;
