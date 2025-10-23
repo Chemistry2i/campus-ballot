@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import getImageUrl from '../utils/getImageUrl';
 import Select from "react-select";
+import ugandaPartiesOptions from '../utils/ugandaParties';
 
 // Move CreateCandidateModal OUTSIDE of Candidates
 function CreateCandidateModal({
@@ -132,11 +133,17 @@ function CreateCandidateModal({
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Party</label>
-                  <input
-                    className="form-control"
-                    name="party"
-                    value={form.party}
-                    onChange={handleFormChange}
+                  <Select
+                    options={ugandaPartiesOptions}
+                    value={
+                      ugandaPartiesOptions.find((opt) => opt.value === form.party) || null
+                    }
+                    onChange={(opt) =>
+                      setForm((prev) => ({ ...prev, party: opt ? opt.value : "" }))
+                    }
+                    placeholder="Search or select party..."
+                    isClearable
+                    classNamePrefix="react-select"
                   />
                 </div>
                 <div className="col-md-12">
