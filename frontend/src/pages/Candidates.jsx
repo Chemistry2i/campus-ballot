@@ -139,7 +139,7 @@ function CreateCandidateModal({
                       ugandaPartiesOptions.find((opt) => opt.value === form.party) || null
                     }
                     onChange={(opt) =>
-                      setForm((prev) => ({ ...prev, party: opt ? opt.value : "" }))
+                      handleFormChange({ target: { name: 'party', value: opt ? opt.value : '' } })
                     }
                     placeholder="Search or select party..."
                     isClearable
