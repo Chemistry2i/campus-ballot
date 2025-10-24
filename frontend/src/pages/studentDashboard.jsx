@@ -444,8 +444,8 @@ function StudentDashboard({ user }) {
               return (
                 <div key={election._id} className="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-2">
                   <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className={`bg-${color} bg-opacity-10 rounded-circle p-2 flex-shrink-0`}>
-                      <StatusIcon className={`text-${color}`} size={16} />
+                    <div className={`bg-${color} bg-opacity-10 rounded-2 p-2 flex-shrink-0`} style={{width:50,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <StatusIcon className={`text-${color}`} size={20} />
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div className="fw-semibold text-truncate" style={{ maxWidth: "200px" }} title={election.title}>
