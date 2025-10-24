@@ -25,6 +25,7 @@ import {
   FaSearch,
   FaFilter,
   FaBell,
+  FaTrash,
   FaNewspaper,
   FaUserEdit,
   FaLock,
@@ -63,6 +64,7 @@ function StudentDashboard({ user }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [notifications, setNotifications] = useState([]);
   const [markingReadIds, setMarkingReadIds] = useState([]);
+  const [deletingNotificationIds, setDeletingNotificationIds] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
@@ -202,6 +204,35 @@ function StudentDashboard({ user }) {
       Swal.fire('Error', 'Failed to mark notification as read', 'error');
     } finally {
       setMarkingReadIds(prev => prev.filter(i => i !== id));
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    if (!id) return;
+    const result = await Swal.fire({
+      title: 'Delete notification?',
+      text: 'This will permanently remove the notification.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: '#d33'
+    });
+    if (!result.isConfirmed) return;
+    try {
+      setDeletingNotificationIds(prev => [...prev, id]);
+      const token = localStorage.getItem('token');
+      await axios.delete(`/api/notifications/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      setNotifications(prev => (prev || []).filter(n => n._id !== id));
+    } catch (err) {
+      console.error('Failed to delete notification', err);
+      Swal.fire('Error', 'Failed to delete notification', 'error');
+    } finally {
+      setDeletingNotificationIds(prev => prev.filter(x => x !== id));
+      // if modal open for this id, close it
+      if (selectedNotification && selectedNotification._id === id) {
+        setShowNotificationModal(false);
+        setSelectedNotification(null);
+      }
     }
   };
 
@@ -790,19 +821,26 @@ function StudentDashboard({ user }) {
         ) : (
           <div className="list-group list-group-flush">
             {notifications.map((notification, index) => (
-              <div className={`list-group-item border-0 py-3 ${!notification.read ? 'bg-light' : ''}`} 
-                   key={notification._id || index}>
+              <div
+                key={notification._id || index}
+                className={`list-group-item border border-1 mb-2`}
+                style={{ background: notification.read ? '#ffffff' : '#f1f3f5' }}
+              >
                 <div className="d-flex align-items-start gap-3">
-                  <div className={`bg-${notification.type === 'success' ? 'success' : 'info'} bg-opacity-10 rounded-circle p-2`}>
-                    <FaInfoCircle className={`text-${notification.type === 'success' ? 'success' : 'info'}`} size={16} />
+                  <div style={{ width: 44, height: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }} className={`bg-${notification.type === 'success' ? 'success' : 'info'} bg-opacity-10`}>
+                    {notification.type === 'success' ? (
+                      <FaCheckCircle className="text-success" size={18} />
+                    ) : (
+                      <FaInfoCircle className="text-info" size={18} />
+                    )}
                   </div>
                   <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className="fw-semibold">
+                    <div className="fw-semibold text-truncate" style={{ maxWidth: 420 }}>
                       {typeof notification.title === 'string' ? notification.title :
                         (notification.title && typeof notification.title === 'object' && (notification.title.text || notification.title.value)) ? (notification.title.text || notification.title.value) :
                         (notification.title ? '[Invalid notification]' : 'Notification')}
                     </div>
-                    <p className="text-muted mb-1 small text-truncate" style={{ maxWidth: "300px" }}>
+                    <p className="text-muted mb-1 small text-truncate" style={{ maxWidth: 420 }}>
                       {typeof notification.message === 'string' ? notification.message :
                         (typeof notification.content === 'string' ? notification.content :
                           (notification.message && typeof notification.message === 'object' && (notification.message.text || notification.message.value)) ? (notification.message.text || notification.message.value) :
@@ -813,20 +851,35 @@ function StudentDashboard({ user }) {
                       {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : 'Recently'}
                     </small>
                   </div>
-                  <div className="d-flex flex-column gap-1">
-                    {!notification.read && (
-                      <span className="badge bg-primary">New</span>
-                    )}
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => {
-                        setSelectedNotification(notification);
-                        setShowNotificationModal(true);
-                      }}
-                    >
-                      <FaEye />
-                    </button>
-                  </div>
+                    <div className="d-flex flex-column gap-2 align-items-end">
+                      {!notification.read && (
+                        <span className="badge bg-primary">New</span>
+                      )}
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
+                          onClick={() => {
+                            setSelectedNotification(notification);
+                            setShowNotificationModal(true);
+                          }}
+                          style={{ minWidth: 110 }}
+                        >
+                          <FaEye className="me-2" /> View
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                          onClick={() => deleteNotification(notification._id)}
+                          disabled={deletingNotificationIds.includes(notification._id)}
+                          style={{ minWidth: 110 }}
+                        >
+                          {deletingNotificationIds.includes(notification._id) ? (
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          ) : (
+                            <><FaTrash className="me-2" /> Delete</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                 </div>
               </div>
             ))}
@@ -1762,7 +1815,7 @@ function StudentDashboard({ user }) {
       {selectedNotification && showNotificationModal && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
-            <div className="modal-content">
+            <div className={`modal-content border border-1`} style={{ background: selectedNotification?.read ? '#ffffff' : '#f1f3f5' }}>
               <div className="modal-header">
                 <h5 className="modal-title d-flex align-items-center gap-2">
                   <FaBell className="text-info" />
@@ -1821,6 +1874,18 @@ function StudentDashboard({ user }) {
                 </div>
               </div>
               <div className="modal-footer">
+                <button 
+                  className="btn btn-danger me-auto"
+                  onClick={async () => { await deleteNotification(selectedNotification._id); }}
+                  disabled={deletingNotificationIds.includes(selectedNotification._id)}
+                >
+                  {deletingNotificationIds.includes(selectedNotification._id) ? (
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  ) : (
+                    <FaTrash className="me-2" />
+                  )}
+                  Delete
+                </button>
                 <button 
                   className="btn btn-secondary"
                   onClick={() => {

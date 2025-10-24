@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import useSocket from '../../hooks/useSocket';
+import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell, faCheckCircle, faTrash, faInfoCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
@@ -10,6 +11,7 @@ export default function Notifications({ user }) {
 	const [notifications, setNotifications] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [markingIds, setMarkingIds] = useState([]);
+	const [deletingIds, setDeletingIds] = useState([]);
 	const { socketRef } = useSocket();
 
 	const fetchNotifications = async () => {
@@ -108,6 +110,30 @@ export default function Notifications({ user }) {
 	  }
 	};
 
+	const deleteNotification = async (id) => {
+		if (!id) return;
+		const confirmed = await Swal.fire({
+			title: 'Delete notification?',
+			text: 'This will permanently remove the notification.',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonText: 'Delete',
+			confirmButtonColor: '#d33'
+		});
+		if (!confirmed.isConfirmed) return;
+		try {
+			setDeletingIds(prev => [...prev, id]);
+			const token = localStorage.getItem('token');
+			await axios.delete(`/api/notifications/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+			setNotifications(prev => (prev || []).filter(n => n._id !== id));
+		} catch (err) {
+			console.error('Failed to delete notification', err);
+			Swal.fire('Error', 'Failed to delete notification', 'error');
+		} finally {
+			setDeletingIds(prev => prev.filter(x => x !== id));
+		}
+	};
+
 	return (
 		<div>
 			<h4 className="mb-3">Notifications</h4>
@@ -118,27 +144,52 @@ export default function Notifications({ user }) {
 			) : (
 				<div className="list-group">
 					{notifications.map(n => (
-						<div key={n._id} className={`list-group-item ${n.read ? '' : 'bg-light'}`}>
+						<div
+							key={n._id}
+							className={`list-group-item border border-1 mb-2`}
+							style={{ background: n.read ? '#ffffff' : '#f1f3f5' }}
+						>
 							<div className="d-flex justify-content-between align-items-start">
-								<div>
-									<div className="fw-bold">{n.title}</div>
-									<div className="small text-muted">{n.message}</div>
-									<div className="small text-muted">{new Date(n.createdAt).toLocaleString()}</div>
+								<div className="d-flex align-items-start gap-3" style={{ minWidth: 0 }}>
+									<div style={{ width: 44, height: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }} className={`bg-${n.type === 'success' ? 'success' : 'info'} bg-opacity-10`}> 
+										<FontAwesomeIcon icon={n.type === 'success' ? faCheckCircle : faInfoCircle} style={{ color: n.type === 'success' ? '#198754' : '#0dcaf0' }} size="lg" />
+									</div>
+									<div style={{ minWidth: 0 }}>
+										<div className="fw-bold text-truncate" style={{ maxWidth: 380 }}>{n.title}</div>
+										<div className="small text-muted text-truncate" style={{ maxWidth: 380 }}>{n.message}</div>
+										<div className="small text-muted">{new Date(n.createdAt).toLocaleString()}</div>
+									</div>
 								</div>
 								<div className="d-flex flex-column gap-2">
-									{!n.read && (
+									<div className="d-flex gap-2">
+										{!n.read && (
+											<button
+												className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
+												onClick={() => markAsRead(n._id)}
+												disabled={markingIds.includes(n._id)}
+												style={{ minWidth: 120 }}
+											>
+												{markingIds.includes(n._id) ? (
+													<FontAwesomeIcon icon={faSpinner} spin />
+												) : (
+													<><FontAwesomeIcon icon={faCheckCircle} className="me-2" /> Mark as read</>
+												)}
+											</button>
+										)}
 										<button
-											className="btn btn-sm btn-outline-success"
-											onClick={() => markAsRead(n._id)}
-											disabled={markingIds.includes(n._id)}
+											className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+											onClick={() => deleteNotification(n._id)}
+											disabled={deletingIds.includes(n._id)}
+											style={{ minWidth: 44 }}
+											title="Delete"
 										>
-											{markingIds.includes(n._id) ? (
+											{deletingIds.includes(n._id) ? (
 												<FontAwesomeIcon icon={faSpinner} spin />
 											) : (
-												<><FontAwesomeIcon icon={faCheckCircle} /> Mark as read</>
+												<FontAwesomeIcon icon={faTrash} />
 											)}
 										</button>
-									)}
+									</div>
 								</div>
 							</div>
 						</div>
