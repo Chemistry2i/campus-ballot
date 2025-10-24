@@ -554,9 +554,9 @@ function StudentDashboard({ user }) {
               const { status, color, icon: StatusIcon } = getElectionStatus(election);
 
               return (
-                <div key={election._id || election.id} className="col-12">
-                  <div className="card border-0 shadow-sm mb-3" 
-                       style={{ borderRadius: '5px' }}>
+         <div key={election._id || election.id} className="col-12">
+         <div className="card border-1 shadow-sm mb-3" 
+           style={{ borderRadius: '5px', background: '#f1f3f5' }}>
                     <div className="card-body p-3 p-md-4">
                       {/* Election Header */}
                       <div className="row mb-3">
@@ -1606,14 +1606,26 @@ function StudentDashboard({ user }) {
 
                       {/* Candidates Section */}
                       <div>
-                        <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
-                          <FaUsers className="text-primary" />
-                          Candidates ({approvedCandidates.length})
-                        </h5>
+                        <div className="d-flex align-items-center justify-content-between mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <FaUsers className="text-primary" />
+                            <h5 className="fw-bold mb-0">Candidates ({approvedCandidates.length})</h5>
+                            {/* If the election has a single position, show it for clarity */}
+                            {selectedElection && Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 && (
+                              <span className="badge bg-success text-white ms-2" style={{ fontSize: '0.85rem' }}>
+                                {selectedElection.positions[0]}
+                              </span>
+                            )}
+                          </div>
+                          {/* If the election has multiple positions, show a compact label */}
+                          {selectedElection && Array.isArray(selectedElection.positions) && selectedElection.positions.length > 1 && (
+                            <small className="text-muted">{selectedElection.positions.length} positions</small>
+                          )}
+                        </div>
                         
                         {approvedCandidates.length > 0 ? (
                           <div className="row g-3">
-                            {approvedCandidates.map((candidate) => (
+                            {approvedCandidates.map((candidate, idx) => (
                               <div className="col-md-6" key={candidate._id || candidate.id}>
                                 <div className="card border h-100" 
                                      style={{ borderRadius: '10px', background: voted ? '#f8f9fa' : 'white' }}>
@@ -1632,10 +1644,31 @@ function StudentDashboard({ user }) {
                                         className="me-3"
                                       />
                                       <div className="flex-grow-1">
-                                        <h6 className="fw-bold mb-1">{candidate.name}</h6>
-                                        <p className="text-muted mb-1">{candidate.party || "Independent"}</p>
+                                        <div className="d-flex align-items-center justify-content-between">
+                                          <div style={{ minWidth: 0 }}>
+                                            <h6 className="fw-bold mb-1 text-truncate" title={candidate.name}>
+                                              <span className="badge bg-secondary text-white me-2">#{idx + 1}</span>
+                                              {candidate.name}
+                                              {candidate.position && (
+                                                <span className="badge bg-success text-white ms-2" style={{ fontSize: '0.75rem' }}>{candidate.position}</span>
+                                              )}
+                                            </h6>
+                                            <div className="d-flex align-items-center gap-2 mt-1">
+                                              {candidate.symbol && (
+                                                <img src={getImageUrl(candidate.symbol)} alt={`${candidate.party || 'Party'} symbol`} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
+                                              )}
+                                              <p className="text-muted mb-0">{candidate.party || 'Independent'}</p>
+                                            </div>
+                                          </div>
+                                        </div>
                                         {candidate.manifesto && (
-                                          <small className="text-muted">{candidate.manifesto}</small>
+                                          <small className="text-muted d-block mt-2" style={{ maxWidth: '100%' }}>{candidate.manifesto}</small>
+                                        )}
+                                        {/* Quick takeaway / What not to miss */}
+                                        {candidate.manifesto && (
+                                          <div className="alert alert-warning py-2 mt-2" role="alert">
+                                            <strong>Quick takeaway:</strong> {candidate.manifesto.length > 140 ? `${candidate.manifesto.slice(0, 140)}...` : candidate.manifesto}
+                                          </div>
                                         )}
                                       </div>
                                     </div>
