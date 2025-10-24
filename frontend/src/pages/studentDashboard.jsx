@@ -513,7 +513,7 @@ function StudentDashboard({ user }) {
                 </div>
                 <select 
                   className="form-select form-select-sm" 
-                  style={{ width: '80px' }}
+                  style={{ width: '140px' }}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -1187,8 +1187,8 @@ function StudentDashboard({ user }) {
         style={{
           width: "100vw",
           margin: 0,
-          padding: '1.25rem 1.25rem',
-          height: '110px',
+          padding: '0.6rem 1rem',
+          height: '72px',
           alignItems: 'center'
         }}
       >
