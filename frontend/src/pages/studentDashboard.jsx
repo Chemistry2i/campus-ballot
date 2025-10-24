@@ -357,7 +357,7 @@ function StudentDashboard({ user }) {
     }
   };
 
-  const renderDashboardView = () => (
+  function renderDashboardView() { return (
     <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
       {/* Statistics Cards - 8 cards in single row */}
       <div className="row g-2 g-md-3 mb-4">
@@ -400,9 +400,9 @@ function StudentDashboard({ user }) {
       {/* Recent Elections Quick View */}
       <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '5px', maxWidth: "100%", overflowX: "hidden" }}>
         <div className="card-header bg-white border-0 py-3">
-          <h3 className="fw-bold mb-0 d-flex align-items-center gap-2">
+          <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
             <FaPoll className="text-primary" /> Recent Elections
-          </h3>
+          </h4>
         </div>
         <div className="card-body p-3">
           <div className="table-responsive">
@@ -448,17 +448,17 @@ function StudentDashboard({ user }) {
         </div>
       </div>
     </div>
-  );
+  ); }
 
-  const renderElectionsView = () => (
+  function renderElectionsView() { return (
     <div className="card shadow-sm border-0" style={{ borderRadius: '5px', width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0 }}>
       <div className="card-header bg-white border-0 py-3" 
            style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
         <div className="row align-items-center g-2">
           <div className="col-12 col-md-6 mb-2 mb-md-0">
-            <h3 className="fw-bold mb-0 d-flex align-items-center gap-2">
+            <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
               <FaPoll className="text-primary" /> All Elections
-            </h3>
+            </h4>
           </div>
           
           <div className="col-12 col-md-6">
@@ -479,7 +479,7 @@ function StudentDashboard({ user }) {
                 </div>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: '60px' }}
+                  style={{ width: '100px' }}
                   value={refreshInterval}
                   onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
                   disabled={!isAutoRefresh}
@@ -499,7 +499,7 @@ function StudentDashboard({ user }) {
               
               {/* Search and Filter - Responsive */}
               <div className="d-flex gap-1">
-                <div className="input-group" style={{ width: '120px' }}>
+                <div className="input-group" style={{ width: '300px' }}>
                   <span className="input-group-text bg-light border-end-0">
                     <FaSearch className="text-muted" size={12} />
                   </span>
@@ -537,7 +537,7 @@ function StudentDashboard({ user }) {
         ) : filteredElections.length === 0 ? (
           <div className="text-center py-5">
             <FaNewspaper size={48} className="text-muted mb-3" />
-            <h3 className="text-muted">No elections found</h3>
+            <h4 className="text-muted">No elections found</h4>
             <p className="text-muted">
               {searchTerm || statusFilter !== 'all' 
                 ? 'Try adjusting your search criteria' 
@@ -562,7 +562,7 @@ function StudentDashboard({ user }) {
                       <div className="row mb-3">
                         <div className="col-12 col-md-8">
                           <div className="d-flex flex-column flex-sm-row align-items-start gap-2 mb-2">
-                            <h3 className="fw-bold mb-0 flex-grow-1">{election.title || election.name}</h3>
+                            <h4 className="fw-bold mb-0 flex-grow-1">{election.title || election.name}</h4>
                             <div className="d-flex gap-2 flex-wrap">
                               <span className={`badge bg-${color} d-flex align-items-center gap-1`}>
                                 <StatusIcon size={12} />
@@ -696,9 +696,9 @@ function StudentDashboard({ user }) {
         )}
       </div>
     </div>
-  );
+  ); }
 
-  const renderMyVotesView = () => (
+  function renderMyVotesView() { return (
     <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
       <div className="card-header bg-success text-white d-flex align-items-center justify-content-between"
            style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
@@ -769,9 +769,9 @@ function StudentDashboard({ user }) {
         )}
       </div>
     </div>
-  );
+  ); }
 
-  const renderNotificationsView = () => (
+  function renderNotificationsView() { return (
     <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
       <div className="card-header bg-primary text-white d-flex align-items-center justify-content-between"
            style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
@@ -784,7 +784,7 @@ function StudentDashboard({ user }) {
         {notifications.length === 0 ? (
           <div className="text-center py-5">
             <FaBell className="mb-3 text-muted" size={48} />
-            <h3 className="text-muted">No notifications</h3>
+            <h4 className="text-muted">No notifications</h4>
             <p className="text-muted">You'll see important updates and announcements here.</p>
           </div>
         ) : (
@@ -834,9 +834,9 @@ function StudentDashboard({ user }) {
         )}
       </div>
     </div>
-  );
+  ); }
 
-  const renderProfileView = () => (
+  function renderProfileView() { return (
     <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0 }}>
       {/* Profile Information Section */}
       <div className="col-lg-4 col-md-5">
@@ -944,9 +944,9 @@ function StudentDashboard({ user }) {
                      borderTopLeftRadius: '5px', 
                      borderTopRightRadius: '5px'
                    }}>
-                <h3 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
                   <FaUser /> Personal Information
-                </h3>
+                </h4>
               </div>
               <div className="card-body p-4">
                 <div className="row g-3">
@@ -1035,9 +1035,9 @@ function StudentDashboard({ user }) {
                      borderTopLeftRadius: '5px', 
                      borderTopRightRadius: '5px'
                    }}>
-                <h3 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
                   <FaHistory /> Recent Activity
-                </h3>
+                </h4>
               </div>
               <div className="card-body p-4">
                 {myVotes.length > 0 ? (
@@ -1081,7 +1081,7 @@ function StudentDashboard({ user }) {
                 ) : (
                   <div className="text-center py-5">
                     <FaHistory className="text-muted mb-3" size={48} />
-                    <h3 className="text-muted mb-2">No Activity Yet</h3>
+                    <h4 className="text-muted mb-2">No Activity Yet</h4>
                     <p className="text-muted mb-4">Start participating in elections to see your voting history here!</p>
                     <button 
                       className="btn btn-primary"
@@ -1095,60 +1095,62 @@ function StudentDashboard({ user }) {
               </div>
             </div>
           </div>
+              </div>
         </div>
       </div>
-    </div>
-  );  const renderHistoryView = () => (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
-      <div className="card-header bg-primary text-white d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
-        <span className="d-flex align-items-center gap-2">
-          <FaHistory /> Activity History
-        </span>
-      </div>
-      <div className="card-body p-4">
-        <div className="timeline">
-          {myVotes.map((vote, index) => (
-            <div className="timeline-item d-flex gap-3 mb-4" key={vote._id || index}>
-              <div className="timeline-marker bg-success rounded-circle d-flex align-items-center justify-content-center"
-                   style={{ width: '40px', height: '40px', minWidth: '40px' }}>
-                <FaVoteYea className="text-white" size={16} />
-              </div>
-              <div className="timeline-content flex-grow-1">
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body p-3">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <h6 className="fw-bold mb-0">Vote Cast</h6>
-                      <small className="text-muted">
-                        {vote.createdAt ? new Date(vote.createdAt).toLocaleDateString() : 'Recently'}
-                      </small>
+    );
+  }
+  function renderHistoryView() { return (
+      <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
+        <div className="card-header bg-primary text-white d-flex align-items-center justify-content-between"
+             style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+          <span className="d-flex align-items-center gap-2">
+            <FaHistory /> Activity History
+          </span>
+        </div>
+        <div className="card-body p-4">
+          <div className="timeline">
+            {myVotes.map((vote, index) => (
+              <div className="timeline-item d-flex gap-3 mb-4" key={vote._id || index}>
+                <div className="timeline-marker bg-success rounded-circle d-flex align-items-center justify-content-center"
+                     style={{ width: '40px', height: '40px', minWidth: '40px' }}>
+                  <FaVoteYea className="text-white" size={16} />
+                </div>
+                <div className="timeline-content flex-grow-1">
+                  <div className="card border-0 shadow-sm">
+                    <div className="card-body p-3">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h6 className="fw-bold mb-0">Vote Cast</h6>
+                        <small className="text-muted">
+                          {vote.createdAt ? new Date(vote.createdAt).toLocaleDateString() : 'Recently'}
+                        </small>
+                      </div>
+                      <p className="mb-1">Voted in: <strong>{typeof vote.electionTitle === 'string' ? vote.electionTitle :
+                        (typeof vote.election === 'string' ? vote.election :
+                          (vote.election && typeof vote.election === 'object') ?
+                            (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
+                            : 'Unknown Election')}</strong></p>
+                      <p className="mb-0 text-muted">Candidate: {typeof vote.candidateName === 'string' ? vote.candidateName :
+                        (typeof vote.candidate === 'string' ? vote.candidate :
+                          (vote.candidate && typeof vote.candidate === 'object') ?
+                            (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
+                            : 'Unknown Candidate')}</p>
                     </div>
-                    <p className="mb-1">Voted in: <strong>{typeof vote.electionTitle === 'string' ? vote.electionTitle :
-                      (typeof vote.election === 'string' ? vote.election :
-                        (vote.election && typeof vote.election === 'object') ?
-                          (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
-                          : 'Unknown Election')}</strong></p>
-                    <p className="mb-0 text-muted">Candidate: {typeof vote.candidateName === 'string' ? vote.candidateName :
-                      (typeof vote.candidate === 'string' ? vote.candidate :
-                        (vote.candidate && typeof vote.candidate === 'object') ?
-                          (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
-                          : 'Unknown Candidate')}</p>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {myVotes.length === 0 && (
-            <div className="text-center py-5">
-              <FaHistory className="mb-3 text-muted" size={48} />
-              <h3 className="text-muted">No activity yet</h3>
-              <p className="text-muted">Your voting activity will appear here.</p>
-            </div>
-          )}
+            ))}
+            {myVotes.length === 0 && (
+              <div className="text-center py-5">
+                <FaHistory className="mb-3 text-muted" size={48} />
+                <h4 className="text-muted">No activity yet</h4>
+                <p className="text-muted">Your voting activity will appear here.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    ); }
 
   return (
     <>
