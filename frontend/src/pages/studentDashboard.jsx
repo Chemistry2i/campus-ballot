@@ -1458,7 +1458,7 @@ function StudentDashboard({ user }) {
           margin: 0
         }}>
           {/* Breadcrumb */}
-          <nav aria-label="breadcrumb" className="mb-4">
+          {/* <nav aria-label="breadcrumb" className="mb-4">
             <ol className="breadcrumb">
               <li className="breadcrumb-item">
                 <button 
@@ -1474,23 +1474,23 @@ function StudentDashboard({ user }) {
                 </li>
               )}
             </ol>
-          </nav>
+          </nav> */}
 
           {/* Page Header */}
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-md-center mb-4">
-            <div>
-              <h2 className="fw-bold mb-1">
+            {/* <div>
+              {/* <h4 className="fw-bold mb-1">
                 {sidebarItems.find(item => item.id === activeView)?.label || 'Dashboard'}
-              </h2>
-              <p className="text-muted mb-0">
+              </h4> */}
+              {/* <p className="text-muted mb-0">
                 {activeView === 'dashboard' && 'Welcome to your student portal dashboard'}
                 {activeView === 'elections' && 'Browse and participate in elections'}
                 {activeView === 'my-votes' && 'View your voting history'}
                 {activeView === 'notifications' && 'Stay updated with important announcements'}
                 {activeView === 'profile' && 'Manage your profile information'}
                 {activeView === 'history' && 'Track your activity timeline'}
-              </p>
-            </div>
+              </p> 
+            </div> */}
             {activeView === 'dashboard' && (
               <div className="d-flex gap-2 mt-2 mt-md-0">
                 <button
