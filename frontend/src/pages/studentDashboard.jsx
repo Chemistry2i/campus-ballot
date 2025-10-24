@@ -837,14 +837,17 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderProfileView() { return (
-    <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0 }}>
+    <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, marginTop: -60 }}>
       {/* Profile Information Section */}
       <div className="col-lg-4 col-md-5">
         <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '5px' }}>
           <div className="card-header bg-primary text-white text-center py-4"
                style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
             {/* Profile Picture Section */}
-            <div className="mb-3">
+            <div className="mb-3" style={{display: 'flex',
+                justifyContent: 'center', // Centers children horizontally
+                alignItems: 'center',     // Centers children vertically
+            }}>
               <img
                 src={(function(){ const s = getImageUrl(user?.profilePicture || "/default-avatar.png"); return s; })()}
                 alt={user?.name}
