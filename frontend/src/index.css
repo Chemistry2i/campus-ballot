@@ -87,7 +87,7 @@ td{
 }
 
 #font{
-  font-size: .75em !important;
+  font-size: 1.25em !important;
 }
 
 /* Reduce padding inside stat cards */
@@ -105,12 +105,12 @@ td{
 /* Mobile: reduce global font size for phones */
 @media (max-width: 576px) {
   html, body {
-    font-size: 0.8em !important;
+    font-size: 1.2em !important;
   }
 
   /* Tweak some common inputs to scale with the smaller base */
   .form-control, .input-group-text, label, .btn {
-    font-size: 0.9em !important;
+    font-size: 1.2em !important;
   }
 
   /* Slightly reduce table cell text on small screens */
@@ -151,7 +151,7 @@ td{
 
 /* Card label font size */
 .analytics-card h6 {
-  font-size: .8em !important; /* Adjust as needed */
+  font-size: 1.2em !important; /* Adjust as needed */
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
