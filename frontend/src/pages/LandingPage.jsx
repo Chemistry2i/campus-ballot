@@ -1,11 +1,19 @@
-import React from "react";
-import { Container, Row, Col, Button, Card } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Button, Card, Modal } from "react-bootstrap";
+import "./LandingPage.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const LandingPage = () => {
+  useEffect(() => {
+    // mark body so css can add padding for the fixed-top navbar
+    document.body.classList.add('has-fixed-navbar');
+    return () => {
+      document.body.classList.remove('has-fixed-navbar');
+    };
+  }, []);
   return (
     <div style={{ fontFamily: "'Merriweather', serif", overflowX: "hidden" }}>
       {/* ===== NAVBAR ===== */}
@@ -245,6 +253,9 @@ const LandingPage = () => {
               </Card>
             </Col>
           </Row>
+
+          {/* Feature details modal */}
+          <FeatureModal />
         </div>
       </section>
 
@@ -255,36 +266,70 @@ const LandingPage = () => {
             Why Choose Our System
           </h2>
           <Row className="justify-content-center g-4">
-            {[
-              {
-                icon: '🔒',
-                title: "High Security",
-                desc: "Every vote is encrypted and tamper-proof, ensuring full integrity.",
-              },
-              {
-                icon: '⚙️',
-                title: "Automation",
-                desc: "Instant result tallying with minimal administrative overhead.",
-              },
-              {
-                icon: '🚀',
-                title: "Fast & Reliable",
-                desc: "Optimized for performance and uptime during peak election hours.",
-              },
-              {
-                icon: '👥',
-                title: "User-Centered",
-                desc: "Simple, accessible interface for all students and admins.",
-              },
-            ].map((item, index) => (
-              <Col lg={3} md={6} key={index}>
-                <Card className="h-100 text-center shadow-sm border-0 p-3">
-                  <Card.Body>
-                    <div className="card-icon mb-3">{item.icon}</div>
-                    <h5 className="fw-bold">{item.title}</h5>
-                    <p className="text-muted">{item.desc}</p>
-                  </Card.Body>
-                </Card>
+            {(
+              [
+                {
+                  key: 'security',
+                  title: "High Security",
+                  desc: "Every vote is encrypted and tamper-proof, ensuring full integrity.",
+                  bg: '#e8f4ff',
+                  fg: '#08306b',
+                  icon: (
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V7l-8-4-8 4v5c0 6 8 10 8 10z"/></svg>
+                  ),
+                  details: 'Uses modern encryption and auditable logs to protect votes.'
+                },
+                {
+                  key: 'automation',
+                  title: "Automation",
+                  desc: "Instant result tallying with minimal administrative overhead.",
+                  bg: '#f0fff4',
+                  fg: '#0b5132',
+                  icon: (
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 13.3A8 8 0 1 0 12 20v-2a6 6 0 1 1 6-6h2.8z"/></svg>
+                  ),
+                  details: 'Automated tallies, scheduling and role-based workflows reduce manual effort.'
+                },
+                {
+                  key: 'performance',
+                  title: "Fast & Reliable",
+                  desc: "Optimized for performance and uptime during peak election hours.",
+                  bg: '#fff7e6',
+                  fg: '#7a4300',
+                  icon: (
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9-4-18-3 9H2"/></svg>
+                  ),
+                  details: 'Built to scale with caching and resilient connections to ensure availability.'
+                },
+                {
+                  key: 'user',
+                  title: "User-Centered",
+                  desc: "Simple, accessible interface for all students and admins.",
+                  bg: '#f6eefc',
+                  fg: '#3f0f66',
+                  icon: (
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  ),
+                  details: 'Designed with accessibility and simplicity in mind for fast onboarding.'
+                }
+              ]
+            ).map((item) => (
+              <Col lg={3} md={6} key={item.key}>
+                <a className="lp-feature-link" onClick={() => window.dispatchEvent(new CustomEvent('openFeatureModal', {detail: item}))}>
+                  <Card className="h-100 text-center shadow-sm border-0 p-3 lp-feature-card">
+                    <Card.Body>
+                      <div
+                        className="mb-3 lp-feature-icon"
+                        style={{ background: item.bg, color: item.fg }}
+                        aria-hidden="true"
+                      >
+                        {item.icon}
+                      </div>
+                      <h5 className="fw-bold mt-2">{item.title}</h5>
+                      <p className="text-muted">{item.desc}</p>
+                    </Card.Body>
+                  </Card>
+                </a>
               </Col>
             ))}
           </Row>
@@ -443,3 +488,34 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+
+function FeatureModal() {
+  const [show, setShow] = useState(false);
+  const [item, setItem] = useState(null);
+
+  useEffect(() => {
+    function handler(e) {
+      setItem(e.detail || null);
+      setShow(true);
+    }
+    window.addEventListener('openFeatureModal', handler);
+    return () => window.removeEventListener('openFeatureModal', handler);
+  }, []);
+
+  return (
+    <Modal show={show} onHide={() => setShow(false)} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>{item?.title}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="lp-modal-body">
+        <p className="text-muted">{item?.details}</p>
+        <hr />
+        <p>{item?.desc}</p>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShow(false)}>Close</Button>
+        <Button variant="primary" onClick={() => { setShow(false); window.location.href = '/register'; }}>Get Started</Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
