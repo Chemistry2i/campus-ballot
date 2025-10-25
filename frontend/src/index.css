@@ -105,12 +105,12 @@ td{
 /* Mobile: reduce global font size for phones */
 @media (max-width: 576px) {
   html, body {
-    font-size: 1em !important;
+    font-size: .85em !important;
   }
 
   /* Tweak some common inputs to scale with the smaller base */
   .form-control, .input-group-text, label, .btn {
-    font-size: 1em !important;
+    font-size: .85em !important;
   }
 
   /* Slightly reduce table cell text on small screens */
