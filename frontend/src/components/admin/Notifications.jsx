@@ -19,6 +19,11 @@ axios.defaults.baseURL = "http://localhost:5000";
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  // UI: search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterAudience, setFilterAudience] = useState("all");
+  const [filterRead, setFilterRead] = useState("all"); // all | read | unread
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
@@ -202,71 +207,141 @@ function Notifications({ user }) {
           </button>
         )}
       </div>
+      {/* Search & Filters toolbar */}
+      <div className="d-flex gap-2 align-items-center mb-3">
+        <div className="input-group" style={{ maxWidth: 360 }}>
+          <span className="input-group-text">Search</span>
+          <input
+            type="search"
+            className="form-control"
+            placeholder="Search by title or message..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button className="btn btn-outline-secondary" onClick={() => setSearchQuery("")}>Clear</button>
+        </div>
+
+        <select className="form-select" style={{ maxWidth: 160 }} value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+          <option value="all">All types</option>
+          <option value="info">Info</option>
+          <option value="success">Success</option>
+          <option value="warning">Warning</option>
+          <option value="error">Error</option>
+        </select>
+
+        <select className="form-select" style={{ maxWidth: 160 }} value={filterAudience} onChange={(e) => setFilterAudience(e.target.value)}>
+          <option value="all">All audiences</option>
+          <option value="allUsers">All</option>
+          <option value="admins">Admins</option>
+          <option value="students">Students</option>
+        </select>
+
+        <select className="form-select" style={{ maxWidth: 140 }} value={filterRead} onChange={(e) => setFilterRead(e.target.value)}>
+          <option value="all">All</option>
+          <option value="unread">Unread</option>
+          <option value="read">Read</option>
+        </select>
+
+        <div className="ms-auto d-flex gap-2">
+          <button className="btn btn-outline-primary" onClick={() => fetchNotifications()} disabled={loading}>
+            Refresh
+          </button>
+          <button className="btn btn-secondary" onClick={() => { setSearchQuery(""); setFilterType("all"); setFilterAudience("all"); setFilterRead("all"); }}>
+            Reset
+          </button>
+        </div>
+      </div>
       {loading ? (
         <div className="text-center py-5">
           <FontAwesomeIcon icon={faSpinner} spin size="2x" className="text-primary mb-3" />
           <p>Loading notifications...</p>
         </div>
-      ) : notifications.length === 0 ? (
-        <div className="alert alert-info d-flex align-items-center">
-          <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-          No notifications found.
-        </div>
       ) : (
-        <div className="list-group shadow-sm">
-          {notifications.map((n) => (
-            <div
-              key={n._id}
-              className={`list-group-item d-flex justify-content-between align-items-start ${n.read ? "" : "bg-light"}`}
-            >
-              <div className="d-flex align-items-center" style={{ cursor: "pointer" }} onClick={() => openDetailsModal(n)}>
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className={`me-3 ${n.read ? "text-secondary" : "text-primary"}`}
-                  size="lg"
-                />
-                <div>
-                  <div className="fw-bold">{n.title || "Notification"}</div>
-                  <div className="text-muted small">{n.message}</div>
-                  <div className="text-muted small">{new Date(n.createdAt).toLocaleString()}</div>
-                  <div>
-                    <span className={`badge bg-${n.type === "success"
-                      ? "success"
-                      : n.type === "warning"
-                      ? "warning"
-                      : n.type === "error"
-                      ? "danger"
-                      : "info"
-                    } me-2`}>
-                      {n.type}
-                    </span>
-                    <span className="badge bg-secondary">{n.targetAudience}</span>
-                  </div>
-                </div>
+        (() => {
+          const q = (searchQuery || "").trim().toLowerCase();
+          const filtered = (notifications || []).filter(n => {
+            if (q) {
+              const hay = `${n.title || ''} ${n.message || ''}`.toLowerCase();
+              if (!hay.includes(q)) return false;
+            }
+            if (filterType !== 'all' && (n.type || '').toLowerCase() !== filterType) return false;
+            if (filterAudience !== 'all' && filterAudience !== 'allUsers') {
+              if ((n.targetAudience || '').toLowerCase() !== filterAudience) return false;
+            }
+            if (filterRead === 'read' && !n.read) return false;
+            if (filterRead === 'unread' && n.read) return false;
+            return true;
+          });
+
+          if (!filtered || filtered.length === 0) {
+            return (
+              <div className="alert alert-info d-flex align-items-center">
+                <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                No notifications found.
               </div>
-              <div className="d-flex align-items-center gap-2">
-                {!n.read && (
-                  <button
-                    className="btn btn-outline-success btn-sm"
-                    onClick={() => markAsRead(n._id)}
+            );
+          }
+
+          return (
+            <div>
+              <div className="small text-muted mb-2">Showing {filtered.length} of {notifications.length} notifications</div>
+              <div className="list-group shadow-sm">
+                {filtered.map((n) => (
+                  <div
+                    key={n._id}
+                    className={`list-group-item d-flex justify-content-between align-items-start ${n.read ? "" : "bg-light"}`}
                   >
-                    <FontAwesomeIcon icon={faCheckCircle} className="me-1" />
-                    Mark as Read
-                  </button>
-                )}
-                {user?.role === "admin" && (
-                  <button
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={() => deleteNotification(n._id)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} className="me-1" />
-                    Delete
-                  </button>
-                )}
+                    <div className="d-flex align-items-center" style={{ cursor: "pointer" }} onClick={() => openDetailsModal(n)}>
+                      <FontAwesomeIcon
+                        icon={faBell}
+                        className={`me-3 ${n.read ? "text-secondary" : "text-primary"}`}
+                        size="lg"
+                      />
+                      <div>
+                        <div className="fw-bold">{n.title || "Notification"}</div>
+                        <div className="text-muted small">{n.message}</div>
+                        <div className="text-muted small">{new Date(n.createdAt).toLocaleString()}</div>
+                        <div>
+                          <span className={`badge bg-${n.type === "success"
+                            ? "success"
+                            : n.type === "warning"
+                            ? "warning"
+                            : n.type === "error"
+                            ? "danger"
+                            : "info"
+                          } me-2`}>
+                            {n.type}
+                          </span>
+                          <span className="badge bg-secondary">{n.targetAudience}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      {!n.read && (
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => markAsRead(n._id)}
+                        >
+                          <FontAwesomeIcon icon={faCheckCircle} className="me-1" />
+                          Mark as Read
+                        </button>
+                      )}
+                      {user?.role === "admin" && (
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => deleteNotification(n._id)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="me-1" />
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })()
       )}
 
       {/* Create Notification Modal */}
