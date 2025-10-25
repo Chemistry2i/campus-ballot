@@ -19,6 +19,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Register.module.css";
 import { useNavigate, Link } from "react-router-dom";
+import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
 
 // Sample data for faculties and courses
 const facultyCourses = {
@@ -192,19 +193,20 @@ function Register() {
             maxWidth: 350,
           }}
         >
-          <FontAwesomeIcon icon={faVoteYea} size="3x" className="mb-4" />
-          <h2 className="fw-bold mb-3">Welcome</h2>
+          <img src={kyuLogo} alt="Kyambogo University" style={{ height: 120, width: 120, marginBottom: 0 }} />
+          <h6 className="fw-bold mb-3">Welcome to Campus Ballot</h6>
           <p className="mb-4 text-center" style={{ opacity: 0.9 }}>
             Register to participate in the
             <br />
             University Voting System!
           </p>
-          <button
+          <Link
+            to="/home"
             className="btn btn-light fw-bold px-4 mb-3"
             style={{ color: "#2563eb", marginBottom: 24 }}
           >
             Go Back
-          </button>
+          </Link>
         </div>
         {/* Right Panel (Form) */}
   <div className={`register-right flex-grow-1 p-5 ${styles["register-right"]}`}> 
@@ -434,11 +436,12 @@ function Register() {
                 </div>
               </div>
             </div>
-            <div className="d-flex justify-content-end mt-4">
+            <div className="mt-4">
               <button
                 className="btn btn-primary px-4 py-2 fw-bold w-100"
                 type="submit"
                 disabled={loading}
+                style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
               >
                 {loading ? "Registering..." : "Register"}
               </button>
