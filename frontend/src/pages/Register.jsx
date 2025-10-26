@@ -23,14 +23,30 @@ import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.
 
 // Sample data for faculties and courses
 const facultyCourses = {
-  Engineering: [
-    "Computer Engineering",
+  Computing: [
+    "Information Systems",
+    "Information Technology and Computing",
+    "Library and Information Science"
+  ],
+  Engineering: [ 
     "Electrical Engineering",
-    "Mechanical Engineering",
+    "Mechanical and Manufacturing Engineering",
+    "Oil and Gas Production",
+    "Chemical and Process Engineering",
+    "Building and Civil Engineering",
+    "Telecommunication Engineering",
+    "Environmental Engineering and Management",
+    "Automotive and Power Engineering",
+    "Industrial Engineering and Management",
+    "Mechatronics and Biomedical Engineering",
+    "Water Engineering",
+    "Refrigeration and Air Conditioning",
+    "Biomedical Engineering",
+    "Computer Engineering",
+
+
   ],
   Science: [
-    "Information Systems",
-    "Information Technology",
     "Biology",
     "Chemistry",
     "Physics",
