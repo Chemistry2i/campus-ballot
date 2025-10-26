@@ -90,6 +90,12 @@ const facultyCourses = {
     "Social Work and Social Administration",
     "Art in Security and Diplomatic Studies",
     "Economics and Statistics"
+  ],
+  "Built Environment": [
+    "Architecture",
+    "Surveying and Land Information Systems",
+    "Science in Building Economics",
+    "Science in Land Economics"
   ]
   //We shall add more faculties and courses as needed
 };
