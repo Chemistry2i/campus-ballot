@@ -66,7 +66,10 @@ function ForgotPassword() {
         </h3> */}
         <div className="text-center mb-4">
           <img src={kyuLogo} alt="Kyambogo University Logo" style={{ width: 100, marginBottom: 0 }} />
-          <h5 className="fw-bold" style={{ color: "#2563eb" }}>Forgot Password</h5>
+          <h5 className="fw-bold" style={{ color: "#2563eb" }}>
+            <FontAwesomeIcon icon={faKey} className="me-2" />
+            Forgot Password
+          </h5>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="input-group mb-3">
