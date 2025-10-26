@@ -9,7 +9,10 @@ import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useNavigate();<h3 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
+          <FontAwesomeIcon icon={faKey} className="me-2" />
+          Forgot Password
+        </h3>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +34,10 @@ function ForgotPassword() {
     } finally {
       setLoading(false);
     }
-  };
+  };<h3 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
+          <FontAwesomeIcon icon={faKey} className="me-2" />
+          Forgot Password
+        </h3>
 
   // Handler for Login link
   const handleLoginRedirect = (e) => {
@@ -54,10 +60,14 @@ function ForgotPassword() {
       style={{ minHeight: "100vh", backgroundColor: "#f3f4f6", width: "100vw" }}
     >
       <div className="bg-white p-4 rounded-1 shadow" style={{ minWidth: 340, maxWidth: 400, width: "100%" }}>
-        <h3 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
+        {/* <h3 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
           <FontAwesomeIcon icon={faKey} className="me-2" />
           Forgot Password
-        </h3>
+        </h3> */}
+        <div className="text-center mb-4">
+          <img src={kyuLogo} alt="Kyambogo University Logo" style={{ width: 100, marginBottom: 0 }} />
+          <h5 className="fw-bold" style={{ color: "#2563eb" }}>Forgot Password</h5>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="input-group mb-3">
             <span className="input-group-text"><FontAwesomeIcon icon={faEnvelope} /></span>
