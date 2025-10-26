@@ -187,8 +187,8 @@ function Register() {
         <div
           className={`register-left d-flex flex-column align-items-center justify-content-center text-white ${styles["register-left"]}`}
           style={{
-            // background: "linear-gradient(135deg, #2563eb 0%, #2193b0 100%)",
-            backgroundColor: "#003366",
+            background: "linear-gradient(135deg, #2563eb 0%, #2193b0 100%)",
+            // backgroundColor: "#003366",
             padding: "40px 30px",
             minWidth: 300,
             maxWidth: 350,
