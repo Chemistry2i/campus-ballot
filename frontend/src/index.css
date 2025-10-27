@@ -223,4 +223,20 @@ td{
   display: inline-block;
 }
 
+input::placeholder{
+  font-size: .8em !important;
+}
+
+select{
+  font-size: .8em !important;
+}
+
+option{
+  font-size: .8em;
+}
+
+input{
+  font-size: .8em !important;
+}
+
 

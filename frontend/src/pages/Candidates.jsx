@@ -419,7 +419,7 @@ function Candidates({ user }) {
     className="container-fluid d-flex flex-column justify-content-center align-items-center"
     style={{ minHeight: "90vh" }}
   >
-    <div className="w-100" style={{ maxWidth: 1100 }}>
+    <div className="w-100" style={{ maxWidth: 1200 }}>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3 className="fw-bold">Candidates</h3>
         {user?.role === "admin" && (
@@ -482,7 +482,7 @@ function Candidates({ user }) {
                           <img
                             src={imgSrc}
                             alt="Candidate"
-                            style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%" }}
+                            style={{ width: 60, height: 60, objectFit: "cover", borderRadius: "50%" }}
                           />
                         );
                       })()
@@ -493,7 +493,7 @@ function Candidates({ user }) {
                   <td>{c.name}</td>
                   <td>
                     {c.symbol ? (
-                      <img src={getImageUrl(c.symbol)} alt="symbol" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #e9ecef' }} />
+                      <img src={getImageUrl(c.symbol)} alt="symbol" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '50%', border: '1px solid #e9ecef' }} />
                     ) : (
                       <span className="text-muted small">No Symbol</span>
                     )}

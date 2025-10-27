@@ -78,7 +78,8 @@ const facultyCourses = {
     "Performing Arts ",
     "Cultural Heritage Studies",
     "Archeology and Heritage Management",
-    "Ethics and Human Rights"
+    "Ethics and Human Rights",
+    ""
   ],
   "Social Sciences": [
     "Guidance and Counselling",
@@ -388,6 +389,8 @@ function Register() {
                     value={form.faculty}
                     onChange={handleChange}
                     required
+                    // style={{ fontSize: ".8em" }}
+                    id="mySelect"
                   >
                     <option value="">Select Faculty</option>
                     {Object.keys(facultyCourses).map((fac) => (

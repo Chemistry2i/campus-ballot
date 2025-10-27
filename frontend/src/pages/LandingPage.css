@@ -1,3 +1,84 @@
+/* Contact & FAQ tweaks */
+.contact-card {
+  border-radius: 8px;
+}
+
+/* Contact area specifics */
+.contact-info-card,
+.contact-form-card,
+.contact-card {
+  padding: 1.25rem;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(3, 51, 102, 0.04);
+}
+
+.contact-info-card h5,
+.contact-form-card h5 {
+  color: #003366;
+  font-size: 1.05rem;
+}
+
+.contact-info-card p {
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+/* Contact list styles (icon + text inline) */
+.contact-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(3, 51, 102, 0.06);
+}
+.contact-line:last-child { border-bottom: none; }
+
+.contact-icon {
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11,99,181,0.12);
+  border-radius: 10px;
+  color: #0b63b5;
+  flex: 0 0 52px;
+  text-align: center;
+  font-size: 20px;
+}
+
+.contact-text { line-height: 1.15; }
+.contact-text .small { margin-bottom: 0.15rem; display:block }
+.contact-text .contact-value { font-weight: 600; color: #0b63b5; }
+.contact-text a { color: #0b63b5; text-decoration: underline; }
+.contact-text a:hover { color: #083f7a; }
+
+@media (max-width: 767px) {
+  .contact-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.faq .accordion-button {
+  font-weight: 600;
+}
+
+.faq .accordion-body,
+#faqs .accordion-body {
+  color: #333;
+}
+
+/* FAQ container tweaks */
+#faqs .accordion-button {
+  color: #0b3366;
+}
 html {
   scroll-behavior: smooth;
   
@@ -101,6 +182,16 @@ body.has-fixed-navbar {
     left: 0;
     right: 0;
     z-index: 999;
+    padding: 1rem; /* added padding so mobile collapsed menu breathes */
+  }
+  .navbar-collapse .btn {
+    /* make collapsed buttons comfortable to tap */
+    padding: 0.6rem 0.75rem;
+    font-weight: 700;
+  }
+  /* add vertical spacing between stacked buttons in the collapsed mobile menu */
+  .navbar-collapse .btn + .btn {
+    margin-top: 0.6rem;
   }
 }
 
@@ -121,3 +212,12 @@ body.has-fixed-navbar {
 .lp-feature-card:hover .lp-feature-icon{transform:translateY(-6px) scale(1.04);box-shadow:0 14px 30px rgba(0,0,0,0.12)}
 .lp-feature-link{cursor:pointer;text-decoration:none;color:inherit}
 .lp-modal-body p{margin-bottom:0}
+
+/* Testimonials: make all testimonial content italic when applied */
+.testimonial-italic {
+  font-style: italic !important;
+}
+
+#inputs::placeholder{
+  font-size: .8em !important;
+}
