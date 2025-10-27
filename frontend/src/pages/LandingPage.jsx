@@ -28,7 +28,7 @@ const LandingPage = () => {
   }, []);
 
   // Contact form handler (client-side simulation)
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const name = fd.get('name');
@@ -36,16 +36,60 @@ const LandingPage = () => {
     const subject = fd.get('subject');
     const message = fd.get('message');
 
-    // In a real app we'd POST to /api/contact. For now show a success toast and reset.
-    Swal.fire({
-      icon: 'success',
-      title: 'Message sent',
-      html: `Thanks <strong>${name}</strong> — we received your message about "${subject}". We'll reply to <a href=\"mailto:${email}\">${email}</a> within 1-2 business days.`,
-      timer: 4000,
-      showConfirmButton: false,
-    });
+    try {
+      // Show loading state
+      Swal.fire({
+        title: 'Sending...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
-    e.target.reset();
+      // Send to backend API
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const data = await response.json();
+
+      // Show simple success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Message Sent!',
+        text: 'Thank you for contacting us. We\'ll get back to you soon.',
+        timer: 3000,
+        showConfirmButton: true,
+        confirmButtonText: 'OK'
+      });
+
+      // Reset form
+      e.target.reset();
+    } catch (error) {
+      console.error('Contact form error:', error);
+      
+      // Show error message
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Failed to send message. Please try again.',
+        showConfirmButton: true,
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // FAQ items (could be moved to CMS later)
@@ -123,41 +167,150 @@ const LandingPage = () => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent" style={isMobileNav ? { paddingLeft: 8, paddingRight: 8 } : undefined}>
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <a className="nav-link" href="#about">About</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#features">Features</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#developers">Developers</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#contact">Contact</a>
-              </li>
-            </ul>
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            {/* Mobile logo header - only visible on mobile */}
+            <div className="mobile-nav-logo d-lg-none">
+              <img src={kyuLogo} alt="Kyambogo University" style={{ height: 40 }} />
+              <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Campus Ballot</span>
+              <button 
+                className="btn-close btn-close-white ms-auto" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#navbarSupportedContent" 
+                aria-label="Close menu"
+              ></button>
+            </div>
 
-            <div className="d-grid gap-2 d-sm-flex align-items-center" style={isMobileNav ? { paddingLeft: 12, paddingRight: 12 } : undefined}>
-              <Link to="/register" className="btn btn-primary me-2 d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 140, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.85rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="8.5" cy="7" r="4" />
-                  <path d="M20 8v6" />
-                  <path d="M23 11h-6" />
-                </svg>
-                <span>Register</span>
-              </Link>
+            {/* Nav content */}
+            <div className="mobile-nav-content">
+              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#about" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    About
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#features" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Features
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#developers" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Developers
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#faqs" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('faqs')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    FAQs
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#contact" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Contact
+                  </a>
+                </li>
+              </ul>
 
-              <Link to="/login" className="btn btn-light d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 120, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.75rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined, marginTop: isMobileNav ? 12 : undefined }} aria-label="Login">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  <polyline points="10 17 15 12 10 7" />
-                  <line x1="15" y1="12" x2="3" y2="12" />
-                </svg>
-                <span>Login</span>
-              </Link>
+              {/* Separator */}
+              <hr className="d-lg-none" style={{ borderColor: 'rgba(255, 255, 255, 0.2)', margin: '1rem 0' }} />
+
+              <div className="d-grid gap-2 d-sm-flex align-items-center">
+                <Link 
+                  to="/register" 
+                  className="btn btn-primary d-flex align-items-center"
+                  onClick={() => {
+                    if (window.innerWidth < 992) {
+                      const navCollapse = document.getElementById('navbarSupportedContent');
+                      const bsCollapse = window.bootstrap?.Collapse?.getInstance(navCollapse);
+                      if (bsCollapse) bsCollapse.hide();
+                    }
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <path d="M20 8v6" />
+                    <path d="M23 11h-6" />
+                  </svg>
+                  <span>Register</span>
+                </Link>
+
+                <Link 
+                  to="/login" 
+                  className="btn btn-light d-flex align-items-center" 
+                  aria-label="Login"
+                  onClick={() => {
+                    if (window.innerWidth < 992) {
+                      const navCollapse = document.getElementById('navbarSupportedContent');
+                      const bsCollapse = window.bootstrap?.Collapse?.getInstance(navCollapse);
+                      if (bsCollapse) bsCollapse.hide();
+                    }
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                  <span>Login</span>
+                </Link>
+              </div>
+
+              {/* Footer text - only visible on mobile */}
+              <div className="d-lg-none pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: '1rem' }}>
+                <p className="text-white-50 small mb-0 text-center">© 2025 Campus Ballot</p>
+                <p className="text-white-50 small mb-0 text-center">Kyambogo University</p>
+              </div>
             </div>
           </div>
         </div>
@@ -492,7 +645,7 @@ const LandingPage = () => {
           </h2>
           <Row className="justify-content-center g-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <Col lg={2} md={3} sm={4} xs={6} key={i}>
+              <Col lg={2} md={3} sm={6} xs={12} key={i}>
                 <Card className="shadow-sm border-0 p-2 h-100">
                   <Card.Img
                     variant="top"
@@ -589,20 +742,57 @@ const LandingPage = () => {
               <Card className="p-3 h-100">
                 <h5 className="fw-bold">Send us a message</h5>
                 <form onSubmit={handleContactSubmit}>
-                  <div className="mb-2">
-                    <input style={{height:50}} className="form-control" id="inputs" name="name" placeholder="Your name" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-user input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        name="name" 
+                        placeholder="Your name" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <input style={{height:50}} className="form-control" id="inputs" type="email" name="email" placeholder="Your email" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-envelope input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        type="email" 
+                        name="email" 
+                        placeholder="Your email" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <input style={{height:50}}  className="form-control" id="inputs" name="subject" placeholder="Subject" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-pen input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        name="subject" 
+                        placeholder="Subject" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <textarea className="form-control" name="message" id="inputs" rows={10} placeholder="Message" required></textarea>
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-message input-icon-textarea"></i>
+                      <textarea 
+                        className="form-control contact-textarea" 
+                        name="message" 
+                        rows={8} 
+                        placeholder="Your message..." 
+                        required
+                      ></textarea>
+                    </div>
                   </div>
                   <div className="d-grid">
-                    <button className="btn btn-primary btn-md" type="submit">Send Message</button>
+                    <button className="btn btn-primary btn-lg" type="submit">
+                      <i className="fa-solid fa-paper-plane me-2"></i>
+                      Send Message
+                    </button>
                   </div>
                 </form>
               </Card>
@@ -631,14 +821,113 @@ const LandingPage = () => {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer
-        className="text-center text-white py-3"
-        style={{ backgroundColor: "#003366", width: "100%" }}
-      >
-        <p className="mb-0">
-          © {new Date().getFullYear()} Campus Ballot | Developed by Concept
-          Crashers
-        </p>
+      <footer className="footer-section" style={{ backgroundColor: "#003366", width: "100%" }}>
+        <div className="container-fluid px-5 py-5">
+          <Row className="g-4">
+            {/* About Column */}
+            <Col lg={3} md={6}>
+              <div className="footer-brand mb-3">
+                <img src={kyuLogo} alt="Kyambogo University" style={{ height: 48, marginBottom: 12 }} />
+                <h5 className="text-white fw-bold mb-2">Campus Ballot</h5>
+              </div>
+              <p className="text-white-50 small mb-3">
+                Empowering universities with secure, transparent, and accessible digital voting solutions for campus elections.
+              </p>
+              <div className="footer-social d-flex gap-2">
+                <a href="#" className="social-icon" aria-label="Facebook">
+                  <i className="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="Twitter">
+                  <i className="fa-brands fa-twitter"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="LinkedIn">
+                  <i className="fa-brands fa-linkedin-in"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="Instagram">
+                  <i className="fa-brands fa-instagram"></i>
+                </a>
+              </div>
+            </Col>
+
+            {/* Quick Links Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Quick Links</h6>
+              <ul className="footer-links list-unstyled">
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#developers">Our Team</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#faqs">FAQs</a></li>
+              </ul>
+            </Col>
+
+            {/* Resources Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Resources</h6>
+              <ul className="footer-links list-unstyled">
+                <li><Link to="/register">Register</Link></li>
+                <li><Link to="/login">Login</Link></li>
+                <li><a href="#contact">Contact Support</a></li>
+                <li><a href="#">Documentation</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+              </ul>
+            </Col>
+
+            {/* Support Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Support</h6>
+              <ul className="footer-links list-unstyled">
+                <li><a href="#contact">Help Center</a></li>
+                <li><a href="mailto:support@campusballot.com">Technical Support</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Security</a></li>
+                <li><a href="#">System Status</a></li>
+              </ul>
+            </Col>
+
+            {/* Contact Column */}
+            <Col lg={3} md={6}>
+              <h6 className="text-white fw-bold mb-3">Contact Info</h6>
+              <ul className="footer-contact list-unstyled">
+                <li className="d-flex align-items-start mb-2">
+                  <i className="fa-solid fa-location-dot me-2 mt-1"></i>
+                  <span className="text-white-50 small">
+                    School of Computing and Information Science<br />
+                    Kyambogo University, Kampala
+                  </span>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <i className="fa-solid fa-envelope me-2"></i>
+                  <a href="mailto:info@campusballot.com" className="text-white-50 small">info@campusballot.com</a>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <i className="fa-solid fa-phone me-2"></i>
+                  <a href="tel:+256700000000" className="text-white-50 small">+256 700 000 000</a>
+                </li>
+                <li className="d-flex align-items-center">
+                  <i className="fa-solid fa-clock me-2"></i>
+                  <span className="text-white-50 small">Mon - Fri, 09:00 - 17:00</span>
+                </li>
+              </ul>
+            </Col>
+          </Row>
+
+          {/* Footer Bottom */}
+          <div className="footer-bottom mt-4 pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <Row className="align-items-center">
+              <Col md={6} className="text-center text-md-start mb-2 mb-md-0">
+                <p className="text-white-50 small mb-0">
+                  © {new Date().getFullYear()} Campus Ballot. All rights reserved.
+                </p>
+              </Col>
+              <Col md={6} className="text-center text-md-end">
+                <p className="text-white-50 small mb-0">
+                  Developed with <i className="fa-solid fa-heart text-danger"></i> by <strong className="text-white">Concept Crashers</strong>
+                </p>
+              </Col>
+            </Row>
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -659,20 +948,20 @@ function FeatureModal() {
     return () => window.removeEventListener('openFeatureModal', handler);
   }, []);
 
-  return (
-    <Modal show={show} onHide={() => setShow(false)} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>{item?.title}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="lp-modal-body">
-        <p className="text-muted">{item?.details}</p>
-        <hr />
-        <p>{item?.desc}</p>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShow(false)}>Close</Button>
-        <Button variant="primary" onClick={() => { setShow(false); window.location.href = '/register'; }}>Get Started</Button>
-      </Modal.Footer>
-    </Modal>
-  );
+  // return (
+  //   <Modal show={show} onHide={() => setShow(false)} centered>
+  //     <Modal.Header closeButton>
+  //       <Modal.Title>{item?.title}</Modal.Title>
+  //     </Modal.Header>
+  //     <Modal.Body className="lp-modal-body">
+  //       <p className="text-muted">{item?.details}</p>
+  //       <hr />
+  //       <p>{item?.desc}</p>
+  //     </Modal.Body>
+  //     <Modal.Footer>
+  //       <Button variant="secondary" onClick={() => setShow(false)}>Close</Button>
+  //       <Button variant="primary" onClick={() => { setShow(false); window.location.href = '/register'; }}>Get Started</Button>
+  //     </Modal.Footer>
+  //   </Modal>
+  // );
 }

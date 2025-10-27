@@ -34,7 +34,3 @@
     box-sizing: border-box;
   }
 }
-
-#inputs::placeholder{
-  font-size: .9em !important;
-}

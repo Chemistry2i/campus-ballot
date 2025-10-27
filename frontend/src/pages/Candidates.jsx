@@ -493,7 +493,13 @@ function Candidates({ user }) {
                   <td>{c.name}</td>
                   <td>
                     {c.symbol ? (
-                      <img src={getImageUrl(c.symbol)} alt="symbol" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '50%', border: '1px solid #e9ecef' }} />
+                      <div style={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '8px' }}>
+                        <img 
+                          src={getImageUrl(c.symbol)} 
+                          alt="symbol" 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                        />
+                      </div>
                     ) : (
                       <span className="text-muted small">No Symbol</span>
                     )}

@@ -38,8 +38,8 @@ label {
   font-family: 'Poppins', Arial, Helvetica, sans-serif !important;
 }
 
-.form-control, .input-group-text, label {
-  font-size: 1.2rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
+.input-group-text, label {
+  font-size: 1.1rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
 }
 
 /* Optionally, adjust button text size */
@@ -86,8 +86,10 @@ td{
   cursor: pointer;
 }
 
-#font{
-  font-size: 1.25em !important;
+/* Label used in compact statistic cards (keeps size similar to dashboard labels) */
+.stat-label {
+  font-size: 0.75rem !important; /* slightly reduced for cleaner look */
+  letter-spacing: 0.1px;
 }
 
 /* Reduce padding inside stat cards */
@@ -95,12 +97,12 @@ td{
   padding: 0.5rem 0.5rem !important; /* Adjust as needed */
 }
 
-@media (min-width: 1200px) {
+/* @media (min-width: 1300px) {
   .col-xl-1-5 {
     flex: 0 0 12.5%;
     max-width: 12.5%;
   }
-}
+} */
 
 /* Mobile: reduce global font size for phones */
 @media (max-width: 576px) {
@@ -117,6 +119,43 @@ td{
   td {
     font-size: 0.75rem !important;
   }
+
+  /* SweetAlert2 mobile optimizations */
+  .swal2-popup {
+    padding: 0.875rem !important;
+    font-size: 0.8rem !important;
+    max-width: 88% !important;
+  }
+
+  .swal2-title {
+    font-size: 1.1rem !important;
+    padding: 0.4rem 0 !important;
+  }
+
+  .swal2-html-container {
+    font-size: 0.8rem !important;
+    padding: 0.4rem 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  .swal2-icon {
+    transform: scale(0.75) !important;
+    margin: 0.5rem auto 0.5rem !important;
+  }
+
+  .swal2-actions {
+    margin: 0.65rem 0 0 0 !important;
+    gap: 0.4rem !important;
+  }
+
+  .swal2-styled {
+    font-size: 0.8rem !important;
+    padding: 0.45rem 0.9rem !important;
+  }
+
+  .swal2-timer-progress-bar {
+    height: 2.5px !important;
+  }
 }
 .analytics-card {
   transition: transform 0.2s, box-shadow 0.2s;
@@ -128,19 +167,19 @@ td{
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1300px) {
   .col-xl-1-5 {
     flex: 0 0 12.5% !important;
     max-width: 12.5% !important;
   }
 }
-/* For 8 cards per row on xl screens */
+/* For 8 cards per row on xl screens
 @media (min-width: 1200px) {
   .col-xl-1-5 {
     flex: 0 0 12.5%;
     max-width: 12.5%;
   }
-}
+} */
 
 /* Analytics card custom styles */
 .analytics-card {
@@ -223,20 +262,20 @@ td{
   display: inline-block;
 }
 
-input::placeholder{
-  font-size: .8em !important;
+input, input::placeholder{
+  font-size: .9em !important;
 }
 
 select{
-  font-size: .8em !important;
+  font-size: .9em !important;
 }
 
 option{
-  font-size: .8em;
+  font-size: .9em;
 }
 
 input{
-  font-size: .8em !important;
+  font-size: .9em !important;
 }
 
 
