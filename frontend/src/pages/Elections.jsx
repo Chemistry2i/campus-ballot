@@ -430,8 +430,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">{stats.total}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Total Elections</p>
+  <h5 className="fw-bold mb-0 fs-6">{stats.total}</h5>
+  <p className="text-muted mb-0 small stat-label">Total Elections</p>
       </div>
     </div>
   </div>
@@ -444,8 +444,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-          <h5 className="fw-bold mb-0 fs-6">{stats.ongoing}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Ongoing Elections</p>
+    <h5 className="fw-bold mb-0 fs-6">{stats.ongoing}</h5>
+    <p className="text-muted mb-0 small stat-label">Ongoing Elections</p>
       </div>
     </div>
   </div>
@@ -458,8 +458,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">{stats.upcoming}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Upcoming Elections</p>
+  <h5 className="fw-bold mb-0 fs-6">{stats.upcoming}</h5>
+  <p className="text-muted mb-0 small stat-label">Upcoming Elections</p>
       </div>
     </div>
   </div>
@@ -472,8 +472,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">{stats.completed}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Complete Elections</p>
+  <h5 className="fw-bold mb-0 fs-6">{stats.completed}</h5>
+  <p className="text-muted mb-0 small stat-label">Complete Elections</p>
       </div>
     </div>
   </div>
@@ -486,8 +486,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">{stats.cancelled || 0}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Cancelled Elections</p>
+  <h5 className="fw-bold mb-0 fs-6">{stats.cancelled || 0}</h5>
+  <p className="text-muted mb-0 small stat-label">Cancelled Elections</p>
       </div>
     </div>
   </div>
@@ -503,7 +503,7 @@ function Elections({ user }) {
         <h5 className="fw-bold mb-0 fs-6">
           {elections.reduce((sum, e) => sum + (e.votesCount || 0), 0)}
         </h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Total Votes Cast</p>
+        <p className="text-muted mb-0 small stat-label">Total Votes Cast</p>
       </div>
     </div>
   </div>
@@ -519,7 +519,7 @@ function Elections({ user }) {
           <h5 className="fw-bold mb-0 fs-6">
           {elections.filter(e => e.status === "ongoing").length}
         </h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Ongoing Elections</p>
+        <p className="text-muted mb-0 small stat-label">Ongoing Elections</p>
       </div>
     </div>
   </div>
@@ -535,7 +535,7 @@ function Elections({ user }) {
         <h5 className="fw-bold mb-0 fs-6">
           {elections.reduce((sum, e) => sum + (e.candidatesCount || 0), 0)}
         </h5>
-        <p className="text-muted mb-0 small fs-6 fw-bold" id="font">Total Candidates</p>
+        <p className="text-muted mb-0 small stat-label">Total Candidates</p>
       </div>
     </div>
   </div>

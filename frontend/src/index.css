@@ -86,8 +86,10 @@ td{
   cursor: pointer;
 }
 
-#font{
-  font-size: 1.25em !important;
+/* Label used in compact statistic cards (keeps size similar to dashboard labels) */
+.stat-label {
+  font-size: 0.75rem !important; /* slightly reduced for cleaner look */
+  letter-spacing: 0.1px;
 }
 
 /* Reduce padding inside stat cards */
