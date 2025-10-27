@@ -204,6 +204,11 @@ body.has-fixed-navbar {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    position: relative;
+  }
+
+  .mobile-nav-logo .btn-close {
+    padding: 0.5rem;
   }
   
   /* Mobile nav content area */
@@ -227,6 +232,74 @@ body.has-fixed-navbar {
     font-weight: 700;
     justify-content: flex-start;
     margin: 0 !important;
+  }
+}
+
+/* Desktop nav - ensure proper layout on larger screens */
+@media (min-width: 992px) {
+  .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto;
+    position: static !important;
+    transform: none !important;
+    width: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow-y: visible !important;
+  }
+  
+  .navbar-nav {
+    flex-direction: row !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .navbar-nav .nav-link {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  .mobile-nav-content {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+  
+  .d-grid.gap-2.d-sm-flex {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    margin-left: auto !important;
+  }
+  
+  .navbar-collapse .d-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .navbar-collapse .btn {
+    width: auto !important;
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 600 !important;
+    justify-content: center !important;
+    margin: 0 0 0 0.5rem !important;
+  }
+  
+  /* Hide mobile-only elements on desktop */
+  .mobile-nav-logo {
+    display: none !important;
+  }
+  
+  /* Hide mobile footer on desktop */
+  .navbar-collapse hr {
+    display: none !important;
   }
 }
 

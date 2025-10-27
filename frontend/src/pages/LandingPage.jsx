@@ -128,27 +128,100 @@ const LandingPage = () => {
             <div className="mobile-nav-logo d-lg-none">
               <img src={kyuLogo} alt="Kyambogo University" style={{ height: 40 }} />
               <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Campus Ballot</span>
+              <button 
+                className="btn-close btn-close-white ms-auto" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#navbarSupportedContent" 
+                aria-label="Close menu"
+              ></button>
             </div>
 
             {/* Nav content */}
             <div className="mobile-nav-content">
               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                 <li className="nav-item">
-                  <a className="nav-link" href="#about">About</a>
+                  <a 
+                    className="nav-link" 
+                    href="#about" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    About
+                  </a>
                 </li>
                 <li className="nav-item">
-                  <a className="nav-link" href="#features">Features</a>
+                  <a 
+                    className="nav-link" 
+                    href="#features" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Features
+                  </a>
                 </li>
                 <li className="nav-item">
-                  <a className="nav-link" href="#developers">Developers</a>
+                  <a 
+                    className="nav-link" 
+                    href="#developers" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('developers')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Developers
+                  </a>
                 </li>
                 <li className="nav-item">
-                  <a className="nav-link" href="#contact">Contact</a>
+                  <a 
+                    className="nav-link" 
+                    href="#faqs" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('faqs')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    FAQs
+                  </a>
+                </li>
+                <li className="nav-item">
+                  <a 
+                    className="nav-link" 
+                    href="#contact" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Contact
+                  </a>
                 </li>
               </ul>
 
+              {/* Separator */}
+              <hr className="d-lg-none" style={{ borderColor: 'rgba(255, 255, 255, 0.2)', margin: '1rem 0' }} />
+
               <div className="d-grid gap-2 d-sm-flex align-items-center">
-                <Link to="/register" className="btn btn-primary d-flex align-items-center">
+                <Link to="/register" className="btn btn-primary d-flex align-items-center" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="8.5" cy="7" r="4" />
@@ -158,7 +231,7 @@ const LandingPage = () => {
                   <span>Register</span>
                 </Link>
 
-                <Link to="/login" className="btn btn-light d-flex align-items-center" aria-label="Login">
+                <Link to="/login" className="btn btn-light d-flex align-items-center" aria-label="Login" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                     <polyline points="10 17 15 12 10 7" />
@@ -166,6 +239,12 @@ const LandingPage = () => {
                   </svg>
                   <span>Login</span>
                 </Link>
+              </div>
+
+              {/* Footer text - only visible on mobile */}
+              <div className="d-lg-none pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: '1rem' }}>
+                <p className="text-white-50 small mb-0 text-center">© 2025 Campus Ballot</p>
+                <p className="text-white-50 small mb-0 text-center">Kyambogo University</p>
               </div>
             </div>
           </div>
