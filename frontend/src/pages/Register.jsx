@@ -357,6 +357,7 @@ function Register() {
                       placeholder="Student ID"
                       value={form.studentId}
                       onChange={handleChange}
+                      style={{fontSize: '.8em'}}
                     />
                   </div>
                 </div>
@@ -369,7 +370,7 @@ function Register() {
                       className="form-control"
                       name="email"
                       type="email"
-                      placeholder="Email (e.g. 2400812450@std.kyu.ac.ug)"
+                      placeholder="Email (e.g. 2400800000@std.kyu.ac.ug)"
                       value={form.email}
                       onChange={handleChange}
                       required
@@ -392,7 +393,7 @@ function Register() {
                     // style={{ fontSize: ".8em" }}
                     id="mySelect"
                   >
-                    <option value="">Select Faculty</option>
+                    <option value="" id="myOption">Select Faculty</option>
                     {Object.keys(facultyCourses).map((fac) => (
                       <option key={fac} value={fac}>
                         {fac}

@@ -39,7 +39,7 @@ label {
 }
 
 .form-control, .input-group-text, label {
-  font-size: 1.2rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
+  font-size: 1.1rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
 }
 
 /* Optionally, adjust button text size */
@@ -95,12 +95,12 @@ td{
   padding: 0.5rem 0.5rem !important; /* Adjust as needed */
 }
 
-@media (min-width: 1200px) {
+/* @media (min-width: 1300px) {
   .col-xl-1-5 {
     flex: 0 0 12.5%;
     max-width: 12.5%;
   }
-}
+} */
 
 /* Mobile: reduce global font size for phones */
 @media (max-width: 576px) {
@@ -128,19 +128,19 @@ td{
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1300px) {
   .col-xl-1-5 {
     flex: 0 0 12.5% !important;
     max-width: 12.5% !important;
   }
 }
-/* For 8 cards per row on xl screens */
+/* For 8 cards per row on xl screens
 @media (min-width: 1200px) {
   .col-xl-1-5 {
     flex: 0 0 12.5%;
     max-width: 12.5%;
   }
-}
+} */
 
 /* Analytics card custom styles */
 .analytics-card {
@@ -223,20 +223,20 @@ td{
   display: inline-block;
 }
 
-input::placeholder{
-  font-size: .8em !important;
+input, input::placeholder{
+  font-size: .85em !important;
 }
 
 select{
-  font-size: .8em !important;
+  font-size: .85em !important;
 }
 
 option{
-  font-size: .8em;
+  font-size: .85em;
 }
 
 input{
-  font-size: .8em !important;
+  font-size: .85em !important;
 }
 
 

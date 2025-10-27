@@ -64,3 +64,11 @@
 		font-size: 1.2em !important;
 	}
 }
+
+#myOption {
+  font-size: 0.9em !important;
+}
+
+#mySelect {
+  font-size: 0.8em !important;
+}

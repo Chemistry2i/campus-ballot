@@ -659,20 +659,20 @@ function FeatureModal() {
     return () => window.removeEventListener('openFeatureModal', handler);
   }, []);
 
-  return (
-    <Modal show={show} onHide={() => setShow(false)} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>{item?.title}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="lp-modal-body">
-        <p className="text-muted">{item?.details}</p>
-        <hr />
-        <p>{item?.desc}</p>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShow(false)}>Close</Button>
-        <Button variant="primary" onClick={() => { setShow(false); window.location.href = '/register'; }}>Get Started</Button>
-      </Modal.Footer>
-    </Modal>
-  );
+  // return (
+  //   <Modal show={show} onHide={() => setShow(false)} centered>
+  //     <Modal.Header closeButton>
+  //       <Modal.Title>{item?.title}</Modal.Title>
+  //     </Modal.Header>
+  //     <Modal.Body className="lp-modal-body">
+  //       <p className="text-muted">{item?.details}</p>
+  //       <hr />
+  //       <p>{item?.desc}</p>
+  //     </Modal.Body>
+  //     <Modal.Footer>
+  //       <Button variant="secondary" onClick={() => setShow(false)}>Close</Button>
+  //       <Button variant="primary" onClick={() => { setShow(false); window.location.href = '/register'; }}>Get Started</Button>
+  //     </Modal.Footer>
+  //   </Modal>
+  // );
 }
