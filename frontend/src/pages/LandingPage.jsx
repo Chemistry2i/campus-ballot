@@ -638,40 +638,51 @@ const LandingPage = () => {
                   name: 'Sarah',
                   text: 'Voting has never been this easy. The interface is clean and quick!',
                   faculty: 'Faculty of Science',
-                  course: 'Information Technology'
+                  course: 'Information Technology',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=David',
                   name: 'David',
                   text: 'I love the transparency and the instant results. Great system!',
                   faculty: 'Faculty of Engineering',
-                  course: 'Computer Engineering'
+                  course: 'Computer Engineering',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=Emily',
                   name: 'Emily',
                   text: 'As an admin, managing elections is now stress-free and automated.',
                   faculty: 'Faculty of Business',
-                  course: 'Marketing'
+                  course: 'Marketing',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=John',
                   name: 'John',
                   text: 'The voting process is secure and transparent. I trust this system!',
                   faculty: 'Faculty of Arts',
-                  course: 'Political Science'
+                  course: 'Political Science',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=Mary',
                   name: 'Mary',
                   text: 'Real-time results are amazing! No more waiting for days.',
                   faculty: 'Faculty of Education',
-                  course: 'Education Management'
+                  course: 'Education Management',
+                  rating: 5
                 },
               ].map((item, index) => (
-                <Card key={`testimonial-1-${index}`} className="testimonial-card shadow-sm border-0 p-4 text-center">
+                <Card key={`testimonial-1-${index}`} className="testimonial-card p-4 text-center" style={{ border: '0', boxShadow: 'none', outline: 'none' }}>
                   <img src={item.img} alt={item.name} className="testimonial-img mb-3 mx-auto" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #003366' }} />
                   <Card.Body className="p-0">
+                    {/* Star Rating */}
+                    <div className="mb-3">
+                      {[...Array(item.rating)].map((_, i) => (
+                        <i key={i} className="fa-solid fa-star" style={{ color: '#ffc107', fontSize: '0.9rem', marginRight: '2px' }}></i>
+                      ))}
+                    </div>
                     <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
                     <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
                     <div className="small text-secondary">{item.faculty}</div>
@@ -687,40 +698,51 @@ const LandingPage = () => {
                   name: 'Sarah',
                   text: 'Voting has never been this easy. The interface is clean and quick!',
                   faculty: 'Faculty of Science',
-                  course: 'Information Technology'
+                  course: 'Information Technology',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=David',
                   name: 'David',
                   text: 'I love the transparency and the instant results. Great system!',
                   faculty: 'Faculty of Engineering',
-                  course: 'Computer Engineering'
+                  course: 'Computer Engineering',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=Emily',
                   name: 'Emily',
                   text: 'As an admin, managing elections is now stress-free and automated.',
                   faculty: 'Faculty of Business',
-                  course: 'Marketing'
+                  course: 'Marketing',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=John',
                   name: 'John',
                   text: 'The voting process is secure and transparent. I trust this system!',
                   faculty: 'Faculty of Arts',
-                  course: 'Political Science'
+                  course: 'Political Science',
+                  rating: 5
                 },
                 {
                   img: 'https://via.placeholder.com/100?text=Mary',
                   name: 'Mary',
                   text: 'Real-time results are amazing! No more waiting for days.',
                   faculty: 'Faculty of Education',
-                  course: 'Education Management'
+                  course: 'Education Management',
+                  rating: 5
                 },
               ].map((item, index) => (
-                <Card key={`testimonial-2-${index}`} className="testimonial-card shadow-sm border-0 p-4 text-center">
+                <Card key={`testimonial-2-${index}`} className="testimonial-card p-4 text-center" style={{ border: '0', boxShadow: 'none', outline: 'none' }}>
                   <img src={item.img} alt={item.name} className="testimonial-img mb-3 mx-auto" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #003366' }} />
                   <Card.Body className="p-0">
+                    {/* Star Rating */}
+                    <div className="mb-3">
+                      {[...Array(item.rating)].map((_, i) => (
+                        <i key={i} className="fa-solid fa-star" style={{ color: '#ffc107', fontSize: '0.9rem', marginRight: '2px' }}></i>
+                      ))}
+                    </div>
                     <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
                     <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
                     <div className="small text-secondary">{item.faculty}</div>

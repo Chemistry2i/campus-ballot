@@ -308,18 +308,27 @@ html {
   animation-play-state: paused;
 }
 
-.testimonial-card {
+.testimonial-card,
+.testimonial-card.card,
+.testimonial-card.shadow-sm,
+.card.testimonial-card,
+section .testimonial-card.card {
   min-width: 320px;
   max-width: 320px;
-  background: white;
+  background: transparent !important;
   border-radius: 12px;
+  border: 0 !important;
   flex-shrink: 0;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
+  box-shadow: none !important;
+  outline: 0 !important;
 }
 
-.testimonial-card:hover {
+.testimonial-card:hover,
+.testimonial-card.card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 28px rgba(0, 51, 102, 0.15) !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }
 
 @keyframes scroll-testimonials {
