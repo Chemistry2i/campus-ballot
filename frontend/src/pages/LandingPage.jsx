@@ -609,75 +609,344 @@ const LandingPage = () => {
       <section
         id="testimonials"
         className="py-5 bg-light"
-        style={{ width: "100%" }}
+        style={{ width: "100%", overflow: "hidden", maxWidth: "100vw" }}
       >
-        <div className="container-fluid px-5 text-center">
+        <div className="container-fluid text-center" style={{ maxWidth: "1400px", margin: "0 auto", overflow: "hidden", paddingLeft: "2rem", paddingRight: "2rem" }}>
           <h2 className="fw-bold mb-5" style={{ color: "#003366" }}>
             What Students Say
           </h2>
-          <Row className="justify-content-center g-4">
-            {[
-              {
-                img: 'https://via.placeholder.com/100?text=Omolo ',
-                name: 'Sarah',
-                text: 'Voting has never been this easy. The interface is clean and quick!',
-                faculty: 'Faculty of Science',
-                course: 'Information Technology'
-              },
-              {
-                img: 'https://via.placeholder.com/100?text=David',
-                name: 'David',
-                text: 'I love the transparency and the instant results. Great system!',
-                faculty: 'Faculty of Engineering',
-                course: 'Computer Engineering'
-              },
-              {
-                img: 'https://via.placeholder.com/100?text=Emily',
-                name: 'Emily',
-                text: 'As an admin, managing elections is now stress-free and automated.',
-                faculty: 'Faculty of Business',
-                course: 'Marketing'
-              },
-            ].map((item, index) => (
-              <Col lg={3} md={4} key={index}>
-                    <Card className="p-3 shadow-sm border-0 h-100 text-center">
-                      <img src={item.img} alt={item.name} className="testimonial-img mb-3" />
-                      <Card.Body className="testimonial-italic" style={{fontStyle:'italic'}}>
-                        <p style={{fontStyle:'italic'}} className="text-muted">"{item.text}"</p>
-                        <h6 style={{fontStyle:'italic'}} className="fw-bold mt-3">{item.name}</h6>
-                        <div style={{fontStyle:'italic'}} className="small text-secondary mt-1">{item.faculty}<br />{item.course}</div>
-                      </Card.Body>
-                    </Card>
-              </Col>
-            ))}
-          </Row>
+          <div className="testimonials-scroll-container">
+            <div className="testimonials-scroll-track">
+              {/* First set of testimonials */}
+              {[
+                {
+                  img: 'https://via.placeholder.com/100?text=Sarah',
+                  name: 'Sarah',
+                  text: 'Voting has never been this easy. The interface is clean and quick!',
+                  faculty: 'Faculty of Science',
+                  course: 'Information Technology'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=David',
+                  name: 'David',
+                  text: 'I love the transparency and the instant results. Great system!',
+                  faculty: 'Faculty of Engineering',
+                  course: 'Computer Engineering'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=Emily',
+                  name: 'Emily',
+                  text: 'As an admin, managing elections is now stress-free and automated.',
+                  faculty: 'Faculty of Business',
+                  course: 'Marketing'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=John',
+                  name: 'John',
+                  text: 'The voting process is secure and transparent. I trust this system!',
+                  faculty: 'Faculty of Arts',
+                  course: 'Political Science'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=Mary',
+                  name: 'Mary',
+                  text: 'Real-time results are amazing! No more waiting for days.',
+                  faculty: 'Faculty of Education',
+                  course: 'Education Management'
+                },
+              ].map((item, index) => (
+                <Card key={`testimonial-1-${index}`} className="testimonial-card shadow-sm border-0 p-4 text-center">
+                  <img src={item.img} alt={item.name} className="testimonial-img mb-3 mx-auto" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #003366' }} />
+                  <Card.Body className="p-0">
+                    <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
+                    <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
+                    <div className="small text-secondary">{item.faculty}</div>
+                    <div className="small text-muted">{item.course}</div>
+                  </Card.Body>
+                </Card>
+              ))}
+              
+              {/* Duplicate set for seamless loop */}
+              {[
+                {
+                  img: 'https://via.placeholder.com/100?text=Sarah',
+                  name: 'Sarah',
+                  text: 'Voting has never been this easy. The interface is clean and quick!',
+                  faculty: 'Faculty of Science',
+                  course: 'Information Technology'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=David',
+                  name: 'David',
+                  text: 'I love the transparency and the instant results. Great system!',
+                  faculty: 'Faculty of Engineering',
+                  course: 'Computer Engineering'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=Emily',
+                  name: 'Emily',
+                  text: 'As an admin, managing elections is now stress-free and automated.',
+                  faculty: 'Faculty of Business',
+                  course: 'Marketing'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=John',
+                  name: 'John',
+                  text: 'The voting process is secure and transparent. I trust this system!',
+                  faculty: 'Faculty of Arts',
+                  course: 'Political Science'
+                },
+                {
+                  img: 'https://via.placeholder.com/100?text=Mary',
+                  name: 'Mary',
+                  text: 'Real-time results are amazing! No more waiting for days.',
+                  faculty: 'Faculty of Education',
+                  course: 'Education Management'
+                },
+              ].map((item, index) => (
+                <Card key={`testimonial-2-${index}`} className="testimonial-card shadow-sm border-0 p-4 text-center">
+                  <img src={item.img} alt={item.name} className="testimonial-img mb-3 mx-auto" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #003366' }} />
+                  <Card.Body className="p-0">
+                    <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
+                    <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
+                    <div className="small text-secondary">{item.faculty}</div>
+                    <div className="small text-muted">{item.course}</div>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ===== DEVELOPERS ===== */}
-      <section id="developers" className="py-5" style={{ width: "100%" }}>
-        <div className="container-fluid px-5 text-center">
-          <h2 className="fw-bold mb-5" style={{ color: "#003366" }}>
-            Meet the Developers
-          </h2>
-          <Row className="justify-content-center g-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Col lg={2} md={3} sm={6} xs={12} key={i}>
-                <Card className="shadow-sm border-0 p-2 h-100">
-                  <Card.Img
-                    variant="top"
-                    src={`https://via.placeholder.com/150?text=Dev+${i + 1}`}
-                    className="rounded-circle mx-auto mt-3"
-                    style={{ width: "80px", height: "80px", objectFit: "cover" }}
-                  />
-                  <Card.Body>
-                    <h6 className="fw-bold">Developer {i + 1}</h6>
-                    <p className="text-muted mb-0">Full Stack Engineer</p>
+      <section id="developers" className="py-5" style={{ width: "100%", backgroundColor: '#f8f9fa', overflow: "hidden", maxWidth: "100vw" }}>
+        <div className="container-fluid text-center" style={{ maxWidth: "1400px", margin: "0 auto", overflow: "hidden", paddingLeft: "2rem", paddingRight: "2rem" }}>
+          <div className="mb-5">
+            <h2 className="fw-bold mb-3" style={{ color: "#003366" }}>
+              Meet the Development Team
+            </h2>
+            <p className="text-muted" style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.05rem' }}>
+              A dedicated team of innovators from Kyambogo University's School of Computing, passionate about transforming campus democracy through technology.
+            </p>
+          </div>
+          
+          <div className="developers-scroll-container">
+            <div className="developers-scroll-track">
+              {/* First set of developers */}
+              {[
+                { name: 'Alex Johnson', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '3+ years', skills: ['React', 'Node.js', 'MongoDB'] },
+                { name: 'Maria Garcia', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '4+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
+                { name: 'James Chen', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
+                { name: 'Sarah Williams', role: 'Security Engineer', expertise: 'Authentication', bio: 'Ensuring system security', years: '5+ years', skills: ['JWT', 'OAuth', 'Encryption'] },
+                { name: 'Michael Brown', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Streamlining deployment pipelines', years: '3+ years', skills: ['Docker', 'CI/CD', 'AWS'] },
+                { name: 'Emily Davis', role: 'Full Stack Engineer', expertise: 'MongoDB Expert', bio: 'Database optimization specialist', years: '4+ years', skills: ['MongoDB', 'Redis', 'SQL'] },
+                { name: 'David Miller', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '3+ years', skills: ['Jest', 'Cypress', 'Testing'] },
+                { name: 'Lisa Anderson', role: 'Project Manager', expertise: 'Coordination', bio: 'Leading agile teams', years: '6+ years', skills: ['Scrum', 'Jira', 'Leadership'] },
+                { name: 'Robert Taylor', role: 'Frontend Developer', expertise: 'Responsive Design', bio: 'Mobile-first development', years: '2+ years', skills: ['Bootstrap', 'Sass', 'Mobile'] },
+                { name: 'Jennifer Martinez', role: 'Backend Developer', expertise: 'REST APIs', bio: 'API architecture expert', years: '4+ years', skills: ['REST', 'GraphQL', 'APIs'] },
+                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '3+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
+                { name: 'Amanda Moore', role: 'Documentation Lead', expertise: 'Technical Writing', bio: 'Making tech understandable', years: '2+ years', skills: ['Writing', 'Docs', 'Guides'] },
+              ].map((dev, i) => (
+                <Card key={`dev-1-${i}`} className="developer-card-new shadow-sm border-0 p-4 text-center">
+                  <div className="position-relative d-inline-block mx-auto mb-3">
+                    <Card.Img
+                      src={`https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
+                      className="rounded-circle"
+                      style={{ width: "100px", height: "100px", objectFit: "cover", border: '4px solid #003366' }}
+                    />
+                    <span className="position-absolute" style={{ 
+                      bottom: '0', 
+                      right: '0', 
+                      background: '#28a745', 
+                      width: '20px', 
+                      height: '20px', 
+                      borderRadius: '50%', 
+                      border: '3px solid white',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}></span>
+                  </div>
+                  <Card.Body className="p-0">
+                    <h6 className="fw-bold mb-2" style={{ color: '#003366', fontSize: '1.05rem' }}>{dev.name}</h6>
+                    <div className="mb-2 px-3 py-1 d-inline-block" style={{ backgroundColor: '#e3f0ff', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600, color: '#0056b3' }}>
+                      {dev.role}
+                    </div>
+                    <p className="text-muted mb-2" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>{dev.bio}</p>
+                    <div className="mb-3">
+                      <span className="badge" style={{ backgroundColor: '#fff3cd', color: '#856404', fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px' }}>
+                        <i className="fa-solid fa-award me-1"></i>{dev.years}
+                      </span>
+                    </div>
+                    {/* Skills tags */}
+                    <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                      {dev.skills.map((skill, idx) => (
+                        <span key={idx} className="badge bg-light text-dark" style={{ fontSize: '0.75rem', padding: '4px 8px', fontWeight: 500 }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Social links */}
+                    <div className="d-flex justify-content-center gap-3 mt-3 pt-3" style={{ borderTop: '1px solid #e9ecef' }}>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="GitHub">
+                        <i className="fa-brands fa-github"></i>
+                      </a>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="LinkedIn">
+                        <i className="fa-brands fa-linkedin"></i>
+                      </a>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="Email">
+                        <i className="fa-solid fa-envelope"></i>
+                      </a>
+                    </div>
                   </Card.Body>
                 </Card>
-              </Col>
-            ))}
-          </Row>
+              ))}
+              
+              {/* Duplicate set for seamless loop */}
+              {[
+                { name: 'Alex Johnson', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '3+ years', skills: ['React', 'Node.js', 'MongoDB'] },
+                { name: 'Maria Garcia', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '4+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
+                { name: 'James Chen', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
+                { name: 'Sarah Williams', role: 'Security Engineer', expertise: 'Authentication', bio: 'Ensuring system security', years: '5+ years', skills: ['JWT', 'OAuth', 'Encryption'] },
+                { name: 'Michael Brown', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Streamlining deployment pipelines', years: '3+ years', skills: ['Docker', 'CI/CD', 'AWS'] },
+                { name: 'Emily Davis', role: 'Full Stack Engineer', expertise: 'MongoDB Expert', bio: 'Database optimization specialist', years: '4+ years', skills: ['MongoDB', 'Redis', 'SQL'] },
+                { name: 'David Miller', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '3+ years', skills: ['Jest', 'Cypress', 'Testing'] },
+                { name: 'Lisa Anderson', role: 'Project Manager', expertise: 'Coordination', bio: 'Leading agile teams', years: '6+ years', skills: ['Scrum', 'Jira', 'Leadership'] },
+                { name: 'Robert Taylor', role: 'Frontend Developer', expertise: 'Responsive Design', bio: 'Mobile-first development', years: '2+ years', skills: ['Bootstrap', 'Sass', 'Mobile'] },
+                { name: 'Jennifer Martinez', role: 'Backend Developer', expertise: 'REST APIs', bio: 'API architecture expert', years: '4+ years', skills: ['REST', 'GraphQL', 'APIs'] },
+                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '3+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
+                { name: 'Amanda Moore', role: 'Documentation Lead', expertise: 'Technical Writing', bio: 'Making tech understandable', years: '2+ years', skills: ['Writing', 'Docs', 'Guides'] },
+              ].map((dev, i) => (
+                <Card key={`dev-2-${i}`} className="developer-card-new shadow-sm border-0 p-4 text-center">
+                  <div className="position-relative d-inline-block mx-auto mb-3">
+                    <Card.Img
+                      src={`https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
+                      className="rounded-circle"
+                      style={{ width: "100px", height: "100px", objectFit: "cover", border: '4px solid #003366' }}
+                    />
+                    <span className="position-absolute" style={{ 
+                      bottom: '0', 
+                      right: '0', 
+                      background: '#28a745', 
+                      width: '20px', 
+                      height: '20px', 
+                      borderRadius: '50%', 
+                      border: '3px solid white',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}></span>
+                  </div>
+                  <Card.Body className="p-0">
+                    <h6 className="fw-bold mb-2" style={{ color: '#003366', fontSize: '1.05rem' }}>{dev.name}</h6>
+                    <div className="mb-2 px-3 py-1 d-inline-block" style={{ backgroundColor: '#e3f0ff', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600, color: '#0056b3' }}>
+                      {dev.role}
+                    </div>
+                    <p className="text-muted mb-2" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>{dev.bio}</p>
+                    <div className="mb-3">
+                      <span className="badge" style={{ backgroundColor: '#fff3cd', color: '#856404', fontSize: '0.75rem', fontWeight: 600, padding: '4px 10px' }}>
+                        <i className="fa-solid fa-award me-1"></i>{dev.years}
+                      </span>
+                    </div>
+                    {/* Skills tags */}
+                    <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                      {dev.skills.map((skill, idx) => (
+                        <span key={idx} className="badge bg-light text-dark" style={{ fontSize: '0.75rem', padding: '4px 8px', fontWeight: 500 }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Social links */}
+                    <div className="d-flex justify-content-center gap-3 mt-3 pt-3" style={{ borderTop: '1px solid #e9ecef' }}>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="GitHub">
+                        <i className="fa-brands fa-github"></i>
+                      </a>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="LinkedIn">
+                        <i className="fa-brands fa-linkedin"></i>
+                      </a>
+                      <a href="#" className="text-muted" style={{ fontSize: '1.1rem', transition: 'all 0.2s' }} aria-label="Email">
+                        <i className="fa-solid fa-envelope"></i>
+                      </a>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          {/* Team CTA */}
+          <div className="mt-5">
+            <div className="p-5 position-relative" style={{ 
+              background: 'linear-gradient(135deg, #003366 0%, #0056b3 100%)', 
+              borderRadius: '16px', 
+              maxWidth: '1400px', 
+              margin: '0 auto', 
+              boxShadow: '0 10px 40px rgba(0,51,102,0.2)',
+              overflow: 'hidden'
+            }}>
+              {/* Decorative elements */}
+              <div className="position-absolute" style={{ top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }}></div>
+              <div className="position-absolute" style={{ bottom: '-30px', left: '-30px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.08)', borderRadius: '50%' }}></div>
+              
+              <div className="position-relative text-center text-white">
+                <div className="mb-4">
+                  <i className="fa-solid fa-users-gear" style={{ fontSize: '3.5rem', opacity: 0.9 }}></i>
+                </div>
+                <h4 className="fw-bold mb-3">Join Our Innovative Team</h4>
+                <p className="mb-4" style={{ fontSize: '1.05rem', opacity: 0.95, maxWidth: '600px', margin: '0 auto 1.5rem' }}>
+                  Passionate about technology and democracy? We're building the future of campus elections and we'd love to have you on board. Whether you're a developer, designer, or tech enthusiast, there's a place for you here.
+                </p>
+                
+                {/* Features */}
+                <div className="row g-3 mb-4 text-start">
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start gap-3">
+                      <i className="fa-solid fa-rocket mt-1" style={{ fontSize: '1.2rem', color: '#ffc107' }}></i>
+                      <div>
+                        <h6 className="mb-1 fw-bold">Modern Tech Stack</h6>
+                        <small style={{ opacity: 0.9 }}>Work with React, Node.js, MongoDB and cutting-edge tools</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start gap-3">
+                      <i className="fa-solid fa-lightbulb mt-1" style={{ fontSize: '1.2rem', color: '#ffc107' }}></i>
+                      <div>
+                        <h6 className="mb-1 fw-bold">Real Impact</h6>
+                        <small style={{ opacity: 0.9 }}>Build solutions that transform campus democracy</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start gap-3">
+                      <i className="fa-solid fa-graduation-cap mt-1" style={{ fontSize: '1.2rem', color: '#ffc107' }}></i>
+                      <div>
+                        <h6 className="mb-1 fw-bold">Learn & Grow</h6>
+                        <small style={{ opacity: 0.9 }}>Collaborate with talented peers and mentors</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start gap-3">
+                      <i className="fa-solid fa-clock mt-1" style={{ fontSize: '1.2rem', color: '#ffc107' }}></i>
+                      <div>
+                        <h6 className="mb-1 fw-bold">Flexible Hours</h6>
+                        <small style={{ opacity: 0.9 }}>Work on your schedule while studying</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="d-flex flex-wrap justify-content-center gap-3">
+                  <a href="#contact" className="btn btn-light btn-lg px-4">
+                    <i className="fa-solid fa-envelope me-2"></i>
+                    Get In Touch
+                  </a>
+                  <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="btn btn-outline-light btn-lg px-4">
+                    <i className="fa-brands fa-github me-2"></i>
+                    View on GitHub
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -401,6 +401,7 @@ body.has-fixed-navbar {
 /* Professional Footer Styles */
 .footer-section {
   background: linear-gradient(135deg, #003366 0%, #004080 100%);
+  overflow-x: hidden !important;
 }
 
 .footer-brand img {
