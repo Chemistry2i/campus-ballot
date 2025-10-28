@@ -24,6 +24,21 @@ body {
   font-family: 'Poppins', Arial, Helvetica, sans-serif;
 }
 
+/* Hero section adjustments to account for fixed navbar height so content centers
+   correctly on mobile and desktop. We subtract the navbar height from 100vh. */
+.hero-section {
+  min-height: calc(100vh - 72px) !important; /* default navbar height */
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 991px) {
+  .hero-section {
+    min-height: calc(100vh - 64px) !important; /* mobile navbar height */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
 .register-container,
  .form-control,
 .btn,

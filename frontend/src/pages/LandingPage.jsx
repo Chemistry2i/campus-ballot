@@ -349,11 +349,10 @@ const LandingPage = () => {
 
       {/* ===== HERO SECTION ===== */}
       <section
-        className="d-flex align-items-center text-white"
+        className="hero-section d-flex align-items-center text-white"
         style={{
           width: "100%",
-          // minHeight: "100vh",
-          height:"100vh",
+          minHeight: "calc(100vh - 72px)", // account for fixed navbar
           backgroundImage: "url('/images/hero-bg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
