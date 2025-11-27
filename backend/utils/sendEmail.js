@@ -32,7 +32,7 @@ const nodemailer = require('nodemailer');
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: 'gmail',
       port: 465, // use 465 for SSL (secure connection)
       secure: true,
       auth: {
