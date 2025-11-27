@@ -32,15 +32,12 @@ const nodemailer = require('nodemailer');
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'gmail',
-      port: 465, // use 465 for SSL (secure connection)
-      secure: true,
+      host: 'smtp.gmail.com', // Always correct for Gmail
+      port: parseInt(process.env.EMAIL_PORT), // Read from .env and convert to number
+      secure: process.env.EMAIL_PORT === '465', // If port = 465 → secure: true
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false, // helps in some hosting environments
+        user: process.env.EMAIL_USER, // Gmail address
+        pass: process.env.EMAIL_PASS, // App Password
       },
     });
 
@@ -60,4 +57,3 @@ const sendEmail = async ({ to, subject, html }) => {
 };
 
 module.exports = sendEmail;
-
