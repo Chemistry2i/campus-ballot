@@ -262,7 +262,7 @@ function CreateElection({ onCreated }) {
                   <option value="approval">Approval</option>
                   <option value="ranked">Ranked-choice</option>
                 </select>
-                <button type="button" className="btn btn-outline-danger" onClick={() => removePosition(idx)} disabled={positions.length === 1}>Remove</button>
+                <button type="button" className="btn btn-danger" onClick={() => removePosition(idx)} disabled={positions.length === 1}>Remove</button>
               </div>
             ))}
             <button type="button" className="btn btn-primary p-2" onClick={addPosition}>+ Add position</button>
