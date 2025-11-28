@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
-  { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins', badge: 3 }, // Example badge
+  { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
   { label: 'Global Settings', icon: 'fa-solid fa-sliders', to: '/super-admin/global-settings' },
   { label: 'Audit Logs', icon: 'fa-solid fa-clipboard-list', to: '/super-admin/audit-logs' },
   { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
@@ -15,7 +16,20 @@ const navItems = [
 export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMobile }) {
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [logCount, setLogCount] = useState(0);
+
+  useEffect(() => {
+    const fetchLogCount = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/audit-logs/count', { headers: { Authorization: `Bearer ${token}` } });
+        setLogCount(res.data.count || 0);
+      } catch (err) {
+        console.error('Error fetching log count', err);
+      }
+    };
+    fetchLogCount();
+  }, []);
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -48,7 +62,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         />
       )}
       <aside
-        className={`superadmin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}${darkMode ? ' dark' : ''}`}
+        className={`superadmin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
         style={{
           minWidth: collapsed ? 64 : 280,
           width: collapsed ? 64 : 280,
@@ -59,8 +73,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           zIndex: 100,
           transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
           boxShadow: '0 0 12px rgba(37,99,235,0.07)',
-          background: darkMode ? '#181a20' : '#fff',
-          color: darkMode ? '#f3f4f6' : '#222'
+          background: '#fff',
+          color: '#222'
         }}
         aria-label="Super Admin Sidebar"
       >
@@ -96,8 +110,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   top: 60,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: darkMode ? '#23272f' : '#fff',
-                  color: darkMode ? '#f3f4f6' : '#222',
+                  background: '#fff',
+                  color: '#222',
                   borderRadius: 8,
                   boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                   minWidth: 160,
@@ -120,7 +134,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           {!collapsed && (
             <>
               {/* Logo/Brand */}
-              <span className="fw-bold" style={{ fontSize: '1.45rem', color: darkMode ? '#60a5fa' : '#2563eb', letterSpacing: '-1px' }}>
+              <span className="fw-bold" style={{ fontSize: '1.45rem', color: '#2563eb', letterSpacing: '-1px' }}>
                 <i className="fa-solid fa-graduation-cap me-2"></i>Super Admin
               </span>
               <div className="mt-2 mb-2">
@@ -128,9 +142,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               </div>
               <div className="text-muted small mb-2" style={{ fontWeight: 500 }}>
                 {user?.name || 'Super Admin'}
-              </div>
-              <div className="text-muted small" style={{ fontSize: '0.93rem' }}>
-                {user?.email}
               </div>
             </>
           )}
@@ -155,17 +166,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               }}
             ></i>
           </button>
-          {/* Dark Mode Toggle */}
-          {!collapsed && (
-            <button
-              className="btn btn-sm btn-outline-dark mt-3"
-              style={{ width: 40 }}
-              onClick={() => setDarkMode(!darkMode)}
-              aria-label="Toggle dark mode"
-            >
-              <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-            </button>
-          )}
         </div>
         <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation">
           {navItems.map((item, idx) => {
@@ -183,7 +183,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                       width: 6,
                       height: 32,
                       borderRadius: 4,
-                      background: darkMode ? '#60a5fa' : '#2563eb',
+                      background: '#2563eb',
                       boxShadow: '0 2px 8px rgba(37,99,235,0.12)'
                     }}
                     aria-hidden="true"
@@ -191,7 +191,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
                 <Link
                   to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : darkMode ? 'text-light' : 'text-dark'}`}
+                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-dark'}`}
                   style={{
                     fontSize: '1.08rem',
                     gap: '1.1rem',
@@ -199,7 +199,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     borderRadius: 12,
                     fontWeight: isActive ? 700 : 500,
-                    background: isActive ? (darkMode ? '#23272f' : '#f0f4ff') : 'transparent',
+                    background: isActive ? '#f0f4ff' : 'transparent',
                     boxShadow: isActive ? '0 2px 8px rgba(37,99,235,0.07)' : 'none',
                     transition: 'all 0.18s',
                     minWidth: collapsed ? 0 : 220,
@@ -213,10 +213,10 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 >
                   <i className={item.icon} style={{ fontSize: '1.2rem' }}></i>
                   {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
-                  {/* Notifications badge */}
-                  {item.badge && !collapsed && (
+                  {/* Badge for Audit Logs */}
+                  {item.label === 'Audit Logs' && logCount > 0 && !collapsed && (
                     <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                      {item.badge}
+                      {logCount}
                     </span>
                   )}
                 </Link>
@@ -226,13 +226,13 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         </nav>
         {/* Footer Section */}
         {!collapsed && (
-          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: darkMode ? '#94a3b8' : '#888' }}>
+          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: '#888' }}>
             <hr />
             <div>
               &copy; {new Date().getFullYear()} KYU Voting v1.0
             </div>
             <div>
-              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: darkMode ? '#60a5fa' : '#2563eb', textDecoration: 'none' }}>
+              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
                 University Site
               </a>
             </div>
@@ -240,11 +240,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         )}
         <style>{`
           .superadmin-sidebar { background: #fff; border-right: 1px solid #eee; }
-          .superadmin-sidebar.dark { background: #181a20; color: #f3f4f6; }
           .superadmin-sidebar .nav-link.active { background: #f0f4ff; border-radius: 12px; }
-          .superadmin-sidebar.dark .nav-link.active { background: #23272f; }
           .superadmin-sidebar .nav-link:hover { background: #f8f9fa; border-radius: 12px; }
-          .superadmin-sidebar.dark .nav-link:hover { background: #23272f; }
           .superadmin-sidebar.collapsed .sidebar-header .fw-bold,
           .superadmin-sidebar.collapsed .sidebar-header .badge,
           .superadmin-sidebar.collapsed .sidebar-header .mb-2,

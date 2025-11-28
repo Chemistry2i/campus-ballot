@@ -26,7 +26,7 @@ const SuperAdmin = ({ user, onLogout }) => {
 
   // Calculate main content margin dynamically
   const mainMarginLeft = isMobile
-    ? (collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH)
+    ? 0
     : (collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH);
 
   return (
@@ -39,7 +39,7 @@ const SuperAdmin = ({ user, onLogout }) => {
       />
       <main
         style={{
-          marginLeft: isMobile ? 0 : mainMarginLeft,
+          marginLeft: mainMarginLeft,
           width: isMobile
             ? '100vw'
             : `calc(100vw - ${collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH}px)`,

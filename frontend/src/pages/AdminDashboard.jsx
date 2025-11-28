@@ -29,6 +29,10 @@ import AdminSettings from "../components/admin/AdminSettings";
 import Reports from "../components/admin/Reports";
 import Results from "../components/admin/Results";
 
+// Responsive sidebar state managed here and passed to Sidebar
+const SIDEBAR_WIDTH = 280;
+const SIDEBAR_COLLAPSED_WIDTH = 64;
+
 function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout prop here
   const navigate = useNavigate();
   const [user, setUser] = useState(initialUser);
@@ -38,6 +42,8 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showMessagesDropdown, setShowMessagesDropdown] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [messages] = useState([
     {
       id: 1,
@@ -65,23 +71,34 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
   const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   useEffect(() => {
-    // initial fetch remains as fallback; realtime updates handled by socket
-    async function fetchStats() {
-      try {
-        const res = await axios.get(
-          "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
-          {
-            headers: { Authorization: `Bearer ${user?.token}` },
-          }
-        );
-        setStats(res.data);
-      } catch (err) {
-        Swal.fire("Error", "Failed to load dashboard stats", "error");
-      } finally {
-        setLoading(false);
-      }
-    }
+    const handleResize = () => setIsMobile(window.innerWidth < 992);
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
+  // Calculate main content margin dynamically
+  const mainMarginLeft = isMobile
+    ? 0
+    : (collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH);
+
+  async function fetchStats() {
+    try {
+      const res = await axios.get(
+        "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+      setStats(res.data);
+    } catch (err) {
+      Swal.fire("Error", "Failed to load dashboard stats", "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
     if (user?.role === "admin") {
       fetchStats();
 
@@ -321,212 +338,87 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
 
   return (
     <div
-      className="container-fluid min-vh-100"
-      style={{ width: "100vw", backgroundColor: "#f8f9fa" }}
+      className="container-fluid d-flex"
+      style={{ minHeight: "100vh", width: "100vw", backgroundColor: "#f8f9fa", overflow: 'hidden' }}
       onClick={closeDropdowns}
     >
-      <div className="row">
-        <Sidebar
-          user={user}
-          navigate={navigate}
-          onOpenCreateElection={() => setShowCreateElection(true)}
-          onLogout={onLogout} // This should now work
-          onProfileUpdated={(updated) => setUser(updated)}
-        />
-        <div className="col-md-10 p-0">
-          {/* Top Navigation Bar */}
-          <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-3">
-            <div className="navbar-nav ms-auto d-flex flex-row align-items-center">
-              {/* Messages Dropdown */}
-              <div className="nav-item dropdown me-3">
-                <button
-                  className="btn btn-link nav-link position-relative p-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMessagesDropdown(!showMessagesDropdown);
-                    setShowNotificationsDropdown(false);
-                  }}
-                  style={{ border: 'none', background: 'none' }}
-                >
-                  <FontAwesomeIcon icon={faEnvelope} size="lg" className="text-muted" />
-                  {messages.filter(m => m.unread).length > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                      {messages.filter(m => m.unread).length}
-                    </span>
-                  )}
-                </button>
-                {showMessagesDropdown && (
-                  <div className="dropdown-menu dropdown-menu-end show" style={{ minWidth: '300px', maxHeight: '400px', overflowY: 'auto' }}>
-                    <div className="dropdown-header d-flex justify-content-between align-items-center">
-                      <span className="fw-bold">Messages</span>
-                      <span className="badge bg-primary">{messages.filter(m => m.unread).length} new</span>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    {messages.map(message => (
-                      <div key={message.id} className={`dropdown-item p-3 ${message.unread ? 'bg-light' : ''}`}>
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0">
-                            <FontAwesomeIcon icon={faUser} className="text-muted me-2" />
-                          </div>
-                          <div className="flex-grow-1">
-                            <div className="d-flex justify-content-between">
-                              <span className="fw-bold small">{message.sender}</span>
-                              {message.unread && <FontAwesomeIcon icon={faCircle} className="text-primary" size="xs" />}
-                            </div>
-                            <div className="text-muted small">{message.subject}</div>
-                            <div className="text-muted small">{message.time}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="dropdown-divider"></div>
-                    <div className="dropdown-item text-center">
-                      <small><a href="#" className="text-decoration-none">View all messages</a></small>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Notifications Dropdown */}
-              <div className="nav-item dropdown me-3">
-                <button
-                  className="btn btn-link nav-link position-relative p-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const opening = !showNotificationsDropdown;
-                    setShowNotificationsDropdown(opening);
-                    setShowMessagesDropdown(false);
-                    if (opening) fetchNotifications();
-                  }}
-                  style={{ border: 'none', background: 'none' }}
-                >
-                  <FontAwesomeIcon icon={faBell} size="lg" className="text-primary" />
-                  {notifications && notifications.filter(n => !n.read).length > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
-                      {notifications.filter(n => !n.read).length}
-                    </span>
-                  )}
-                </button>
-                {showNotificationsDropdown && (
-                  <div
-                    className="dropdown-menu dropdown-menu-end show"
-                    style={{
-                      minWidth: '360px',
-                      maxHeight: '420px',
-                      overflowY: 'auto',
-                      position: 'absolute',
-                      top: '56px',
-                      right: '1rem',
-                      zIndex: 2000
-                    }}
-                  >
-                    <div className="dropdown-header d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="fw-bold">Notifications</span>
-                        {loadingNotifications && <small className="text-muted">Loading...</small>}
-                      </div>
-                      <div>
-                        <button className="btn btn-sm btn-link" onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}>
-                          Mark all read
-                        </button>
-                        <span className="badge bg-warning ms-2">{notifications.length}</span>
-                      </div>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    {loadingNotifications ? (
-                      <div className="px-3 py-4 text-center text-muted">Loading notifications...</div>
-                    ) : notifications.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-muted">No notifications</div>
-                    ) : (
-                      notifications.map(notification => (
-                        <div key={notification._id || notification.id} className={`dropdown-item p-2 ${!notification.read ? 'bg-light' : ''}`}>
-                          <div className="d-flex align-items-start">
-                            <div className="flex-shrink-0 me-2">
-                              <span className={`badge bg-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : 'info'} d-inline-flex align-items-center justify-content-center`} style={{ width: 34, height: 34 }}>
-                                <FontAwesomeIcon icon={faBell} />
-                              </span>
-                            </div>
-                            <div className="flex-grow-1">
-                              <div className="d-flex justify-content-between align-items-start">
-                                <div>
-                                  <div className="fw-bold small">{notification.title}</div>
-                                  <div className="text-muted small">{notification.message}</div>
-                                  <div className="text-muted small mt-1">{notification.time}</div>
-                                </div>
-                                <div className="ms-2 text-end">
-                                  <div className="btn-group" role="group">
-                                    <button className="btn btn-sm btn-outline-secondary" onClick={(e) => { e.stopPropagation(); setShowNotificationsDropdown(false); navigate('/admin/notifications'); if (!notification.read) markNotificationAsRead(notification._id || notification.id); }}>
-                                      View
-                                    </button>
-                                    {!notification.read && (
-                                      <button className="btn btn-sm btn-primary ms-1" onClick={(e) => { e.stopPropagation(); markNotificationAsRead(notification._id || notification.id); }}>
-                                        <FontAwesomeIcon icon={faCheck} className="me-1" /> Mark as read
-                                      </button>
-                                    )}
-                                    <button className="btn btn-sm btn-light text-danger" onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id || notification.id); }}>
-                                      <FontAwesomeIcon icon={faTrash} />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                    <div className="dropdown-divider"></div>
-                    <div className="dropdown-item text-center">
-                      <small><a href="#" className="text-decoration-none">View all notifications</a></small>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* User Profile & Logout */}
-              <div className="nav-item dropdown">
-                <div className="d-flex align-items-center">
-                  <span className="me-3 small">
-                    <span className="text-muted">Welcome,</span>
-                    <span className="fw-bold ms-1">{user?.firstName || 'Admin'}</span>
-                  </span>
-                  <button
-                    className="btn btn-outline-danger btn-sm d-flex align-items-center"
-                    onClick={handleLogout}
-                  >
-                    <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-          </nav>
-
-          {/* Main Content */}
-          <div className="p-4">
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <h4 className="mb-4 fw-bold text-primary">System Overview</h4>
-                    <OverviewCards stats={stats} />
-                    <DashboardCharts stats={stats} />
-                  </>
-                }
-              />
-              <Route path="elections" element={<Elections user={user} />} />
-              <Route path="candidates" element={<Candidates user={user} />} />
-              <Route path="users" element={<Users user={user} />} />
-              <Route path="logs" element={<Logs user={user} />} />
-              <Route path="notifications" element={<Notifications user={user} />} />
-              <Route path="settings" element={<AdminSettings user={user} />} />
-              <Route path="reports" element={<Reports user={user} />} />
-              <Route path="results" element={<Results user={user} />} />
-              {/* Add more admin routes here */}
-            </Routes>
+      <Sidebar
+        user={user}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        isMobile={isMobile}
+        onOpenCreateElection={() => setShowCreateElection(true)}
+        onLogout={onLogout} // This should now work
+        onProfileUpdated={(updated) => setUser(updated)}
+      />
+      <main
+        style={{
+          marginLeft: mainMarginLeft,
+          width: isMobile
+            ? '100vw'
+            : `calc(100vw - ${collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH}px)`,
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#f8f9fc',
+          transition: 'margin-left 0.2s, width 0.2s'
+        }}
+      >
+        {/* Header Bar */}
+        <div
+          style={{
+            background: '#fff',
+            borderBottom: '1px solid #eee',
+            padding: '1rem 2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            minHeight: 64
+          }}
+        >
+          <div>
+            <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>Admin Panel</span>
+          </div>
+          <div>
+            <span className="me-3 text-muted">{user?.name}</span>
+            <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>
+              <i className="fa-solid fa-right-from-bracket me-1"></i> Logout
+            </button>
           </div>
         </div>
-      </div>
+        {/* Main Content */}
+        <div
+          className="container-fluid"
+          style={{
+            flex: 1,
+            padding: '2rem',
+            overflowY: 'auto',
+            height: '100%'
+          }}
+        >
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <h4 className="mb-4 fw-bold text-primary">System Overview</h4>
+                  <OverviewCards stats={stats} />
+                  <DashboardCharts stats={stats} />
+                </>
+              }
+            />
+            <Route path="elections" element={<Elections user={user} />} />
+            <Route path="candidates" element={<Candidates user={user} />} />
+            <Route path="users" element={<Users user={user} />} />
+            <Route path="logs" element={<Logs user={user} />} />
+            <Route path="notifications" element={<Notifications user={user} />} />
+            <Route path="settings" element={<AdminSettings user={user} />} />
+            <Route path="reports" element={<Reports user={user} />} />
+            <Route path="results" element={<Results user={user} />} />
+            {/* Add more admin routes here */}
+          </Routes>
+        </div>
+      </main>
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
