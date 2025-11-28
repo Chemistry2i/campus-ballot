@@ -193,7 +193,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   to={item.to}
                   className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-primary'}`}
                   style={{
-                    fontSize: '1.08rem',
+                    fontSize: '1em', // <-- changed from 1.08rem to 1em
                     gap: '1rem',
                     padding: collapsed ? '0.85rem 0.5rem' : '0.85rem 1.5rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
@@ -243,7 +243,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           .superadmin-sidebar .nav-link,
           .superadmin-sidebar .nav-link.active {
             color: #2563eb !important;
-            font-size: 1.08rem;
+            font-size: 1em !important; /* <-- changed from 1.08rem to 1em */
             padding: 0.85rem 1.5rem;
             border-radius: 12px;
             transition: background 0.18s, border-left 0.18s;

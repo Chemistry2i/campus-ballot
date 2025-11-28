@@ -79,7 +79,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             boxShadow: '0 2px 8px rgba(37,99,235,0.07)'
           }}
         >
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center ">
             <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>
               <i className="fa-solid fa-crown me-2 text-warning"></i>
               Super Admin Panel
@@ -102,7 +102,9 @@ const SuperAdmin = ({ user, onLogout }) => {
             flex: 1,
             padding: '2rem',
             overflowY: 'auto',
-            height: '100%'
+            height: '100%',
+            width: '100%',
+            transition: 'width 0.2s',
           }}
         >
           <Routes>
