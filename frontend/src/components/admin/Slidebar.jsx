@@ -100,7 +100,7 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
             <img
               src={profileImgSrc}
               alt="Admin"
-              style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%' }}
+              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: '50%' }}
               className="mb-2"
             />
             <button
