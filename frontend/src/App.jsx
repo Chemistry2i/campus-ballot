@@ -75,7 +75,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* Default redirect based on user role */}
+        <Route
+          path="/"
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : currentUser.role === 'super_admin' ? (
+                <Navigate to="/super-admin/dashboard" replace />
+              ) : (
+                <Navigate to="/student-dashboard" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -111,21 +127,6 @@ function App() {
             <ProtectedRoute user={currentUser} requiredRole="super_admin">
               <SuperAdmin user={currentUser} onLogout={handleLogout} />
             </ProtectedRoute>
-          }
-        />
-        {/* Default redirect based on user role */}
-        <Route 
-          path="/" 
-          element={
-            currentUser ? (
-              currentUser.role === 'admin' ? (
-                <Navigate to="/admin" replace />
-              ) : (
-                <Navigate to="/student-dashboard" replace />
-              )
-            ) : (
-              <Navigate to="/login" replace />
-            )
           }
         />
         <Route path="*" element={<Navigate to="/" />} />

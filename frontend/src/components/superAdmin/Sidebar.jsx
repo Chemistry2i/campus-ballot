@@ -141,7 +141,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 <span className="badge bg-danger" style={{ fontSize: '0.95rem', fontWeight: 600 }}>super_admin</span>
               </div>
               <div className="text-muted small mb-2" style={{ fontWeight: 500 }}>
-                {user?.name || 'Super Admin'}
+                Welcome, {user?.name || 'Super Admin'}
               </div>
             </>
           )}
@@ -156,7 +156,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               zIndex: 101,
               transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)'
             }}
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => setCollapsed(!collapsed)} // This line is correct
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
@@ -191,17 +191,16 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
                 <Link
                   to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-dark'}`}
+                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-primary'}`}
                   style={{
                     fontSize: '1.08rem',
-                    gap: '1.1rem',
+                    gap: '1rem',
                     padding: collapsed ? '0.85rem 0.5rem' : '0.85rem 1.5rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
-                    borderRadius: 12,
+                    borderRadius: 4,
                     fontWeight: isActive ? 700 : 500,
-                    background: isActive ? '#f0f4ff' : 'transparent',
+                    background: isActive ? '#e7f1ff' : 'transparent',
                     boxShadow: isActive ? '0 2px 8px rgba(37,99,235,0.07)' : 'none',
-                    transition: 'all 0.18s',
                     minWidth: collapsed ? 0 : 220,
                     outline: 'none'
                   }}
@@ -209,10 +208,10 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   tabIndex={0}
                   onKeyDown={e => handleKeyDown(e, idx)}
                   onClick={() => isMobile && setCollapsed(true)}
-                  title={collapsed ? item.label : undefined} // Tooltip on collapsed
+                  title={collapsed ? item.label : undefined}
                 >
-                  <i className={item.icon} style={{ fontSize: '1.2rem' }}></i>
-                  {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: '#2563eb' }}></i>
+                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: '#2563eb' }}>{item.label}</span>}
                   {/* Badge for Audit Logs */}
                   {item.label === 'Audit Logs' && logCount > 0 && !collapsed && (
                     <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
@@ -240,8 +239,17 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         )}
         <style>{`
           .superadmin-sidebar { background: #fff; border-right: 1px solid #eee; }
-          .superadmin-sidebar .nav-link.active { background: #f0f4ff; border-radius: 12px; }
-          .superadmin-sidebar .nav-link:hover { background: #f8f9fa; border-radius: 12px; }
+          .superadmin-sidebar .nav-link.active { background: #e7f1ff; border-radius: 12px; }
+          .superadmin-sidebar .nav-link,
+          .superadmin-sidebar .nav-link.active {
+            color: #2563eb !important;
+            font-size: 1.08rem;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            transition: background 0.18s, border-left 0.18s;
+            outline: none;
+          }
+          .superadmin-sidebar .nav-link:hover { background: #f8f9fa; border-radius: 12px; color: #2563eb !important; }
           .superadmin-sidebar.collapsed .sidebar-header .fw-bold,
           .superadmin-sidebar.collapsed .sidebar-header .badge,
           .superadmin-sidebar.collapsed .sidebar-header .mb-2,

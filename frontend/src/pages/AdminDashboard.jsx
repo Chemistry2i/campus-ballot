@@ -171,14 +171,19 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     };
   }, [stats, joinRoom, leaveRoom]);
 
-  // Handle logout confirmation
-  const handleLogout = () => {
-    setShowLogoutModal(true);
-  };
-
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    onLogout();
+  // Handle logout confirmation with SweetAlert
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Confirm Logout',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Logout',
+      cancelButtonText: 'Cancel'
+    });
+    if (result.isConfirmed) {
+      onLogout();
+    }
   };
 
   // Close dropdowns when clicking outside
@@ -348,7 +353,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
         setCollapsed={setCollapsed}
         isMobile={isMobile}
         onOpenCreateElection={() => setShowCreateElection(true)}
-        onLogout={onLogout} // This should now work
+        onLogout={handleLogout} // Use SweetAlert confirmation
         onProfileUpdated={(updated) => setUser(updated)}
       />
       <main
@@ -380,8 +385,8 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
             <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>Admin Panel</span>
           </div>
           <div>
-            <span className="me-3 text-muted">{user?.name}</span>
-            <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>
+            <span className="me-3 text-muted">Welcome, <strong>{user?.name}</strong></span>
+            <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
               <i className="fa-solid fa-right-from-bracket me-1"></i> Logout
             </button>
           </div>

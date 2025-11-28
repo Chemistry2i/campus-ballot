@@ -227,7 +227,9 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
           {!collapsed && (
             <>
               <h4 className="fw-bold text-primary mt-2">Admin Panel</h4>
-              <p className="mb-0 text-muted">{user?.name}</p>
+              <p className="mb-0 text-muted">
+                Welcome, {user?.name}
+              </p>
               <span className="badge bg-success">{user?.role}</span>
               {/* Quick Action */}
               <div className="mt-3">

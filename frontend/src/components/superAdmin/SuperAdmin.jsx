@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import ManageAdmins from './ManageAdmins';
@@ -28,6 +29,21 @@ const SuperAdmin = ({ user, onLogout }) => {
   const mainMarginLeft = isMobile
     ? 0
     : (collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH);
+
+  // SweetAlert logout confirmation
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Confirm Logout',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Logout',
+      cancelButtonText: 'Cancel'
+    });
+    if (result.isConfirmed) {
+      onLogout();
+    }
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', background: '#f8f9fc', overflow: 'hidden' }}>
@@ -59,15 +75,22 @@ const SuperAdmin = ({ user, onLogout }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            minHeight: 64
+            minHeight: 64,
+            boxShadow: '0 2px 8px rgba(37,99,235,0.07)'
           }}
         >
-          <div>
-            <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>Super Admin Panel</span>
+          <div className="d-flex align-items-center">
+            <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>
+              <i className="fa-solid fa-crown me-2 text-warning"></i>
+              Super Admin Panel
+            </span>
+            <span className="badge bg-primary ms-3" style={{ fontSize: '1rem', fontWeight: 600 }}>
+              Welcome, {user?.name}
+            </span>
           </div>
           <div>
-            <span className="me-3 text-muted">{user?.name} ({user?.email})</span>
-            <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>
+            <span className="me-3 text-muted">{user?.email}</span>
+            <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
               <i className="fa-solid fa-right-from-bracket me-1"></i> Logout
             </button>
           </div>
