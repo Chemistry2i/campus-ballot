@@ -7,7 +7,7 @@ export default function useSocket() {
 
   useEffect(() => {
     if (!socketRef.current) {
-      const url = import.meta.env.VITE_API_URL || 'https://campus-ballot-backend.onrender.com';
+      const url = import.meta.env.VITE_API_URL || 'https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev';
   // send token in auth payload for socket authentication
   const token = localStorage.getItem('token');
   socketRef.current = io(url, { withCredentials: true, auth: { token } });
@@ -42,7 +42,7 @@ export default function useSocket() {
       s.disconnect();
       socketRef.current = null;
     }
-    const url = import.meta.env.VITE_API_URL || 'https://campus-ballot-backend.onrender.com';
+    const url = import.meta.env.VITE_API_URL || 'https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev';
     socketRef.current = io(url, { withCredentials: true, auth: { token: newToken } });
     return socketRef.current;
   };

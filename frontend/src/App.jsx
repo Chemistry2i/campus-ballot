@@ -10,6 +10,12 @@ import { useState, useEffect } from "react";
 import useSocket from './hooks/useSocket';
 import VotingPage from "./pages/VotingPage";
 import LandingPage from "./pages/LandingPage";
+import SuperAdmin from './components/superAdmin/SuperAdmin';
+import GlobalSettings from './components/superAdmin/GlobalSettings';
+import AuditLogs from './components/superAdmin/AuditLogs';
+import ElectionOversight from './components/superAdmin/ElectionOversight';
+import DataMaintenance from './components/superAdmin/DataMaintenance';
+import Reporting from './components/superAdmin/Reporting';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -97,6 +103,19 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/super-admin/*"
+          element={
+            <ProtectedRoute user={currentUser} requiredRole="super_admin">
+              <SuperAdmin user={currentUser} onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/super-admin/global-settings" element={<GlobalSettings />} />
+        <Route path="/super-admin/audit-logs" element={<AuditLogs />} />
+        <Route path="/super-admin/election-oversight" element={<ElectionOversight />} />
+        <Route path="/super-admin/data-maintenance" element={<DataMaintenance />} />
+        <Route path="/super-admin/reporting" element={<Reporting />} />
         {/* Default redirect based on user role */}
         <Route 
           path="/" 

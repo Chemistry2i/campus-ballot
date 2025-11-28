@@ -12,6 +12,8 @@
 
     "dev": "nodemon server.js",
 
+    "super": "nodemon seedSuperAdmin.js",
+
     "start": "node server.js",
 
     "seed": "nodemon seedAdmin.js",
@@ -62,7 +64,7 @@
 
     "nodemailer": "^7.0.5",
 
-    "nodemon": "^3.1.10",
+    "nodemon": "^3.1.11",
 
     "socket.io": "^4.8.1"
 

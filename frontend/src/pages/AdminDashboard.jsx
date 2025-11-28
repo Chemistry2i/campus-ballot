@@ -69,7 +69,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     async function fetchStats() {
       try {
         const res = await axios.get(
-          "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
+          "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -174,7 +174,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
+        "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -201,11 +201,11 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
       // Try admin notifications endpoint first, fallback to general
       let res;
       try {
-        res = await axios.get("https://campus-ballot-backend.onrender.com/api/admin/notifications", {
+        res = await axios.get("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications", {
           headers: { Authorization: `Bearer ${token}` },
         });
       } catch (err) {
-        res = await axios.get("https://campus-ballot-backend.onrender.com/api/notifications", {
+        res = await axios.get("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications", {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -232,13 +232,13 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
 
     setNotifications(prev => (prev || []).map(n => (n._id === id || n.id === id) ? { ...n, read: true } : n));
     try {
-      await axios.put(`https://campus-ballot-backend.onrender.com/api/notifications/${id}/read`, {}, {
+      await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
       // try admin path
       try {
-        await axios.put(`https://campus-ballot-backend.onrender.com/api/admin/notifications/${id}/read`, {}, {
+        await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications/${id}/read`, {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } catch (e) {
@@ -263,7 +263,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`https://campus-ballot-backend.onrender.com/api/notifications/${id}`, {
+      await axios.delete(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${id}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       setNotifications((prev) => prev.filter(n => !(n._id === id || n.id === id)));
@@ -271,7 +271,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     } catch (err) {
       // try admin path
       try {
-        await axios.delete(`https://campus-ballot-backend.onrender.com/api/admin/notifications/${id}`, {
+        await axios.delete(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications/${id}`, {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
         setNotifications((prev) => prev.filter(n => !(n._id === id || n.id === id)));
@@ -290,12 +290,12 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     try {
       // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
       try {
-        await axios.put('https://campus-ballot-backend.onrender.com/api/notifications/mark-all-read', {}, {
+        await axios.put('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/mark-all-read', {}, {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
       } catch (_) {
         // fallback: mark each
-        await Promise.all(unread.map(n => axios.put(`https://campus-ballot-backend.onrender.com/api/notifications/${n._id || n.id}/read`, {}, {
+        await Promise.all(unread.map(n => axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${n._id || n.id}/read`, {}, {
           headers: { Authorization: `Bearer ${user?.token}` },
         })));
       }
