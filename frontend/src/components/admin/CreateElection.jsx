@@ -48,7 +48,20 @@ function CreateElection({ onCreated }) {
       } catch (err) {
         console.warn('Failed to fetch faculties/cohorts meta, falling back to defaults', err);
         if (mounted) {
-          if (availableFaculties.length === 0) setAvailableFaculties(['Engineering','Science','Business','Arts']);
+          if (availableFaculties.length === 0) setAvailableFaculties([
+            'Computing and Information Science',
+            'Engineering',
+            'Science',
+            'Management & Entrepreneurship',
+            'Arts and Humanities',
+            'Social Sciences',
+            'Built Environment',
+            'Agriculture',
+            'Art and Industrial Design',
+            'Education',
+            'Special Needs & Rehabilitation',
+            'Vocational Studies'
+          ]);
           if (availableCohorts.length === 0) setAvailableCohorts(['2025','2024','2023','2022']);
         }
       }
