@@ -693,37 +693,31 @@ const resendVerification = asyncHandler(async (req, res) => {
         html,
       });
       console.log("[RESEND VERIFICATION]: Email sent to:", user.email);
-      
-      res.json({ 
-        message: `New verification link sent to ${email}. Please check your inbox and spam folder.` 
+      res.json({
+        message: `New verification link sent to ${email}. Please check your inbox and spam folder.`
       });
     } catch (emailError) {
       console.error("[RESEND VERIFICATION EMAIL ERROR]:", emailError.message);
-      res.status(500).json({ 
-        message: "Failed to send verification email. Please try again later." 
+      res.status(500).json({
+        message: "Failed to send verification email. Please try again later."
       });
     }
-
   } catch (error) {
     console.error("[RESEND VERIFICATION ERROR]:", error.message);
-    res.status(500).json({ message: "Server error during resend verification" });
+    res.status(500).json({ message: "Error resending verification email" });
   }
 });
 
-
-/* -------------------------------------------------------
-   Exports
---------------------------------------------------------- */
 module.exports = {
-  register,
-  login,
-  logout,
-  verifyEmail,
-  forgotPassword,
-  resetPassword,
-  getProfile,
-  updateProfile,
-  changePassword,
-  resendVerification,
+    register,
+    login,
+    logout,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
+    getProfile,
+    updateProfile,
+    changePassword,
+    resendVerification
 };
 

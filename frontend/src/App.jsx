@@ -65,7 +65,7 @@ function App() {
     localStorage.removeItem("token");
     try {
       reconnectWithToken(null);
-    } catch (e) {
+    } catch {
       // ignore if socket not initialized
     }
   };
@@ -111,11 +111,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/super-admin/global-settings" element={<GlobalSettings />} />
-        <Route path="/super-admin/audit-logs" element={<AuditLogs />} />
-        <Route path="/super-admin/election-oversight" element={<ElectionOversight />} />
-        <Route path="/super-admin/data-maintenance" element={<DataMaintenance />} />
-        <Route path="/super-admin/reporting" element={<Reporting />} />
         {/* Default redirect based on user role */}
         <Route 
           path="/" 
