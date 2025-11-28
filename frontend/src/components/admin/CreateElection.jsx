@@ -252,7 +252,7 @@ function CreateElection({ onCreated }) {
                 <button type="button" className="btn btn-outline-danger" onClick={() => removePosition(idx)} disabled={positions.length === 1}>Remove</button>
               </div>
             ))}
-            <button type="button" className="btn btn-link p-0" onClick={addPosition}>+ Add position</button>
+            <button type="button" className="btn btn-primary p-0" onClick={addPosition}>+ Add position</button>
           </div>
 
           <div className="col-md-6">
