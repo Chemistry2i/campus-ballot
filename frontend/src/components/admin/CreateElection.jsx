@@ -48,7 +48,20 @@ function CreateElection({ onCreated }) {
       } catch (err) {
         console.warn('Failed to fetch faculties/cohorts meta, falling back to defaults', err);
         if (mounted) {
-          if (availableFaculties.length === 0) setAvailableFaculties(['Engineering','Science','Business','Arts']);
+          if (availableFaculties.length === 0) setAvailableFaculties([
+            'Computing and Information Science',
+            'Engineering',
+            'Science',
+            'Management & Entrepreneurship',
+            'Arts and Humanities',
+            'Social Sciences',
+            'Built Environment',
+            'Agriculture',
+            'Art and Industrial Design',
+            'Education',
+            'Special Needs & Rehabilitation',
+            'Vocational Studies'
+          ]);
           if (availableCohorts.length === 0) setAvailableCohorts(['2025','2024','2023','2022']);
         }
       }
@@ -249,10 +262,10 @@ function CreateElection({ onCreated }) {
                   <option value="approval">Approval</option>
                   <option value="ranked">Ranked-choice</option>
                 </select>
-                <button type="button" className="btn btn-outline-danger" onClick={() => removePosition(idx)} disabled={positions.length === 1}>Remove</button>
+                <button type="button" className="btn btn-danger" onClick={() => removePosition(idx)} disabled={positions.length === 1}>Remove</button>
               </div>
             ))}
-            <button type="button" className="btn btn-link p-0" onClick={addPosition}>+ Add position</button>
+            <button type="button" className="btn btn-primary p-2" onClick={addPosition}>+ Add position</button>
           </div>
 
           <div className="col-md-6">
