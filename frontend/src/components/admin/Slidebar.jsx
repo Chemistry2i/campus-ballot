@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from 'axios';
 import { useRef, useState, useEffect } from 'react';
 import getImageUrl from '../../utils/getImageUrl';
+import Swal from 'sweetalert2'; // Added SweetAlert2 import
 import {
   faTachometerAlt,
   faUsers,
@@ -97,9 +98,22 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
       setShowUploadModal(false);
       setSelectedFile(null);
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
+      // Replaced alert with SweetAlert
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Profile picture updated successfully!',
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (err) {
       console.error('Upload error', err);
-      alert(err.response?.data?.message || 'Failed to upload profile picture');
+      // Replaced alert with SweetAlert
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: err.response?.data?.message || 'Failed to upload profile picture'
+      });
     } finally {
       setUploading(false);
     }
