@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from 'axios';
 import { useRef, useState, useEffect } from 'react';
 import getImageUrl from '../../utils/getImageUrl';
+import Swal from 'sweetalert2'; // Added SweetAlert2 import
 import {
   faTachometerAlt,
   faUsers,
@@ -97,9 +98,22 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
       setShowUploadModal(false);
       setSelectedFile(null);
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
+      // Replaced alert with SweetAlert
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Profile picture updated successfully!',
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (err) {
       console.error('Upload error', err);
-      alert(err.response?.data?.message || 'Failed to upload profile picture');
+      // Replaced alert with SweetAlert
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: err.response?.data?.message || 'Failed to upload profile picture'
+      });
     } finally {
       setUploading(false);
     }
@@ -112,33 +126,89 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   };
 
   return (
-    <div className="col-md-2 bg-white shadow-sm p-0 min-vh-100 d-flex flex-column justify-content-between">
-      <div>
-        <div className="p-4 border-bottom text-center">
-          {/* User Avatar */}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <img
-              src={profileImgSrc}
-              alt="Admin"
-              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: '50%' }}
-              className="mb-2"
-            />
-            <button
-              className="btn btn-sm btn-light position-absolute top-0 end-0"
-              style={{ transform: 'translate(30%, -30%)' }}
-              onClick={onChooseFile}
-              title="Change profile picture"
-              aria-label="Change profile picture"
-            >
-              {uploading ? (
-                <span className="spinner-border spinner-border-sm" role="status" />
-              ) : (
-                <FontAwesomeIcon icon={faUserCircle} />
-              )}
-            </button>
-            {/* hidden input for fallback */}
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-          </div>
+    <>
+      {/* Overlay for mobile drawer */}
+      {isMobile && !collapsed && (
+        <div
+          className="admin-sidebar-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.08)',
+            zIndex: 99,
+          }}
+          onClick={() => setCollapsed(true)}
+          aria-label="Close sidebar"
+        />
+      )}
+      <aside
+        className={`admin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
+        style={{
+          minWidth: collapsed ? 64 : 280,
+          width: collapsed ? 64 : 280,
+          height: '100vh',
+          position: 'fixed',
+          left: isMobile && collapsed ? -280 : 0,
+          top: 0,
+          zIndex: 100,
+          transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
+          boxShadow: '0 0 12px rgba(37,99,235,0.07)',
+          background: '#fff',
+          color: '#222'
+        }}
+        aria-label="Admin Sidebar"
+      >
+        <div className="sidebar-header p-4 border-bottom text-center" style={{ padding: collapsed ? '1rem 0' : '2rem 0', position: 'relative' }}>
+          {/* Collapse/Expand Button */}
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: collapsed ? 8 : 16,
+              width: collapsed ? 32 : 40,
+              zIndex: 101,
+              transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)'
+            }}
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
+              style={{
+                transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+                transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)'
+              }}
+            ></i>
+          </button>
+          {/* User Avatar - only show when not collapsed */}
+          {!collapsed && (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <img
+                src={profileImgSrc}
+                alt="Admin"
+                style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: '50%' }}
+                className="mb-2"
+              />
+              <button
+                className="btn btn-sm btn-light position-absolute top-0 end-0"
+                style={{ transform: 'translate(30%, -30%)' }}
+                onClick={onChooseFile}
+                title="Change profile picture"
+                aria-label="Change profile picture"
+              >
+                {uploading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  <FontAwesomeIcon icon={faUserCircle} />
+                )}
+              </button>
+              {/* hidden input for fallback */}
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+            </div>
+          )}
 
           {/* Upload modal */}
           {showUploadModal && (
