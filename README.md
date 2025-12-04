@@ -67,7 +67,7 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 - WebSocket for real-time updates
 - Audit logging for transparency
 
-### 🗄️ Database (MongoDB)
+### 🗄️ Database (MongoDB) + MySql
 - Stores users, elections, votes, and candidate data
 - Mongoose models for data consistency
 - Data encryption for sensitive information
