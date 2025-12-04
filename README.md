@@ -24,6 +24,12 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 ## 🚀 Features
 
 ### 👥 User Roles
+**Super Admin:**
+- Overoll System Administrator
+- View analytics, reports, and statistics
+- Manage student voter accounts
+- More Coming......
+  
 **Admin:**
 - Create and manage elections
 - Add, update, or remove candidates
