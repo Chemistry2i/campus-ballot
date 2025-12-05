@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { getFaculties, getCohorts } = require('../controllers/metaController');
-const { protect } = require('../middleware/authMiddleware');
 
-// Public meta endpoints (protected optional)
+// Get all faculties
 router.get('/faculties', getFaculties);
+
+// Get all cohorts
 router.get('/cohorts', getCohorts);
 
 module.exports = router;

@@ -1,21 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { protect, superAdminOnly } = require('../middleware/authMiddleware');
+
 const {
   getSystemSummary,
-  getAllAdmins,
-  createAdmin,
-  updateAdminStatus,
-  deleteAdmin
-} = require('../controllers/superAdminController');
+} = require('../controllers/reportController');
 
-// System summary for dashboard
-router.get('/reports/system-summary', protect, superAdminOnly, getSystemSummary);
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-// Admin management
-router.get('/admins', protect, superAdminOnly, getAllAdmins);
-router.post('/admins', protect, superAdminOnly, createAdmin);
-router.put('/admins/:id/status', protect, superAdminOnly, updateAdminStatus);
-router.delete('/admins/:id', protect, superAdminOnly, deleteAdmin);
+// Super Admin: Get system summary (dashboard stats)
+router.get('/reports/system-summary', protect, adminOnly, getSystemSummary);
 
 module.exports = router;

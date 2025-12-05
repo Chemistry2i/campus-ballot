@@ -46,4 +46,8 @@ router.get('/reports/voter-demographics', protect, adminOnly, getVoterDemographi
 // Super Admin: Get audit logs
 router.get('/audit-logs', protect, adminOnly, getAuditLogs);
 
+// Add log routes
+const logRoutes = require('./routes/logRoutes');
+app.use('/api/logs', logRoutes);
+
 module.exports = router;

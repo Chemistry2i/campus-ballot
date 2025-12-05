@@ -34,28 +34,12 @@ axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app
 
 function Logs({ user }) {
   const [logs, setLogs] = useState([]);
-  const [filteredLogs, setFilteredLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
-  const [actionFilter, setActionFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedLog, setSelectedLog] = useState(null);
-  const [sortField, setSortField] = useState("timestamp");
-  const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [logsPerPage] = useState(10);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30); // seconds
-  const [stats, setStats] = useState({
-    total: 0,
-    info: 0,
-    warning: 0,
-    error: 0,
-    success: 0
-  });
+  const [totalPages, setTotalPages] = useState(1);
 
   // Form state for creating new log
   const [formData, setFormData] = useState({
@@ -73,32 +57,42 @@ function Logs({ user }) {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get("/api/logs", {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get('/api/logs', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          page: currentPage,
+          limit: 50,
+          level: levelFilter !== 'all' ? levelFilter : undefined,
+          date: dateFilter || undefined
+        }
       });
-      setLogs(response.data);
-      calculateStats(response.data);
+      
+      // Fix: Ensure we always get an array
+      const logsData = Array.isArray(response.data) 
+        ? response.data 
+        : Array.isArray(response.data?.logs) 
+        ? response.data.logs 
+        : [];
+      
+      setLogs(logsData);
+      setTotalPages(response.data.totalPages || 1);
     } catch (error) {
-      console.error("Error fetching logs:", error);
-      Swal.fire("Error", "Failed to load logs", "error");
+      console.error('Failed to fetch logs:', error);
+      setLogs([]); // Ensure logs is always an array
+      Swal.fire('Error', 'Failed to load logs', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate stats for log summary cards
-  const calculateStats = (logsData) => {
-    const stats = {
-      total: logsData.length,
-      info: logsData.filter(log => log.status === 'success' && !log.errorMessage).length,
-      warning: logsData.filter(log => log.status === 'success' && log.errorMessage).length,
-      error: logsData.filter(log => log.status === 'failure').length,
-      success: logsData.filter(log => log.status === 'success').length
-    };
-    setStats(stats);
-  };
-
   const filterAndSortLogs = () => {
+    // Fix: Ensure logs is always an array
+    if (!Array.isArray(logs)) {
+      console.warn('filterAndSortLogs: logs is not an array:', logs);
+      setFilteredLogs([]);
+      return;
+    }
+
     let filtered = [...logs];
 
     // Search filter
@@ -120,6 +114,8 @@ function Logs({ user }) {
         filtered = filtered.filter(log => log.status === 'success' && !log.errorMessage);
       } else if (levelFilter === "warning") {
         filtered = filtered.filter(log => log.status === 'success' && log.errorMessage);
+      } else if (levelFilter === "info") {
+        filtered = filtered.filter(log => log.level === 'info' || (!log.level && log.status === 'success'));
       }
     }
 
@@ -357,10 +353,12 @@ function Logs({ user }) {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [currentPage, levelFilter, dateFilter]);
 
   useEffect(() => {
-    filterAndSortLogs();
+    if (Array.isArray(logs)) {
+      filterAndSortLogs();
+    }
   }, [logs, searchTerm, levelFilter, actionFilter, dateFilter, sortField, sortOrder]);
 
   useEffect(() => {
@@ -556,8 +554,8 @@ function Logs({ user }) {
                       type="text"
                       className="form-control border-start-0"
                       placeholder="Search logs by action, message, user ID, or IP..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>

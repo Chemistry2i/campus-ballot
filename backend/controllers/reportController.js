@@ -109,4 +109,44 @@ const getReportSummary = async (req, res) => {
   }
 };
 
-module.exports = { getReportSummary };
+const getSystemSummary = async (req, res) => {
+  try {
+    const totalElections = await Election.countDocuments();
+    const totalVotes = await Vote.countDocuments();
+    const totalUsers = await User.countDocuments();
+    
+    // Basic system summary for super admin dashboard
+    const summary = {
+      totalAdmins: await User.countDocuments({ role: 'admin' }),
+      totalUsers,
+      totalElections,
+      activeElections: await Election.countDocuments({ status: 'ongoing' }),
+      pendingRequests: 0, // placeholder
+      systemHealth: 'OK',
+      recentActions: [],
+      // Add dummy data for charts
+      userGrowth: [
+        { month: 'Jan', count: 20 },
+        { month: 'Feb', count: 35 },
+        { month: 'Mar', count: 50 },
+        { month: 'Apr', count: 65 },
+        { month: 'May', count: 80 },
+      ],
+      electionParticipation: [
+        { name: 'Presidential', turnout: 75 },
+        { name: 'Guild', turnout: 60 },
+        { name: 'Faculty', turnout: 45 },
+        { name: 'Class Rep', turnout: 30 },
+      ],
+    };
+    
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch system summary', error: err.message });
+  }
+};
+
+module.exports = { 
+  getReportSummary,
+  getSystemSummary 
+};

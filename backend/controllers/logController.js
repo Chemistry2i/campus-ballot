@@ -6,119 +6,154 @@ const Log = require("../models/Log");
 // @access  Admin only
 const getAllLogs = asyncHandler(async (req, res) => {
   try {
-    const logs = await Log.find().sort({ createdAt: -1 }).populate('user', 'name email role');
-    console.log({ message: "Fetched all logs" });
-    res.json(logs);
-  } catch (error) {
-    console.log({ message: "Error fetching logs", error: error.message });
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// @desc    Get a log by ID
-// @route   GET /api/logs/:id
-// @access  Admin only
-const getLogById = asyncHandler(async (req, res) => {
-  try {
-    const log = await Log.findById(req.params.id).populate('user', 'name email role');
-    if (!log) {
-      console.log({ message: "Log not found" });
-      return res.status(404).json({ message: "Log not found" });
+    const { page = 1, limit = 50, level, date, search } = req.query;
+    
+    const query = {};
+    
+    // Filter by level if provided
+    if (level && level !== 'all') {
+      if (level === 'error') {
+        query.status = 'failure';
+      } else if (level === 'success') {
+        query.status = 'success';
+        query.errorMessage = { $exists: false };
+      } else if (level === 'warning') {
+        query.status = 'success';
+        query.errorMessage = { $exists: true };
+      }
     }
-    console.log({ message: "Fetched log by ID" });
-    res.json(log);
+    
+    // Filter by date if provided
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      query.createdAt = { $gte: startDate, $lte: endDate };
+    }
+    
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { action: { $regex: search, $options: 'i' } },
+        { details: { $regex: search, $options: 'i' } },
+        { entityType: { $regex: search, $options: 'i' } },
+        { ipAddress: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const logs = await Log.find(query)
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const total = await Log.countDocuments(query);
+    
+    res.json({
+      logs,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
   } catch (error) {
-    console.log({ message: "Error fetching log by ID", error: error.message });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to get logs', error: error.message });
   }
 });
 
-// @desc    Create a log entry
+// @desc    Create a new log
 // @route   POST /api/logs
 // @access  Admin only
 const createLog = asyncHandler(async (req, res) => {
   try {
-    const {
-      action,
-      entityType,
-      entityId,
-      details,
-      status = 'success',
-      errorMessage = null,
-      location = null
-    } = req.body;
-
-    if (!action || !entityType || !entityId) {
-      console.log({ message: "Missing required fields for log" });
-      return res.status(400).json({ message: "Action, entityType, and entityId are required" });
+    const { action, entityType, entityId, details, status, ipAddress, userAgent } = req.body;
+    
+    if (!action || !entityType || !details) {
+      return res.status(400).json({ message: 'Action, entityType, and details are required' });
     }
-
+    
     const log = await Log.create({
       user: req.user._id,
       action,
       entityType,
       entityId,
       details,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'] || 'unknown',
-      status,
-      errorMessage,
-      location
+      status: status || 'success',
+      ipAddress: ipAddress || req.ip,
+      userAgent: userAgent || req.get('User-Agent')
     });
-
-    console.log({ message: "Log created", ip: req.ip, userAgent: req.headers['user-agent'] });
+    
     res.status(201).json(log);
   } catch (error) {
-    console.log({ message: "Error creating log", error: error.message });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to create log', error: error.message });
   }
 });
 
-// @desc    Delete a log entry
+// @desc    Delete a log
 // @route   DELETE /api/logs/:id
 // @access  Admin only
 const deleteLog = asyncHandler(async (req, res) => {
   try {
     const log = await Log.findById(req.params.id);
+    
     if (!log) {
-      console.log({ message: "Log not found" });
-      return res.status(404).json({ message: "Log not found" });
+      return res.status(404).json({ message: 'Log not found' });
     }
+    
     await log.deleteOne();
-    console.log({ message: "Log deleted" });
-    res.json({ message: "Log deleted" });
+    res.json({ message: 'Log deleted successfully' });
   } catch (error) {
-    console.log({ message: "Error deleting log", error: error.message });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to delete log', error: error.message });
   }
 });
 
 // @desc    Search logs
-// @route   GET /api/logs/search?q=...&action=...
+// @route   GET /api/logs/search
 // @access  Admin only
 const searchLogs = asyncHandler(async (req, res) => {
   try {
-    const { q, action } = req.query;
-    let filter = {};
-    if (q) {
-      filter.details = { $regex: q, $options: "i" };
+    const { q } = req.query;
+    
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
     }
-    if (action) {
-      filter.action = action;
-    }
-    const logs = await Log.find(filter).sort({ createdAt: -1 }).populate('user', 'name email role');
-    console.log({ message: "Searched logs" });
+    
+    const logs = await Log.find({
+      $or: [
+        { action: { $regex: q, $options: 'i' } },
+        { details: { $regex: q, $options: 'i' } },
+        { entityType: { $regex: q, $options: 'i' } },
+        { ipAddress: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .populate('user', 'name email')
+    .sort({ createdAt: -1 })
+    .limit(100);
+    
     res.json(logs);
   } catch (error) {
-    console.log({ message: "Error searching logs", error: error.message });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to search logs', error: error.message });
+  }
+});
+
+// @desc    Clear all logs
+// @route   DELETE /api/logs
+// @access   Admin only
+const clearAllLogs = asyncHandler(async (req, res) => {
+  try {
+    const result = await Log.deleteMany({});
+    res.json({ 
+      message: `Successfully deleted ${result.deletedCount} log entries`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to clear logs', error: error.message });
   }
 });
 
 module.exports = {
   getAllLogs,
-  getLogById,
   createLog,
   deleteLog,
-  searchLogs
+  searchLogs,
+  clearAllLogs
 };
