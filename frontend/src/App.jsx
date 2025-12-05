@@ -16,6 +16,7 @@ import AuditLogs from './components/superAdmin/AuditLogs';
 import ElectionOversight from './components/superAdmin/ElectionOversight';
 import DataMaintenance from './components/superAdmin/DataMaintenance';
 import Reporting from './components/superAdmin/Reporting';
+import './styles/darkmode.css';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {

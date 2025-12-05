@@ -28,12 +28,15 @@ import Notifications from "../components/admin/Notifications"; // Importing Noti
 import AdminSettings from "../components/admin/AdminSettings";
 import Reports from "../components/admin/Reports";
 import Results from "../components/admin/Results";
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/admin/ThemeToggle';
+import '../styles/darkmode.css';
 
 // Responsive sidebar state managed here and passed to Sidebar
 const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
-function AdminDashboard({ user: initialUser, onLogout }) {
+function AdminDashboardContent({ user: initialUser, onLogout }) {
   // Adding onLogout prop here
   const navigate = useNavigate();
   const [user, setUser] = useState(initialUser);
@@ -71,6 +74,7 @@ function AdminDashboard({ user: initialUser, onLogout }) {
   ]);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -432,7 +436,7 @@ function AdminDashboard({ user: initialUser, onLogout }) {
       style={{
         minHeight: "100vh",
         width: "100vw",
-        backgroundColor: "#f8f9fa",
+        backgroundColor: colors.background,
         overflow: "hidden",
       }}
       onClick={closeDropdowns}
@@ -443,29 +447,26 @@ function AdminDashboard({ user: initialUser, onLogout }) {
         setCollapsed={setCollapsed}
         isMobile={isMobile}
         onOpenCreateElection={() => setShowCreateElection(true)}
-        onLogout={handleLogout} // Use SweetAlert confirmation
+        onLogout={handleLogout}
         onProfileUpdated={(updated) => setUser(updated)}
       />
+      
       <main
         style={{
           marginLeft: mainMarginLeft,
-          width: isMobile
-            ? "100vw"
-            : `calc(100vw - ${
-                collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
-              }px)`,
+          width: isMobile ? "100vw" : `calc(100vw - ${collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH}px)`,
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
-          background: "#f8f9fc",
+          background: colors.background,
           transition: "margin-left 0.2s, width 0.2s",
         }}
       >
         {/* Header Bar */}
         <div
           style={{
-            background: "#fff",
-            borderBottom: "1px solid #eee",
+            background: colors.surface,
+            borderBottom: `1px solid ${colors.border}`,
             padding: "1rem 2rem",
             display: "flex",
             alignItems: "center",
@@ -476,14 +477,15 @@ function AdminDashboard({ user: initialUser, onLogout }) {
           <div>
             <span
               className="fw-bold"
-              style={{ fontSize: "1.2rem", color: "#2563eb" }}
+              style={{ fontSize: "1.2rem", color: colors.primary }}
             >
               Admin Panel
             </span>
           </div>
-          <div>
-            <span className="me-3 text-muted">
-              Welcome, <strong>{user?.name}</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <ThemeToggle showLabel />
+            <span className="me-3" style={{ color: colors.textMuted }}>
+              Welcome, <strong style={{ color: colors.text }}>{user?.name}</strong>
             </span>
             <button
               className="btn btn-outline-danger btn-sm"
@@ -502,6 +504,7 @@ function AdminDashboard({ user: initialUser, onLogout }) {
             padding: "2rem",
             overflowY: "auto",
             height: "100%",
+            background: colors.background,
           }}
         >
           <Routes>
@@ -649,6 +652,15 @@ function AdminDashboard({ user: initialUser, onLogout }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Wrap with ThemeProvider
+function AdminDashboard(props) {
+  return (
+    <ThemeProvider>
+      <AdminDashboardContent {...props} />
+    </ThemeProvider>
   );
 }
 

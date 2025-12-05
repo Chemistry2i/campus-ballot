@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from 'axios';
 import { useRef, useState, useEffect } from 'react';
 import getImageUrl from '../../utils/getImageUrl';
-import Swal from 'sweetalert2'; // Added SweetAlert2 import
+import Swal from 'sweetalert2';
 import {
   faTachometerAlt,
   faUsers,
@@ -20,20 +20,25 @@ import {
   faPlusCircle,
   faUserCircle,
   faBullhorn,
+  faChevronLeft,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from '../../contexts/ThemeContext';
 
 function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, setCollapsed, isMobile }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [profilePic, setProfilePic] = useState(user?.profilePicture || '/default-avatar.png');
   const profileImgSrc = getImageUrl(profilePic);
-  // Modal + preview upload states
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  // Counts for badges
   const [notificationCount, setNotificationCount] = useState(0);
   const [logCount, setLogCount] = useState(0);
+  const { isDarkMode, colors } = useTheme();
+
+  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -47,7 +52,6 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
         setLogCount(logRes.data.count || 0);
       } catch (err) {
         console.error('Error fetching counts', err);
-        // Optionally set to 0 or show error
       }
     };
     fetchCounts();
@@ -125,12 +129,39 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
   };
 
+  const sidebarStyle = {
+    width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+    height: '100vh',
+    position: 'fixed',
+    left: 0,
+    top: 0,
+    background: isDarkMode 
+      ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)'
+      : '#fff',
+    borderRight: `1px solid ${colors.border}`,
+    zIndex: 1000,
+    transition: 'width 0.2s ease-in-out, background-color 0.2s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: isDarkMode 
+      ? '4px 0 15px rgba(0,0,0,0.3)'
+      : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  };
+
+  if (isMobile) {
+    sidebarStyle.transform = collapsed ? 'translateX(-100%)' : 'translateX(0)';
+    sidebarStyle.width = SIDEBAR_WIDTH;
+  }
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'AD';
+
   return (
     <>
-      {/* Overlay for mobile drawer */}
+      {/* Overlay for mobile */}
       {isMobile && !collapsed && (
         <div
-          className="admin-sidebar-overlay"
           style={{
             position: 'fixed',
             top: 0,
@@ -138,229 +169,501 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
             width: '100vw',
             height: '100vh',
             background: 'rgba(0,0,0,0.08)',
-            zIndex: 99,
+            zIndex: 999,
           }}
           onClick={() => setCollapsed(true)}
-          aria-label="Close sidebar"
         />
       )}
-      <aside
-        className={`admin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
-        style={{
-          minWidth: collapsed ? 64 : 280,
-          width: collapsed ? 64 : 280,
-          height: '100vh',
-          position: 'fixed',
-          left: isMobile && collapsed ? -280 : 0,
-          top: 0,
-          zIndex: 100,
-          transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
-          boxShadow: '0 0 12px rgba(37,99,235,0.07)',
-          background: '#fff',
-          color: '#222'
-        }}
-        aria-label="Admin Sidebar"
-      >
-        <div className="p-4 border-bottom text-center">
-          {/* User Avatar */}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <img
-              src={profileImgSrc}
-              alt="Admin"
-              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: '50%' }}
-              className="mb-2"
-            />
-            <button
-              className="btn btn-sm btn-light position-absolute top-0 end-0"
-              style={{ transform: 'translate(30%, -30%)' }}
-              onClick={onChooseFile}
-              title="Change profile picture"
-              aria-label="Change profile picture"
-            >
-              {uploading ? (
-                <span className="spinner-border spinner-border-sm" role="status" />
-              ) : (
-                <FontAwesomeIcon icon={faUserCircle} />
-              )}
-            </button>
-            {/* hidden input for fallback */}
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-          </div>
 
-          {/* Upload modal */}
-          {showUploadModal && (
-            <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
-              <div className="modal-dialog modal-sm modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">Upload profile picture</h5>
-                    <button type="button" className="btn-close" onClick={handleCancelUpload}></button>
-                  </div>
-                  <div className="modal-body text-center">
-                    {previewUrl ? (
-                      <img src={previewUrl} alt="preview" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%' }} />
-                    ) : (
-                      <div className="mb-3 text-muted">No file selected</div>
-                    )}
-                    <div className="mt-3">
-                      <input className="form-control" type="file" accept="image/*" onChange={handleFileSelect} />
-                    </div>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn btn-secondary" type="button" onClick={handleCancelUpload}>Cancel</button>
-                    <button className="btn btn-primary" type="button" onClick={handleSaveUpload} disabled={uploading || !selectedFile}>{uploading ? 'Saving...' : 'Save'}</button>
-                  </div>
-                </div>
+      <aside style={sidebarStyle}>
+        {/* Header */}
+        <div
+          style={{
+            padding: collapsed ? '1rem 0.5rem' : '1rem 1.5rem',
+            borderBottom: `1px solid ${colors.border}`,
+            background: colors.surface,
+            textAlign: collapsed ? 'center' : 'left',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between' }}>
+            {!collapsed && (
+              <div style={{ display: 'flex', alignItems: 'center', color: colors.primary }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: '600', color: colors.primary }}>Admin Panel</span>
+              </div>
+            )}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.textMuted,
+                padding: '0.25rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              <FontAwesomeIcon icon={collapsed ? faChevronRight : faChevronLeft} />
+            </button>
+          </div>
+        </div>
+
+        {/* User Info */}
+        {!collapsed && (
+          <div
+            style={{
+              padding: '1rem 1.5rem',
+              borderBottom: `1px solid ${colors.border}`,
+              background: colors.surface,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+              <div
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: '50%',
+                  background: isDarkMode ? '#475569' : '#e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '0.5rem',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  color: colors.text,
+                }}
+                onClick={onChooseFile}
+                title="Change profile picture"
+              >
+                {uploading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div style={{ fontSize: '0.875rem', fontWeight: '500', color: colors.text, marginBottom: '0.25rem' }}>
+                Welcome, {user?.name}
+              </div>
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: '#fff', 
+                background: colors.success, 
+                padding: '0.125rem 0.5rem', 
+                borderRadius: '9999px',
+                fontWeight: '500'
+              }}>
+                {user?.role}
               </div>
             </div>
-          )}
+            
+            {/* Quick Action Button */}
+            <div className="mt-3">
+              <button
+                onClick={onOpenCreateElection}
+                style={{
+                  background: colors.primary,
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: '0.375rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={e => e.target.style.background = colors.primaryHover}
+                onMouseLeave={e => e.target.style.background = colors.primary}
+              >
+                <FontAwesomeIcon icon={faPlusCircle} style={{ marginRight: '0.5rem' }} />
+                New Election
+              </button>
+            </div>
+          </div>
+        )}
 
-          {!collapsed && (
-            <>
-              <h4 className="fw-bold text-primary mt-2">Admin Panel</h4>
-              <p className="mb-0 text-muted">
-                Welcome, {user?.name}
-              </p>
-              <span className="badge bg-success">{user?.role}</span>
-              {/* Quick Action */}
-              <div className="mt-3">
-                <button
-                  className="btn btn-sm btn-primary w-100"
-                  onClick={onOpenCreateElection}
-                  aria-label="Create Election"
-                >
-                  <FontAwesomeIcon icon={faPlusCircle} className="me-2" />
-                  New Election
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-        <ul className="nav flex-column p-2">
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin" title={collapsed ? 'Dashboard' : undefined}>
-              <FontAwesomeIcon icon={faTachometerAlt} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Dashboard</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/users" title={collapsed ? 'Users' : undefined}>
-              <FontAwesomeIcon icon={faUsers} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Users</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/elections" title={collapsed ? 'Elections' : undefined}>
-              <FontAwesomeIcon icon={faBullhorn} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Elections</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/candidates" title={collapsed ? 'Candidates' : undefined}>
-              <FontAwesomeIcon icon={faUserTie} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Candidates</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/results" title={collapsed ? 'Results' : undefined}>
-              <FontAwesomeIcon icon={faChartBar} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Results</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/logs" title={collapsed ? 'Logs' : undefined}>
-              <FontAwesomeIcon icon={faHistory} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Logs</span>
-              {/* Logs badge */}
-              {logCount > 0 && !collapsed && (
-                <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                  {logCount}
-                </span>
-              )}
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/notifications" title={collapsed ? 'Notifications' : undefined}>
-              <FontAwesomeIcon icon={faBell} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Notifications</span>
-              {/* Notifications badge */}
-              {notificationCount > 0 && !collapsed && (
-                <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                  {notificationCount}
-                </span>
-              )}
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/reports" title={collapsed ? 'Reports' : undefined}>
-              <FontAwesomeIcon icon={faChartPie} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Reports</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/settings" title={collapsed ? 'Settings' : undefined}>
-              <FontAwesomeIcon icon={faCog} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Settings</span>
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink className="nav-link d-flex align-items-center" to="/admin/help" title={collapsed ? 'Help' : undefined}>
-              <FontAwesomeIcon icon={faQuestionCircle} className="me-2" style={{ fontSize: collapsed ? '1.5rem' : '1rem' }} />
-              <span>Help</span>
-            </NavLink>
-          </li>
-        </ul>
-        {/* Sidebar Footer */}
+        {/* Navigation Menu */}
+        <nav style={{ flex: 1, padding: '0.5rem 0' }}>
+          <NavLink
+            to="/admin"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+            })}
+            onMouseEnter={e => {
+              if (!e.target.classList.contains('active')) {
+                e.target.style.background = colors.sidebarHover;
+                e.target.style.color = colors.text;
+              }
+            }}
+            onMouseLeave={e => {
+              if (!e.target.classList.contains('active')) {
+                e.target.style.background = 'transparent';
+                e.target.style.color = colors.textSecondary;
+              }
+            }}
+          >
+            <FontAwesomeIcon 
+              icon={faTachometerAlt} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Dashboard</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/users"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faUsers} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Users</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/elections"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faBullhorn} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Elections</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/candidates"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faUserTie} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Candidates</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/results"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faChartBar} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Results</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/logs"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faHistory} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Logs</span>}
+            {logCount > 0 && !collapsed && (
+              <span className="badge bg-danger ms-auto" style={{ fontSize: '0.625rem' }}>
+                {logCount}
+              </span>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/admin/notifications"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faBell} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Notifications</span>}
+            {notificationCount > 0 && !collapsed && (
+              <span className="badge bg-danger ms-auto" style={{ fontSize: '0.625rem' }}>
+                {notificationCount}
+              </span>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/admin/reports"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faChartPie} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Reports</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/settings"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faCog} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Settings</span>}
+          </NavLink>
+
+          <NavLink
+            to="/admin/help"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+              color: isActive ? colors.primary : colors.textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+              background: isActive ? colors.sidebarHover : 'transparent',
+            })}
+          >
+            <FontAwesomeIcon 
+              icon={faQuestionCircle} 
+              style={{
+                fontSize: '1rem',
+                width: collapsed ? 'auto' : '1rem',
+                marginRight: collapsed ? '0' : '0.75rem',
+              }}
+            />
+            {!collapsed && <span>Help</span>}
+          </NavLink>
+        </nav>
+
+        {/* Footer */}
         {!collapsed && (
-          <div className="sidebar-footer p-3 border-top text-center small text-muted mt-auto">
-            <FontAwesomeIcon icon={faBookOpen} className="me-1" />
-            v1.0.0 &copy; 2025 VoteSys
+          <div
+            style={{
+              padding: '1rem 1.5rem',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.75rem',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FontAwesomeIcon icon={faBookOpen} style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2025 VoteSys
+            </div>
             <button
-              className="nav-link text-danger btn btn-link w-100 mt-2"
               onClick={onLogout ? onLogout : () => navigate("/login")}
-              style={{ textAlign: "left" }}
-              aria-label="Logout"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
             >
-              <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+              <FontAwesomeIcon icon={faSignOutAlt} style={{ marginRight: '0.25rem' }} />
               Logout
             </button>
           </div>
         )}
-        <style>{`
-          .admin-sidebar { background: #fff; border-right: 1px solid #eee; }
-          .admin-sidebar.collapsed .sidebar-header .fw-bold,
-          .admin-sidebar.collapsed .sidebar-header .mb-0,
-          .admin-sidebar.collapsed .sidebar-header .badge,
-          .admin-sidebar.collapsed .sidebar-header .mt-3,
-          .admin-sidebar.collapsed .sidebar-footer {
-            display: none !important;
-          }
-          .admin-sidebar.collapsed .nav-link span {
-            display: none;
-          }
-          .admin-sidebar.collapsed .nav-link {
-            padding: 0.85rem 0.5rem;
-            justify-content: center;
-          }
-          .admin-sidebar-overlay {
-            display: none;
-          }
-          .admin-sidebar-overlay.show {
-            display: block;
-          }
-          @media (max-width: 992px) {
-            .admin-sidebar {
-              left: ${collapsed ? '-280px' : '0'} !important;
-              min-width: ${collapsed ? '64px' : '280px'} !important;
-              width: ${collapsed ? '64px' : '280px'} !important;
-              transition: left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s;
-            }
-            .admin-sidebar-overlay {
-              display: ${collapsed ? 'none' : 'block'};
-            }
-          }
-        `}</style>
+
+        {/* Upload Modal */}
+        {showUploadModal && (
+          <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-sm modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Upload Profile Picture</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowUploadModal(false)}></button>
+                </div>
+                <div className="modal-body text-center">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="preview" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%' }} />
+                  ) : (
+                    <div className="mb-3 text-muted">No file selected</div>
+                  )}
+                  <div className="mt-3">
+                    <input className="form-control" type="file" accept="image/*" onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (!file) return;
+                      setSelectedFile(file);
+                      try {
+                        const url = URL.createObjectURL(file);
+                        setPreviewUrl(url);
+                      } catch (err) {
+                        setPreviewUrl(null);
+                      }
+                    }} />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" type="button" onClick={() => setShowUploadModal(false)}>Cancel</button>
+                  <button className="btn btn-primary" type="button" disabled={uploading || !selectedFile}>
+                    {uploading ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} />
       </aside>
+
+      {/* Mobile toggle button */}
+      {isMobile && collapsed && (
+        <button
+          onClick={() => setCollapsed(false)}
+          style={{
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            zIndex: 1001,
+            background: '#2563eb',
+            border: 'none',
+            color: '#fff',
+            padding: '0.75rem',
+            borderRadius: '50%',
+            width: 48,
+            height: 48,
+            boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+          }}
+        >
+          <FontAwesomeIcon icon={faBullhorn} />
+        </button>
+      )}
     </>
   );
 }
