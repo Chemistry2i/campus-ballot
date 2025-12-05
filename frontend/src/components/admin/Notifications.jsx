@@ -13,6 +13,7 @@ import {
   faEnvelopeOpenText,
   faTimes
 } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from '../../contexts/ThemeContext';
 
 axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 
@@ -33,6 +34,8 @@ function Notifications({ user }) {
     type: "info",
     targetAudience: "all"
   });
+
+  const { isDarkMode, colors } = useTheme();
 
   // Fetch all notifications
   const fetchNotifications = async () => {
@@ -192,10 +195,10 @@ function Notifications({ user }) {
   }, [socketRef]);
 
   return (
-    <div className="container py-4">
+    <div className="container py-4" style={{ backgroundColor: colors.background, color: colors.text }}>
       <div className="d-flex align-items-center mb-4">
         <FontAwesomeIcon icon={faBell} className="text-primary me-2" size="lg" />
-        <h4 className="fw-bold mb-0">Notifications</h4>
+        <h4 className="fw-bold mb-0" style={{ color: colors.text }}>Notifications</h4>
         <span className="badge bg-primary ms-2">{notifications.length}</span>
         {user?.role === "admin" && (
           <button
@@ -207,21 +210,46 @@ function Notifications({ user }) {
           </button>
         )}
       </div>
+
       {/* Search & Filters toolbar */}
       <div className="d-flex gap-2 align-items-center mb-3">
         <div className="input-group" style={{ maxWidth: 360 }}>
-          <span className="input-group-text">Search</span>
+          <span 
+            className="input-group-text"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              color: colors.text
+            }}
+          >
+            Search
+          </span>
           <input
             type="search"
             className="form-control"
             placeholder="Search by title or message..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}
           />
           <button className="btn btn-outline-secondary" onClick={() => setSearchQuery("")}>Clear</button>
         </div>
 
-        <select className="form-select" style={{ maxWidth: 160 }} value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+        <select 
+          className="form-select" 
+          style={{ 
+            maxWidth: 160,
+            backgroundColor: colors.inputBg,
+            borderColor: colors.inputBorder,
+            color: colors.text
+          }} 
+          value={filterType} 
+          onChange={(e) => setFilterType(e.target.value)}
+        >
           <option value="all">All types</option>
           <option value="info">Info</option>
           <option value="success">Success</option>
@@ -254,7 +282,7 @@ function Notifications({ user }) {
       {loading ? (
         <div className="text-center py-5">
           <FontAwesomeIcon icon={faSpinner} spin size="2x" className="text-primary mb-3" />
-          <p>Loading notifications...</p>
+          <p style={{ color: colors.text }}>Loading notifications...</p>
         </div>
       ) : (
         (() => {
@@ -275,7 +303,14 @@ function Notifications({ user }) {
 
           if (!filtered || filtered.length === 0) {
             return (
-              <div className="alert alert-info d-flex align-items-center">
+              <div 
+                className="alert d-flex align-items-center"
+                style={{
+                  backgroundColor: isDarkMode ? '#164e63' : '#d1ecf1',
+                  borderColor: isDarkMode ? '#0891b2' : '#bee5eb',
+                  color: isDarkMode ? '#bae6fd' : '#0c5460'
+                }}
+              >
                 <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
                 No notifications found.
               </div>
@@ -284,12 +319,19 @@ function Notifications({ user }) {
 
           return (
             <div>
-              <div className="small text-muted mb-2">Showing {filtered.length} of {notifications.length} notifications</div>
+              <div className="small mb-2" style={{ color: colors.textMuted }}>
+                Showing {filtered.length} of {notifications.length} notifications
+              </div>
               <div className="list-group shadow-sm">
                 {filtered.map((n) => (
                   <div
                     key={n._id}
-                    className={`list-group-item d-flex justify-content-between align-items-start ${n.read ? "" : "bg-light"}`}
+                    className="list-group-item d-flex justify-content-between align-items-start"
+                    style={{
+                      backgroundColor: n.read ? colors.surface : colors.surfaceHover,
+                      borderColor: colors.border,
+                      color: colors.text
+                    }}
                   >
                     <div className="d-flex align-items-center" style={{ cursor: "pointer" }} onClick={() => openDetailsModal(n)}>
                       <FontAwesomeIcon
@@ -298,9 +340,9 @@ function Notifications({ user }) {
                         size="lg"
                       />
                       <div>
-                        <div className="fw-bold">{n.title || "Notification"}</div>
-                        <div className="text-muted small">{n.message}</div>
-                        <div className="text-muted small">{new Date(n.createdAt).toLocaleString()}</div>
+                        <div className="fw-bold" style={{ color: colors.text }}>{n.title || "Notification"}</div>
+                        <div className="small" style={{ color: colors.textMuted }}>{n.message}</div>
+                        <div className="small" style={{ color: colors.textMuted }}>{new Date(n.createdAt).toLocaleString()}</div>
                         <div>
                           <span className={`badge bg-${n.type === "success"
                             ? "success"
@@ -346,12 +388,22 @@ function Notifications({ user }) {
 
       {/* Create Notification Modal */}
       {showCreateModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ background: "rgba(0,0,0,0.5)" }}>
+        <div className="modal show d-block" tabIndex="-1" style={{ background: colors.modalBg }}>
           <div className="modal-dialog">
-            <div className="modal-content">
+            <div 
+              className="modal-content"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.text
+              }}
+            >
               <form onSubmit={handleCreate}>
-                <div className="modal-header">
-                  <h5 className="modal-title">
+                <div 
+                  className="modal-header"
+                  style={{ borderBottomColor: colors.border }}
+                >
+                  <h5 className="modal-title" style={{ color: colors.text }}>
                     <FontAwesomeIcon icon={faPlus} className="me-2" />
                     Create Notification
                   </h5>
@@ -359,31 +411,46 @@ function Notifications({ user }) {
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label fw-bold">Title</label>
+                    <label className="form-label fw-bold" style={{ color: colors.text }}>Title</label>
                     <input
                       type="text"
                       className="form-control"
                       value={formData.title}
                       onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      style={{
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text
+                      }}
                       required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-bold">Message</label>
+                    <label className="form-label fw-bold" style={{ color: colors.text }}>Message</label>
                     <textarea
                       className="form-control"
                       rows={3}
                       value={formData.message}
                       onChange={e => setFormData({ ...formData, message: e.target.value })}
+                      style={{
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text
+                      }}
                       required
                     ></textarea>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-bold">Type</label>
+                    <label className="form-label fw-bold" style={{ color: colors.text }}>Type</label>
                     <select
                       className="form-select"
                       value={formData.type}
                       onChange={e => setFormData({ ...formData, type: e.target.value })}
+                      style={{
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text
+                      }}
                     >
                       <option value="info">Info</option>
                       <option value="success">Success</option>
@@ -392,11 +459,16 @@ function Notifications({ user }) {
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-bold">Target Audience</label>
+                    <label className="form-label fw-bold" style={{ color: colors.text }}>Target Audience</label>
                     <select
                       className="form-select"
                       value={formData.targetAudience}
                       onChange={e => setFormData({ ...formData, targetAudience: e.target.value })}
+                      style={{
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.text
+                      }}
                     >
                       <option value="all">All</option>
                       <option value="admins">Admins</option>
@@ -404,7 +476,10 @@ function Notifications({ user }) {
                     </select>
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer"
+                  style={{ borderTopColor: colors.border }}
+                >
                   <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
                     Cancel
                   </button>

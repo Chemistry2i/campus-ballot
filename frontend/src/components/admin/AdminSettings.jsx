@@ -12,6 +12,7 @@ import {
   faClipboardList,
   faHistory
 } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from '../../contexts/ThemeContext';
 
 function SectionCard({ id, title, children, onSave, onSaveDraft, saving }) {
   return (
@@ -74,6 +75,8 @@ export default function AdminSettings({ user }) {
   // RBAC / MFA enforcement
   const [enforceMfa, setEnforceMfa] = useState(false);
   const [mfaGraceDays, setMfaGraceDays] = useState(7);
+
+  const { isDarkMode, colors } = useTheme();
 
   // load settings from backend when available
   useEffect(() => {
@@ -349,7 +352,7 @@ export default function AdminSettings({ user }) {
   };
 
   return (
-    <div className="container py-4">
+    <div className="container py-4" style={{ background: colors.background, color: colors.text }}>
       <style>{`
         /* Quick visual flash when navigating via quick actions */
         .cb-flash{ animation: cbFlash 1.4s ease-in-out; }
@@ -417,12 +420,30 @@ export default function AdminSettings({ user }) {
   {/* Profile section */}
   <SectionCard id="profile" title="Profile" onSave={saveProfile} onSaveDraft={async () => { Swal.fire('Saved draft', 'Profile draft saved locally.', 'info'); }} saving={saving}>
         <div className="mb-3">
-          <label className="form-label">Display name</label>
-          <input className="form-control" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          <label className="form-label" style={{ color: colors.text }}>Display name</label>
+          <input 
+            className="form-control" 
+            value={displayName} 
+            onChange={(e) => setDisplayName(e.target.value)}
+            style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}
+          />
         </div>
         <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input className="form-control" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} />
+          <label className="form-label" style={{ color: colors.text }}>Email</label>
+          <input 
+            className="form-control" 
+            value={profileEmail} 
+            onChange={(e) => setProfileEmail(e.target.value)}
+            style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}
+          />
         </div>
         <div className="mb-3">
           <label className="form-label">Phone</label>
@@ -514,17 +535,36 @@ export default function AdminSettings({ user }) {
         </div>
         {voterPreview && voterPreview.length > 0 && (
           <div className="mb-3">
-            <div className="fw-bold small">Preview (first {voterPreview.length} rows)</div>
-            <div className="table-responsive" style={{ maxHeight: 220 }}>
-              <table className="table table-sm">
+            <div className="fw-bold small" style={{ color: colors.text }}>Preview (first {voterPreview.length} rows)</div>
+            <div className="table-responsive" style={{ 
+              maxHeight: 220,
+              borderRadius: '0.5rem',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: colors.surface
+            }}>
+              <table className="table table-sm mb-0" style={{
+                backgroundColor: colors.surface,
+                color: colors.text,
+                ...(isDarkMode && {
+                  '--bs-table-bg': colors.surface,
+                  '--bs-table-striped-bg': '#2d3748',
+                  '--bs-table-hover-bg': '#3b4a5c',
+                  '--bs-table-border-color': colors.border,
+                })
+              }}>
                 <tbody>
                   {voterPreview.slice(0,50).map(p => (
-                    <tr key={p.row}><td className="small">{p.row}</td><td className="small">{p.cols.join(' | ')}</td></tr>
+                    <tr key={p.row} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                      <td className="small" style={{ color: colors.textSecondary, padding: '0.5rem' }}>{p.row}</td>
+                      <td className="small" style={{ color: colors.text, padding: '0.5rem' }}>{p.cols.join(' | ')}</td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="small text-muted">Validation: {voterValidation ? `${voterValidation.invalidCount} invalid of ${voterValidation.total}` : 'Pending'}</div>
+            <div className="small" style={{ color: colors.textMuted }}>
+              Validation: {voterValidation ? `${voterValidation.invalidCount} invalid of ${voterValidation.total}` : 'Pending'}
+            </div>
           </div>
         )}
       </SectionCard>

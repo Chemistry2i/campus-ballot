@@ -27,6 +27,7 @@ import {
 } from 'chart.js';
 
 import useSocket from '../../hooks/useSocket';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Register Chart.js components
 ChartJS.register(
@@ -45,6 +46,7 @@ ChartJS.register(
 
 function DashboardCharts() {
   const { socketRef } = useSocket();
+  const { isDarkMode, colors } = useTheme();
   const [stats, setStats] = useState({
     electionNames: [],
     votesPerElection: [],
@@ -372,7 +374,15 @@ function DashboardCharts() {
       {/* Data Source Indicator */}
       {usingDummyData && (
         <div className="col-12">
-          <div className="alert alert-warning d-flex align-items-center" role="alert">
+          <div 
+            className="alert d-flex align-items-center" 
+            role="alert"
+            style={{
+              backgroundColor: isDarkMode ? '#451a03' : '#fff3cd',
+              borderColor: isDarkMode ? '#d97706' : '#ffeaa7',
+              color: isDarkMode ? '#fed7aa' : '#856404'
+            }}
+          >
             <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
             <div>
               <strong>Demo Mode:</strong> The charts below are showing sample data because your database is empty. 
@@ -384,9 +394,21 @@ function DashboardCharts() {
       
       {/* Approved Candidates Votes Line Chart */}
       <div className="col-12">
-        <div className="card shadow-sm border-0">
-          <div className="card-header bg-transparent border-0 py-3">
-            <h5 className="mb-0 fw-bold d-flex align-items-center">
+        <div 
+          className="card shadow-sm border-0" 
+          style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border
+          }}
+        >
+          <div 
+            className="card-header bg-transparent border-0 py-3"
+            style={{
+              backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
+              borderBottomColor: colors.border
+            }}
+          >
+            <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: colors.text }}>
               <FontAwesomeIcon 
                 icon={faVoteYea} 
                 className="text-danger me-2" 
@@ -394,7 +416,7 @@ function DashboardCharts() {
               Approved Candidates Votes
             </h5>
           </div>
-          <div className="card-body">
+          <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
             {hasCandidateVotes ? (
               <Line
                 data={{
@@ -409,7 +431,7 @@ function DashboardCharts() {
                       tension: 0.4,
                       fill: true,
                       pointBackgroundColor: "#dc3545",
-                      pointBorderColor: "#fff",
+                      pointBorderColor: isDarkMode ? colors.surface : "#fff",
                       pointBorderWidth: 2,
                       pointRadius: 6,
                     },
@@ -419,9 +441,15 @@ function DashboardCharts() {
                   responsive: true,
                   maintainAspectRatio: false,
                   plugins: { 
-                    legend: { display: true, position: 'top' },
+                    legend: { 
+                      display: true, 
+                      position: 'top',
+                      labels: {
+                        color: colors.text
+                      }
+                    },
                     tooltip: {
-                      backgroundColor: 'rgba(0,0,0,0.8)',
+                      backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)',
                       titleColor: '#fff',
                       bodyColor: '#fff'
                     }
@@ -429,24 +457,32 @@ function DashboardCharts() {
                   scales: {
                     y: {
                       beginAtZero: true,
-                      grid: { color: 'rgba(0,0,0,0.1)' }
+                      grid: { 
+                        color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' 
+                      },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
                     },
                     x: {
-                      grid: { display: false }
+                      grid: { display: false },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
                     }
                   }
                 }}
                 height={300}
               />
             ) : (
-              <div className="text-muted text-center py-5">
+              <div className="text-center py-5" style={{ color: colors.textMuted }}>
                 <FontAwesomeIcon 
                   icon={faChartLine} 
                   size="3x" 
                   className="mb-3 opacity-25" 
                 />
                 <p>No candidate vote data available</p>
-                <small className="text-muted">Check browser console for debugging info</small>
+                <small>Check browser console for debugging info</small>
               </div>
             )}
           </div>
@@ -455,9 +491,21 @@ function DashboardCharts() {
 
       {/* Votes Trend */}
       <div className="col-md-6">
-        <div className="card shadow-sm border-0">
-          <div className="card-header bg-transparent border-0 py-3">
-            <h5 className="mb-0 fw-bold d-flex align-items-center">
+        <div 
+          className="card shadow-sm border-0"
+          style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border
+          }}
+        >
+          <div 
+            className="card-header bg-transparent border-0 py-3"
+            style={{
+              backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
+              borderBottomColor: colors.border
+            }}
+          >
+            <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: colors.text }}>
               <FontAwesomeIcon 
                 icon={faChartLine} 
                 className="text-primary me-2" 
@@ -465,7 +513,7 @@ function DashboardCharts() {
               Election Votes Overview
             </h5>
           </div>
-          <div className="card-body">
+          <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
             {hasVotes ? (
               <Line
                 data={{
@@ -480,7 +528,7 @@ function DashboardCharts() {
                       tension: 0.4,
                       fill: true,
                       pointBackgroundColor: "#0d6efd",
-                      pointBorderColor: "#fff",
+                      pointBorderColor: isDarkMode ? colors.surface : "#fff",
                       pointBorderWidth: 2,
                       pointRadius: 5,
                     },
@@ -493,7 +541,21 @@ function DashboardCharts() {
                     legend: { display: true, position: 'top' }
                   },
                   scales: {
-                    y: { beginAtZero: true }
+                    y: { 
+                      beginAtZero: true,
+                      grid: { 
+                        color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' 
+                      },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
+                    },
+                    x: {
+                      grid: { display: false },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
+                    }
                   }
                 }}
                 height={250}
@@ -514,9 +576,21 @@ function DashboardCharts() {
 
       {/* User Roles Distribution */}
       <div className="col-md-6">
-        <div className="card shadow-sm border-0">
-          <div className="card-header bg-transparent border-0 py-3">
-            <h5 className="mb-0 fw-bold d-flex align-items-center">
+        <div 
+          className="card shadow-sm border-0"
+          style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border
+          }}
+        >
+          <div 
+            className="card-header bg-transparent border-0 py-3"
+            style={{
+              backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
+              borderBottomColor: colors.border
+            }}
+          >
+            <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: colors.text }}>
               <FontAwesomeIcon 
                 icon={faUsers} 
                 className="text-success me-2" 
@@ -524,7 +598,7 @@ function DashboardCharts() {
               User Roles Distribution
             </h5>
           </div>
-          <div className="card-body">
+          <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
             {hasRoles ? (
               <Bar
                 data={{
@@ -553,7 +627,21 @@ function DashboardCharts() {
                     legend: { display: false }
                   },
                   scales: {
-                    y: { beginAtZero: true }
+                    y: { 
+                      beginAtZero: true,
+                      grid: { 
+                        color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' 
+                      },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
+                    },
+                    x: {
+                      grid: { display: false },
+                      ticks: {
+                        color: colors.textSecondary
+                      }
+                    }
                   }
                 }}
                 height={250}

@@ -12,11 +12,13 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { useTheme } from '../../contexts/ThemeContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Results({ user }) {
   const { socketRef } = useSocket();
+  const { isDarkMode, colors } = useTheme();
   const [elections, setElections] = useState([]);
   const [selectedElectionId, setSelectedElectionId] = useState(null);
   const [selectedElection, setSelectedElection] = useState(null);
@@ -147,11 +149,32 @@ function Results({ user }) {
 
   return (
     <div className="container-fluid">
-      <div className="card shadow-sm">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">Election Results</h4>
+      <div 
+        className="card shadow-sm"
+        style={{
+          backgroundColor: colors.cardBg,
+          borderColor: colors.border
+        }}
+      >
+        <div 
+          className="card-header d-flex justify-content-between align-items-center"
+          style={{
+            backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
+            borderBottomColor: colors.border
+          }}
+        >
+          <h4 className="mb-0" style={{ color: colors.text }}>Election Results</h4>
           <div>
-            <select className="form-select me-2 d-inline-block" style={{width: '280px'}} onChange={e => { const v = e.target.value; if (v) loadResults(v); }}>
+            <select 
+              className="form-select me-2 d-inline-block" 
+              style={{
+                width: '280px',
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+                color: colors.text
+              }} 
+              onChange={e => { const v = e.target.value; if (v) loadResults(v); }}
+            >
               <option value="">Select an election...</option>
               {Array.isArray(elections) && elections.length > 0 ? (
                 elections.map(el => {
@@ -166,12 +189,12 @@ function Results({ user }) {
             <button className="btn btn-outline-secondary btn-sm" onClick={exportResultsCSV} disabled={!results.length}>Export CSV</button>
           </div>
         </div>
-        <div className="card-body">
+        <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
           {loading ? (
-            <div className="text-center py-4">Loading results...</div>
+            <div className="text-center py-4" style={{ color: colors.text }}>Loading results...</div>
           ) : unpublished ? (
             <div className="text-center py-4">
-              <div className="mb-3 text-warning">Results are not published for this election.</div>
+              <div className="mb-3" style={{ color: colors.warning }}>Results are not published for this election.</div>
               {user?.role === 'admin' && (
                 <button className="btn btn-primary btn-sm" onClick={publishResults}>Publish Results</button>
               )}
@@ -180,7 +203,7 @@ function Results({ user }) {
             <>
               <div className="mb-3 d-flex justify-content-between align-items-center">
                 <div>
-                  <strong>{selectedElection || 'Results'}</strong>
+                  <strong style={{ color: colors.text }}>{selectedElection || 'Results'}</strong>
                 </div>
                 <div>
                   {user?.role === 'admin' && (
@@ -192,19 +215,61 @@ function Results({ user }) {
 
               <div className="row">
                 <div className="col-md-6">
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <thead>
+                  <div className="table-responsive" style={{
+                    borderRadius: '0.5rem',
+                    border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.surface
+                  }}>
+                    <table className="table table-striped mb-0" style={{
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      ...(isDarkMode && {
+                        '--bs-table-bg': colors.surface,
+                        '--bs-table-striped-bg': '#2d3748',
+                        '--bs-table-hover-bg': '#3b4a5c',
+                        '--bs-table-border-color': colors.border,
+                      })
+                    }}>
+                      <thead style={{ 
+                        backgroundColor: isDarkMode ? '#334155' : '#f8f9fa',
+                        borderBottomColor: colors.border
+                      }}>
                         <tr>
-                          <th>Candidate</th>
-                          <th>Votes</th>
+                          <th style={{ 
+                            color: colors.text,
+                            borderBottomColor: colors.border,
+                            padding: '0.75rem'
+                          }}>
+                            Candidate
+                          </th>
+                          <th style={{ 
+                            color: colors.text,
+                            borderBottomColor: colors.border,
+                            padding: '0.75rem'
+                          }}>
+                            Votes
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {results.map(r => (
-                          <tr key={r._id || r.id || r.name}>
-                            <td>{r.name}</td>
-                            <td>{r.votes || 0}</td>
+                          <tr key={r._id || r.id || r.name} style={{
+                            borderBottomColor: colors.border
+                          }}>
+                            <td style={{ 
+                              color: colors.text,
+                              borderBottomColor: colors.border,
+                              padding: '0.75rem'
+                            }}>
+                              {r.name}
+                            </td>
+                            <td style={{ 
+                              color: colors.textSecondary,
+                              borderBottomColor: colors.border,
+                              padding: '0.75rem'
+                            }}>
+                              {r.votes || 0}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -212,7 +277,13 @@ function Results({ user }) {
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="card p-3">
+                  <div 
+                    className="card p-3"
+                    style={{
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.border
+                    }}
+                  >
                     <Bar
                       data={{
                         labels: results.map(r => r.name || 'Unknown'),
@@ -220,14 +291,37 @@ function Results({ user }) {
                           {
                             label: 'Votes',
                             data: results.map(r => r.votes || 0),
-                            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                            backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.8)' : 'rgba(54, 162, 235, 0.7)'
                           }
                         ]
                       }}
                       options={{
                         responsive: true,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } }
+                        plugins: { 
+                          legend: { 
+                            display: false,
+                            labels: {
+                              color: colors.text
+                            }
+                          }
+                        },
+                        scales: { 
+                          y: { 
+                            beginAtZero: true,
+                            grid: {
+                              color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)'
+                            },
+                            ticks: {
+                              color: colors.textSecondary
+                            }
+                          },
+                          x: {
+                            grid: { display: false },
+                            ticks: {
+                              color: colors.textSecondary
+                            }
+                          }
+                        }
                       }}
                     />
                   </div>
@@ -235,7 +329,7 @@ function Results({ user }) {
               </div>
             </>
           ) : (
-            <div className="text-muted">Select an election to view published results.</div>
+            <div style={{ color: colors.textMuted }}>Select an election to view published results.</div>
           )}
         </div>
       </div>
