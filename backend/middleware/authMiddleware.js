@@ -132,8 +132,17 @@ const authorize = (...roles) => {
 // Shortcut for admin-only routes
 const adminOnly = authorize("admin");
 
+// Super Admin only middleware
+const superAdminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'super_admin') {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Super Admin only." });
+  }
+};
+
 module.exports = {
   protect,
-  authorize,
   adminOnly,
+  superAdminOnly,
 };

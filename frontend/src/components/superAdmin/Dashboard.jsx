@@ -30,8 +30,9 @@ const SuperAdminDashboard = ({ user }) => {
         const res = await axios.get('/api/super-admin/reports/system-summary', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setStats(res.data && Object.keys(res.data).length > 0 ? res.data : dummyStats);
+        setStats(res.data || dummyStats);
       } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
         setStats(dummyStats); // fallback to dummy data
       } finally {
         setLoading(false);

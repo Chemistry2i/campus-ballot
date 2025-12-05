@@ -32,40 +32,17 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     const fetchAdmins = async () => {
       try {
         const token = localStorage.getItem('token');
-        // Try all possible endpoints for admins
-        let adminsList = [];
-        let res = null;
-        // Try /api/admins first (if you have a dedicated admins endpoint)
-        try {
-          res = await axios.get('/api/admins', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (Array.isArray(res.data)) {
-            adminsList = res.data;
-          } else if (res.data && Array.isArray(res.data.admins)) {
-            adminsList = res.data.admins;
-          }
-        } catch (err) {
-          // Fallback to /api/users
-          try {
-            res = await axios.get('/api/users', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (Array.isArray(res.data)) {
-              adminsList = res.data.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            } else if (res.data && Array.isArray(res.data.users)) {
-              adminsList = res.data.users.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            } else if (res.data && Array.isArray(res.data.data)) {
-              adminsList = res.data.data.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            }
-          } catch (err2) {
-            // Fallback to dummy data if all fail
-            adminsList = dummyAdmins;
-          }
-        }
+        // Use the new super admin endpoint
+        const res = await axios.get('/api/super-admin/admins', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        // Backend now returns admins directly
+        const adminsList = Array.isArray(res.data) ? res.data : [];
         setAdmins(adminsList);
       } catch (err) {
-        setAdmins(dummyAdmins); // fallback to dummy data if all fail
+        console.error('Error fetching admins:', err);
+        setAdmins([]); // fallback to empty array
       } finally {
         setLoading(false);
       }
@@ -89,8 +66,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     }
     try {
       const token = localStorage.getItem('token');
-      // Create user with admin/super_admin role
-      await axios.post('/api/users', newAdmin, {
+      await axios.post('/api/super-admin/admins', newAdmin, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Swal.fire('Success', 'Admin added', 'success');
@@ -107,15 +83,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         createdAt: '',
       });
       // Refresh list
-      setLoading(true);
-      const res = await axios.get('/api/users', {
+      const res = await axios.get('/api/super-admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const adminsList = Array.isArray(res.data)
-        ? res.data.filter(u => u.role === 'admin' || u.role === 'super_admin')
-        : [];
-      setAdmins(adminsList);
-      setLoading(false);
+      setAdmins(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       Swal.fire('Error', 'Failed to add admin', 'error');
     }
@@ -134,7 +105,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     if (!result.isConfirmed) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/users/${id}`, {
+      await axios.delete(`/api/super-admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Swal.fire('Deleted', 'Admin removed', 'success');
@@ -147,18 +118,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   const handleToggleStatus = async (id, status) => {
     try {
       const token = localStorage.getItem('token');
-      if (status === 'active') {
-        await axios.put(`/api/users/${id}/suspend`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        await axios.put(`/api/users/${id}/activate`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
+      const newStatus = status === 'active' ? 'suspended' : 'active';
+      await axios.put(`/api/super-admin/admins/${id}/status`, 
+        { status: newStatus }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setAdmins(admins.map(a =>
         (a._id === id || a.id === id)
-          ? { ...a, status: status === 'active' ? 'suspended' : 'active' }
+          ? { ...a, status: newStatus, accountStatus: newStatus }
           : a
       ));
       Swal.fire('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
