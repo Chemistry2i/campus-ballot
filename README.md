@@ -107,7 +107,7 @@ JWT_SECRET=your_secret_key
 npm run dev
 cd ../client
 npm install
-npm start
+npm run dev
 Frontend → http://localhost:5173
 Backend → http://localhost:5000
 ```
