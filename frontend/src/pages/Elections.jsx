@@ -625,21 +625,21 @@ function Elections({ user }) {
                       <div className="btn-group" role="group">
                         <button
                           className="btn btn-sm btn-outline-info"
-                          onClick={() => viewElection(election._id)}
+                          onClick={() => openDetailsModal(election)}
                           title="View"
                         >
                           <i className="fa fa-eye"></i>
                         </button>
                         <button
                           className="btn btn-sm btn-outline-warning"
-                          onClick={() => editElection(election._id)}
+                          onClick={() => openEditModal(election)}
                           title="Edit"
                         >
                           <i className="fa fa-edit"></i>
                         </button>
                         <button
                           className="btn btn-sm btn-outline-danger"
-                          onClick={() => deleteElection(election._id)}
+                          onClick={() => handleDelete(election)}
                           title="Delete"
                         >
                           <i className="fa fa-trash"></i>
