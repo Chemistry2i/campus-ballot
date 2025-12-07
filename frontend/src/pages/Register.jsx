@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -144,7 +144,20 @@ function Register() {
     gender: "",
     phone: "",
   });
-  const [loading, setLoading] = useState(false); // <-- Add this line
+  const [loading, setLoading] = useState(false);
+
+  // Remove dark mode classes from body when this component mounts
+  useEffect(() => {
+    document.body.classList.remove('admin-dark-mode');
+    document.body.classList.remove('admin-light-mode');
+    document.body.style.backgroundColor = '#f3f4f6';
+    document.body.style.color = '#111827';
+    
+    return () => {
+      document.body.style.backgroundColor = '';
+      document.body.style.color = '';
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -255,6 +268,14 @@ function Register() {
       navigate("/login");
     });
   };
+
+  // useEffect to remove dark mode classes on mount
+  useEffect(() => {
+    document.body.classList.remove("dark-mode");
+    return () => {
+      document.body.classList.remove("dark-mode");
+    };
+  }, []);
 
   return (
     <div

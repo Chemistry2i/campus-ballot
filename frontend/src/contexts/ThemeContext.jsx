@@ -33,6 +33,12 @@ export const ThemeProvider = ({ children }) => {
       document.body.classList.add('admin-light-mode');
       document.body.classList.remove('admin-dark-mode');
     }
+
+    // Cleanup function to remove dark mode class when component unmounts
+    return () => {
+      document.body.classList.remove('admin-dark-mode');
+      document.body.classList.remove('admin-light-mode');
+    };
   }, [isDarkMode]);
 
   const toggleTheme = () => {

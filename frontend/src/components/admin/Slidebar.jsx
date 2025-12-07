@@ -41,6 +41,19 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   useEffect(() => {
+    // Sync profile picture from localStorage
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.profilePicture) {
+          setProfilePic(parsed.profilePicture);
+        }
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+
     const fetchCounts = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -91,11 +104,11 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
         }
         // update localStorage user if present
         try {
-          const stored = localStorage.getItem('user');
+          const stored = localStorage.getItem('currentUser');
           if (stored) {
             const parsed = JSON.parse(stored);
             parsed.profilePicture = res.data.profilePicture;
-            localStorage.setItem('user', JSON.stringify(parsed));
+            localStorage.setItem('currentUser', JSON.stringify(parsed));
           }
         } catch (e) {}
       }
@@ -232,15 +245,34 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
                   fontWeight: '600',
                   cursor: 'pointer',
                   color: colors.text,
+                  overflow: 'hidden',
+                  position: 'relative',
                 }}
                 onClick={onChooseFile}
                 title="Change profile picture"
               >
                 {uploading ? (
                   <span className="spinner-border spinner-border-sm" role="status" />
-                ) : (
-                  initials
-                )}
+                ) : profilePic && profilePic !== '/default-avatar.png' ? (
+                  <img 
+                    src={profileImgSrc} 
+                    alt="Profile" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                  />
+                ) : null}
+                <div style={{ 
+                  display: profilePic && profilePic !== '/default-avatar.png' ? 'none' : 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                }}>
+                  {initials}
+                </div>
               </div>
               <div style={{ fontSize: '0.875rem', fontWeight: '500', color: colors.text, marginBottom: '0.25rem' }}>
                 Welcome, {user?.name}
@@ -629,8 +661,8 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button className="btn btn-secondary" type="button" onClick={() => setShowUploadModal(false)}>Cancel</button>
-                  <button className="btn btn-primary" type="button" disabled={uploading || !selectedFile}>
+                  <button className="btn btn-secondary" type="button" onClick={handleCancelUpload}>Cancel</button>
+                  <button className="btn btn-primary" type="button" onClick={handleSaveUpload} disabled={uploading || !selectedFile}>
                     {uploading ? 'Saving...' : 'Save'}
                   </button>
                 </div>

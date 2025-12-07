@@ -136,7 +136,7 @@
 // export default Login;
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -152,6 +152,25 @@ function Login({ setCurrentUser }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Remove dark mode classes on mount
+    const loginContainer = document.querySelector(`.${styles["login-inner-container"]}`);
+    if (loginContainer) {
+      loginContainer.classList.remove("bg-dark", "text-white");
+    }
+
+    // Remove dark mode classes from body when this component mounts
+    document.body.classList.remove('admin-dark-mode');
+    document.body.classList.remove('admin-light-mode');
+    document.body.style.backgroundColor = '#f3f4f6';
+    document.body.style.color = '#111827';
+    
+    return () => {
+      document.body.style.backgroundColor = '';
+      document.body.style.color = '';
+    };
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
