@@ -229,18 +229,44 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             );
           })}
         </nav>
-        {/* Footer Section */}
+        {/* Footer */}
         {!collapsed && (
-          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: colors.textMuted }}>
-            <hr style={{ borderColor: colors.border }} />
-            <div>
-              &copy; {new Date().getFullYear()} KYU Voting v1.0
+          <div
+            style={{
+              padding: '1rem 1.5rem',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.75rem',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <i className="fa fa-book-open" style={{ marginRight: '0.25rem' }}></i>
+              v1.0.0 © 2025 VoteSys
             </div>
-            <div>
-              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: colors.primary, textDecoration: 'none' }}>
-                University Site
-              </a>
-            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login';
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <i className="fa fa-sign-out-alt" style={{ marginRight: '0.25rem' }}></i>
+              Logout
+            </button>
           </div>
         )}
         <style>{`
