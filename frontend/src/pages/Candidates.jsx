@@ -53,6 +53,23 @@ function CreateCandidateModal({
                     onChange={handleUserSelect}
                     placeholder="Search or select user..."
                     isClearable
+                    styles={{
+                      control: (provided) => ({
+                        ...provided,
+                        backgroundColor: '#444444',
+                        color: '#ffffff',
+                        borderColor: '#555555',
+                      }),
+                      option: (provided, state) => ({
+                        ...provided,
+                        backgroundColor: state.isFocused ? '#555555' : '#444444',
+                        color: '#ffffff',
+                      }),
+                      placeholder: (provided) => ({
+                        ...provided,
+                        color: '#aaaaaa',
+                      }),
+                    }}
                   />
                 </div>
                 <div className="col-md-6">
@@ -145,6 +162,23 @@ function CreateCandidateModal({
                     placeholder="Search or select party..."
                     isClearable
                     classNamePrefix="react-select"
+                    styles={{
+                      control: (provided) => ({
+                        ...provided,
+                        backgroundColor: '#444444',
+                        color: '#ffffff',
+                        borderColor: '#555555',
+                      }),
+                      option: (provided, state) => ({
+                        ...provided,
+                        backgroundColor: state.isFocused ? '#555555' : '#444444',
+                        color: '#ffffff',
+                      }),
+                      placeholder: (provided) => ({
+                        ...provided,
+                        color: '#aaaaaa',
+                      }),
+                    }}
                   />
                 </div>
                 <div className="col-md-12">
@@ -476,6 +510,27 @@ function Candidates({ user }) {
     }
   };
 
+  const modalStyles = {
+    content: {
+        color: '#ffffff', /* Set text color to white for better visibility in dark mode */
+    },
+    headerFooter: {
+        backgroundColor: '#333333', /* Darker background for header and footer */
+    },
+    selectDropdown: {
+        backgroundColor: '#444444', /* Darker background for dropdowns */
+        color: '#ffffff', /* White text for dropdown options */
+    },
+    userSelect: {
+        backgroundColor: '#444444', /* Darker background for user select */
+        color: '#ffffff', /* White text for user select */
+    },
+    partySelect: {
+        backgroundColor: '#444444', /* Darker background for party select */
+        color: '#ffffff', /* White text for party select */
+    }
+};
+
   return (
     <div className="container-fluid py-4" style={{ backgroundColor: colors.background }}>
       {/* Banner */}
@@ -509,7 +564,7 @@ function Candidates({ user }) {
           All Candidates
         </h3>
         <div className="d-flex align-items-center flex-wrap">
-          <button className="btn btn-success me-2" onClick={() => setShowCreate(true)}>
+          <button className="btn btn-success me-2" onClick={handleShowCreate}>
             <i className="fa fa-plus me-2"></i> Add Candidate
           </button>
           <button className="btn btn-outline-primary me-2" onClick={exportToCSV}>
