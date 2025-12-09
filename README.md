@@ -28,7 +28,8 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 - Overoll System Administrator
 - View analytics, reports, and statistics
 - Manage student voter accounts
-- More Coming......
+- Perform System Backup of Data
+- etc
   
 **Admin:**
 - Create and manage elections
