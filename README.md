@@ -15,7 +15,7 @@
 
 ## 📘 Overview
 
-A **secure, scalable, and user-friendly digital voting platform** built with the **MERN stack (MongoDB, Express, React, Node.js)**.  
+A **secure, scalable, and user-friendly digital voting platform** built with the **MERN stack (MongoDB, Express, React, Node.js) + MySql**.  
 This project enables university students to participate in elections online, while administrators manage elections, candidates, and results.  
 It’s **responsive**, **role-based**, and **fully deployed on Render** for cloud scalability.
 
