@@ -1,4 +1,4 @@
-# 🗳️ Campus Voting System (MERN Stack) + MySQL
+# 🗳️ Campus Voting System (MERN Stack)
 
 ![MERN Stack](https://img.shields.io/badge/MERN-Stack-blueviolet?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Render Deployment](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render)
