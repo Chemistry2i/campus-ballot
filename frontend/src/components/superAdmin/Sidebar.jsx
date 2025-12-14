@@ -4,10 +4,10 @@ import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const navItems = [
+  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
   { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
-  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
   { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
   { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
@@ -82,7 +82,10 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           boxShadow: isDarkMode ? '0 0 12px rgba(0,0,0,0.3)' : '0 0 12px rgba(37,99,235,0.07)',
           background: isDarkMode ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)' : '#fff',
           color: colors.text,
-          borderRight: `1px solid ${colors.border}`
+          borderRight: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowX: 'hidden'
         }}
         aria-label="Super Admin Sidebar"
       >
@@ -176,7 +179,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             ></i>
           </button>
         </div>
-        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', paddingBottom: '0.5rem' }}>
+        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', flex: 1, paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: `${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'}` }}>
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.to;
             return (
@@ -244,9 +247,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               color: colors.textMuted,
               fontSize: '0.7rem',
               textAlign: 'center',
-              position: 'absolute',
-              bottom: 0,
-              width: '100%'
+              flexShrink: 0
             }}
           >
             <div style={{ marginBottom: '0.5rem' }}>
