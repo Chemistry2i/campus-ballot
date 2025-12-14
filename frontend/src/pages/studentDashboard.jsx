@@ -1,7 +1,22 @@
 import "./swal-zindex-override.css";
+import "../styles/animations.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/useToast';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import ToastContainer from '../components/common/ToastContainer';
+import { SkeletonCard, SkeletonRow } from '../components/common/LoadingSkeleton';
+import QuickActionsWidget from '../components/student/QuickActionsWidget';
+import AnalyticsChart from '../components/student/AnalyticsChart';
+import ElectionCalendar from '../components/student/ElectionCalendar';
+import AchievementsBadges from '../components/student/AchievementsBadges';
+import ShareButton from '../components/student/ShareButton';
+import ReminderSystem from '../components/student/ReminderSystem';
+import CandidateComparison from '../components/student/CandidateComparison';
+import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
+import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
 axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
@@ -47,11 +62,14 @@ import {
   FaArrowUp,
   FaUser
 } from "react-icons/fa";
+import { FaMoon, FaSun } from "react-icons/fa";
 import useSocket from '../hooks/useSocket';
 import getImageUrl from '../utils/getImageUrl';
 import ElectionCard from '../components/student/ElectionCard';
 
 function StudentDashboard({ user }) {
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+  const { toasts, removeToast, success, error, info, warning } = useToast();
   const [elections, setElections] = useState([]);
   const [myVotes, setMyVotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +87,9 @@ function StudentDashboard({ user }) {
   const [showProfile, setShowProfile] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [comparisonCandidates, setComparisonCandidates] = useState([]);
   const [electionStats, setElectionStats] = useState({
     total: 0,
     participated: 0,
@@ -142,6 +163,25 @@ function StudentDashboard({ user }) {
       if (interval) clearInterval(interval);
     };
   }, [isAutoRefresh, refreshInterval]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    { key: 'd', ctrl: true, callback: () => setActiveView('dashboard') },
+    { key: 'e', ctrl: true, callback: () => setActiveView('elections') },
+    { key: 'v', ctrl: true, callback: () => setActiveView('my-votes') },
+    { key: 'n', ctrl: true, callback: () => setActiveView('notifications') },
+    { key: 'p', ctrl: true, callback: () => setActiveView('profile') },
+    { key: 'h', ctrl: true, callback: () => setActiveView('history') },
+    { key: 'r', ctrl: true, callback: () => refreshData() },
+    { key: '?', ctrl: false, callback: () => setShowKeyboardShortcuts(true) },
+    { key: 'Escape', ctrl: false, callback: () => {
+      setShowElectionModal(false);
+      setShowProfile(false);
+      setShowNotificationModal(false);
+      setShowKeyboardShortcuts(false);
+      setShowComparisonModal(false);
+    }}
+  ]);
 
   const refreshData = () => {
     fetchElections();
@@ -344,19 +384,47 @@ function StudentDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Generate verification code and receipt
+      const verificationCode = generateVerificationCode();
+      const election = elections.find(e => e._id === electionId);
+      const candidate = election?.candidates?.find(c => c._id === candidateId);
+      
       Swal.fire({
         title: 'Vote Cast Successfully!',
-        text: 'Thank you for participating in the democratic process.',
+        html: `
+          <p>Thank you for participating in the democratic process.</p>
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; font-size: 14px; color: #666;">Verification Code:</p>
+            <p style="margin: 8px 0; font-size: 18px; font-weight: bold; font-family: monospace; color: #0d6efd;">${verificationCode}</p>
+          </div>
+          <button id="download-receipt" class="btn btn-outline-primary btn-sm mt-2">
+            <i class="fas fa-download"></i> Download Receipt
+          </button>
+        `,
         icon: 'success',
-        timer: 3000,
+        timer: 5000,
         timerProgressBar: true,
-        showConfirmButton: false
+        showConfirmButton: true,
+        didOpen: () => {
+          document.getElementById('download-receipt')?.addEventListener('click', () => {
+            generateVoteReceipt({
+              election,
+              candidate,
+              votedAt: new Date(),
+              verificationCode
+            });
+          });
+        }
       });
+      
+      // Show toast notification
+      success('Vote recorded successfully!');
       
       fetchMyVotes();
       fetchElections();
       calculateElectionStats(elections);
     } catch (err) {
+      error('Failed to cast vote. Please try again.');
       Swal.fire("Error", err.response?.data?.message || "Failed to vote", "error");
     }
   };
@@ -391,6 +459,32 @@ function StudentDashboard({ user }) {
 
   function renderDashboardView() { return (
     <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
+      {/* Welcome Banner */}
+      <div 
+        className="mb-4 rounded-lg shadow-sm p-4 p-md-5"
+        style={{
+          background: isDarkMode 
+            ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: '#fff',
+          borderRadius: '12px'
+        }}
+      >
+        <div className="d-flex align-items-center justify-content-between">
+          <div>
+            <h2 className="fw-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}! 👋</h2>
+            <p className="mb-0 opacity-90">
+              {elections.length > 0 && getElectionStatus(elections[0])?.status === 'active' 
+                ? 'An election is currently active. Cast your vote now!' 
+                : 'Stay tuned for upcoming elections. Check back soon!'}
+            </p>
+          </div>
+          <div className="d-none d-lg-block" style={{ fontSize: '3rem', opacity: 0.3 }}>
+            <FaPoll />
+          </div>
+        </div>
+      </div>
+
       {/* Statistics Cards - 8 cards in single row */}
       <div className="row g-2 g-md-3 mb-4">
         {[
@@ -403,24 +497,41 @@ function StudentDashboard({ user }) {
           { icon: <FaBell className="text-warning" size={20} />, value: notifications.filter(n => !n.read).length, label: 'Unread', color: 'warning' },
           { icon: <FaTrophy className="text-success" size={20} />, value: `${Math.min(100, Math.round((electionStats.participated / Math.max(electionStats.total, 1)) * 100))}%`, label: 'Engagement', color: 'success' }
         ].map((c, i) => {
-          // determine soft bg and border based on semantic color
-          let bg = '#f1f3f5';
-          let border = '#e9ecef';
-          if (c.color === 'primary') { bg = '#e7f1ff'; border = '#cfe3ff'; }
-          if (c.color === 'success') { bg = '#e9f7ee'; border = '#d5efda'; }
-          if (c.color === 'warning') { bg = '#fff4e5'; border = '#ffe6b8'; }
-          if (c.color === 'secondary') { bg = '#f1f3f5'; border = '#e9ecef'; }
+          // determine soft bg and border based on semantic color and dark mode
+          let bg = isDarkMode ? '#2d3748' : '#f1f3f5';
+          let border = isDarkMode ? colors.border : '#e9ecef';
+          if (c.color === 'primary') { bg = isDarkMode ? '#1e3c72' : '#e7f1ff'; border = isDarkMode ? '#2563eb' : '#cfe3ff'; }
+          if (c.color === 'success') { bg = isDarkMode ? '#1b4332' : '#e9f7ee'; border = isDarkMode ? '#22c55e' : '#d5efda'; }
+          if (c.color === 'warning') { bg = isDarkMode ? '#78350f' : '#fff4e5'; border = isDarkMode ? '#eab308' : '#ffe6b8'; }
+          if (c.color === 'secondary') { bg = isDarkMode ? '#2d3748' : '#f1f3f5'; border = isDarkMode ? colors.border : '#e9ecef'; }
 
           return (
-            <div key={i} className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-              <div className="card shadow-sm h-100 stat-card-hover" style={{ borderRadius: '12px', border: '1px solid #e0e0e0' }}>
+            <div key={i} className="col-6 col-sm-4 col-md-3 col-lg-3 col-xl-1-5">
+              <div 
+                className="card shadow-sm h-100 stat-card-hover" 
+                style={{ 
+                  borderRadius: '12px', 
+                  border: `1px solid ${border}`,
+                  background: isDarkMode ? colors.surface : '#fff',
+                  transition: 'all 0.2s ease'
+                }}
+              >
                 <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-1 p-md-2">
-                  <div className={`rounded-circle mb-2 d-inline-flex align-items-center justify-content-center`} style={{ width: 44, height: 44, backgroundColor: bg, border: `1px solid ${border}` }}>
+                  <div 
+                    className={`rounded-circle mb-2 d-inline-flex align-items-center justify-content-center`} 
+                    style={{ 
+                      width: 44, 
+                      height: 44, 
+                      backgroundColor: bg, 
+                      border: `1px solid ${border}`,
+                      color: isDarkMode ? '#fff' : 'inherit'
+                    }}
+                  >
                     {c.icon}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <h5 className="fw-bold mb-0 fs-6">{c.value}</h5>
-                    <p className="text-muted mb-0 small text-truncate">{c.label}</p>
+                    <h5 className="fw-bold mb-0 fs-6" style={{ color: isDarkMode ? colors.text : 'inherit' }}>{c.value}</h5>
+                    <p style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }} className="mb-0 small text-truncate">{c.label}</p>
                   </div>
                 </div>
               </div>
@@ -430,9 +541,24 @@ function StudentDashboard({ user }) {
       </div>
 
       {/* Recent Elections Quick View */}
-      <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '5px', maxWidth: "100%", overflowX: "hidden" }}>
-        <div className="card-header bg-white border-0 py-3">
-          <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
+      <div 
+        className="card border-0 shadow-sm mb-4" 
+        style={{ 
+          borderRadius: '12px', 
+          maxWidth: "100%", 
+          overflowX: "hidden",
+          background: isDarkMode ? colors.surface : '#fff',
+          border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`
+        }}
+      >
+        <div 
+          className="card-header border-0 py-3"
+          style={{
+            background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+            borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`
+          }}
+        >
+          <h4 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: isDarkMode ? colors.text : 'inherit' }}>
             <FaPoll className="text-primary" /> Recent Elections
           </h4>
         </div>
@@ -479,13 +605,32 @@ function StudentDashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Analytics Chart */}
+      <AnalyticsChart myVotes={myVotes} electionStats={electionStats} />
+
+      {/* Row with Calendar and Achievements */}
+      <div className="row g-3 mb-4">
+        <div className="col-lg-7">
+          <ElectionCalendar 
+            elections={elections} 
+            onElectionClick={(election) => openElectionDetails(election)} 
+          />
+        </div>
+        <div className="col-lg-5">
+          <AchievementsBadges myVotes={myVotes} electionStats={electionStats} />
+        </div>
+      </div>
+
+      {/* Reminder System */}
+      <ReminderSystem elections={elections.filter(e => getElectionStatus(e).status === 'upcoming')} />
     </div>
   ); }
 
   function renderElectionsView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0 }}>
-      <div className="card-header bg-white border-0 py-3" 
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+      <div className="card-header border-0 py-3" 
+           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.surfaceHover : '#fff', color: isDarkMode ? colors.text : undefined, borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <div className="row align-items-center g-2">
           <div className="col-12 col-md-6 mb-2 mb-md-0">
             <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
@@ -496,7 +641,7 @@ function StudentDashboard({ user }) {
           <div className="col-12 col-md-6">
             <div className="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
               {/* Auto-refresh controls - Simplified for mobile */}
-              <div className="d-flex align-items-center gap-1 mb-2 mb-md-0">
+              <div className="d-flex align-items-center gap-1 flex-wrap mb-2 mb-md-0">
                 <div className="form-check form-switch">
                   <input
                     className="form-check-input"
@@ -505,13 +650,13 @@ function StudentDashboard({ user }) {
                     checked={isAutoRefresh}
                     onChange={(e) => setIsAutoRefresh(e.target.checked)}
                   />
-                  <label className="form-check-label small" htmlFor="autoRefresh">
+                  <label className="form-check-label small" htmlFor="autoRefresh" style={{ color: isDarkMode ? colors.text : undefined }}>
                     Auto
                   </label>
                 </div>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: '100px' }}
+                  style={{ width: '100px', background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
                   value={refreshInterval}
                   onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
                   disabled={!isAutoRefresh}
@@ -521,18 +666,19 @@ function StudentDashboard({ user }) {
                   <option value={60000}>1m</option>
                 </select>
                 <button
-                  className="btn btn-outline-primary btn-sm"
+                  className="btn btn-sm"
                   onClick={refreshData}
                   title="Refresh now"
+                  style={{ background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', border: 'none' }}
                 >
                   <FaCog className={loading ? 'fa-spin' : ''} />
                 </button>
               </div>
               
               {/* Search and Filter - Responsive */}
-              <div className="d-flex gap-1">
-                <div className="input-group" style={{ width: '300px' }}>
-                  <span className="input-group-text bg-light border-end-0">
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <div className="input-group" style={{ maxWidth: '300px', minWidth: '150px', flex: 1 }}>
+                  <span className="input-group-text border-end-0" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.textMuted : undefined }}>
                     <FaSearch className="text-muted" size={12} />
                   </span>
                   <input
@@ -541,11 +687,12 @@ function StudentDashboard({ user }) {
                     placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
                   />
                 </div>
                 <select 
                   className="form-select form-select-sm" 
-                  style={{ width: '140px' }}
+                  style={{ maxWidth: '140px', minWidth: '100px', background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -560,7 +707,7 @@ function StudentDashboard({ user }) {
         </div>
       </div>
       
-      <div className="card-body p-3 p-md-4" style={{ minHeight: '400px' }}>
+      <div className="card-body p-3 p-md-4" style={{ minHeight: '400px', background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-primary mb-3" role="status"></div>
@@ -596,15 +743,15 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderMyVotesView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
-      <div className="card-header bg-success text-white d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+      <div className="card-header d-flex align-items-center justify-content-between"
+           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.success : '#198754', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <span className="d-flex align-items-center gap-2">
           <FaVoteYea /> My Voting History
         </span>
         <span className="badge bg-white text-success">{myVotes.length}</span>
       </div>
-      <div className="card-body p-4">
+      <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
         {myVotes.length === 0 ? (
           <div className="text-center py-5">
             <FaExclamationTriangle className="mb-3 text-muted" size={48} />
@@ -669,15 +816,15 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderNotificationsView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
-      <div className="card-header bg-primary text-white d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+      <div className="card-header d-flex align-items-center justify-content-between"
+           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <span className="d-flex align-items-center gap-2">
           <FaBell /> Notifications
         </span>
         <span className="badge bg-white text-primary">{notifications.length}</span>
       </div>
-              <div className="card-body p-4">
+            <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
         {notifications.length === 0 ? (
           <div className="text-center py-5">
             <FaBell className="mb-3 text-muted" size={48} />
@@ -690,7 +837,7 @@ function StudentDashboard({ user }) {
               <div
                 key={notification._id || index}
                 className={`list-group-item border border-1 mb-2`}
-                style={{ background: notification.read ? '#ffffff' : '#f1f3f5' }}
+                style={{ background: isDarkMode ? (notification.read ? colors.surface : colors.surfaceHover) : (notification.read ? '#ffffff' : '#f1f3f5'), color: isDarkMode ? colors.text : undefined, borderColor: isDarkMode ? colors.border : '#e9ecef' }}
               >
                 <div className="d-flex align-items-start gap-3">
                   <div style={{ width: 44, height: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }} className={`bg-${notification.type === 'success' ? 'success' : 'info'} bg-opacity-10`}>
@@ -757,12 +904,12 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderProfileView() { return (
-    <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, marginTop: -50 }}>
+    <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, marginTop: -50, color: isDarkMode ? colors.text : undefined }}>
       {/* Profile Information Section */}
       <div className="col-lg-4 col-md-5">
-        <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '5px' }}>
-          <div className="card-header bg-primary text-white text-center py-4"
-               style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+        <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+          <div className="card-header text-center py-4"
+               style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
             {/* Profile Picture Section */}
             <div className="mb-3" style={{display: 'flex',
                 justifyContent: 'center', // Centers children horizontally
@@ -800,23 +947,23 @@ function StudentDashboard({ user }) {
             </span>
           </div>
           
-          <div className="card-body p-4">
+          <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
             {/* Quick Stats */}
             <div className="row g-2 mb-4">
               <div className="col-4 text-center">
-                <div className="bg-light rounded p-3">
+                <div className="rounded p-3" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', color: isDarkMode ? colors.text : undefined }}>
                   <div className="fw-bold h5 mb-0">{myVotes.length}</div>
                   <small className="text-muted">Votes</small>
                 </div>
               </div>
               <div className="col-4 text-center">
-                <div className="bg-light rounded p-3">
+                <div className="rounded p-3" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', color: isDarkMode ? colors.text : undefined }}>
                   <div className="fw-bold h5 mb-0">{electionStats.participated}</div>
                   <small className="text-muted">Elections</small>
                 </div>
               </div>
               <div className="col-4 text-center">
-                <div className="bg-light rounded p-3">
+                <div className="rounded p-3" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', color: isDarkMode ? colors.text : undefined }}>
                   <div className="fw-bold h5 mb-0">{notifications.length}</div>
                   <small className="text-muted">Alerts</small>
                 </div>
@@ -861,17 +1008,20 @@ function StudentDashboard({ user }) {
         <div className="row g-4">
           {/* Personal Information Card */}
           <div className="col-12">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
-              <div className="card-header border-0 py-3 bg-primary text-white"
+            <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+              <div className="card-header border-0 py-3"
                    style={{ 
                      borderTopLeftRadius: '5px', 
-                     borderTopRightRadius: '5px'
+                     borderTopRightRadius: '5px',
+                     background: isDarkMode ? colors.primary : '#0d6efd',
+                     color: '#fff',
+                     borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`
                    }}>
                 <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
                   <FaUser /> Personal Information
                 </h4>
               </div>
-              <div className="card-body p-4">
+              <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold text-muted">
@@ -972,7 +1122,7 @@ function StudentDashboard({ user }) {
                           <FaCheckCircle className="text-white" size={16} />
                         </div>
                         <div className="flex-grow-1">
-                          <div className="bg-light rounded p-3 border">
+                          <div className="rounded p-3 border" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', color: isDarkMode ? colors.text : undefined, borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
                             <div className="d-flex justify-content-between align-items-start mb-2">
                               <div>
                                 <span className="fw-bold text-primary">Election Vote</span>
@@ -1024,14 +1174,14 @@ function StudentDashboard({ user }) {
     );
   }
   function renderHistoryView() { return (
-      <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
-        <div className="card-header bg-primary text-white d-flex align-items-center justify-content-between"
-             style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px' }}>
+      <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+        <div className="card-header d-flex align-items-center justify-content-between"
+             style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
           <span className="d-flex align-items-center gap-2">
             <FaHistory /> Activity History
           </span>
         </div>
-        <div className="card-body p-4">
+        <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
           <div className="timeline">
             {myVotes.map((vote, index) => (
               <div className="timeline-item d-flex gap-3 mb-4" key={vote._id || index}>
@@ -1097,33 +1247,45 @@ function StudentDashboard({ user }) {
       <div
         className="min-vh-100"
         style={{
-          background: "#f8f9fa",
+          background: isDarkMode ? colors.background : "#f8f9fa",
           width: "100vw",
-          height: "100vh",
-          maxWidth: "100vw",
-        overflowX: "hidden",
-        margin: 0,
-        padding: 0
-      }}
-    >
+          minHeight: "100vh",
+          overflowX: "hidden",
+          margin: 0,
+          padding: 0,
+          color: isDarkMode ? colors.text : 'inherit',
+          transition: 'background-color 0.3s ease, color 0.3s ease'
+        }}
+      >
       {/* Top Navigation */}
       <nav
-        className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm"
+        className="navbar navbar-expand-lg shadow-sm"
         style={{
-          width: "100vw",
+          width: "100%",
           margin: 0,
           padding: '0.6rem 1rem',
           height: '72px',
-          alignItems: 'center'
+          alignItems: 'center',
+          background: isDarkMode ? colors.surface : '#0d6efd',
+          borderBottom: `1px solid ${isDarkMode ? colors.border : '#0d6efd'}`,
+          color: isDarkMode ? colors.text : '#fff',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000
         }}
       >
-        <div className="container-fluid" style={{ maxWidth: "100%", padding: "0", margin: 0 }}>
+        <div className="container-fluid" style={{ maxWidth: "100%", padding: "0 0.5rem", margin: 0 }}>
           <span className="navbar-brand d-flex align-items-center gap-2">
             {/* Hamburger menu for mobile */}
             <button
-              className="btn btn-outline-light btn-sm me-2 d-lg-none"
+              className="btn btn-sm me-2 d-lg-none"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar menu"
+              style={{
+                background: isDarkMode ? colors.surfaceHover : 'rgba(255,255,255,0.2)',
+                color: isDarkMode ? colors.text : '#fff',
+                border: `1px solid ${isDarkMode ? colors.border : 'rgba(255,255,255,0.3)'}`,
+              }}
             >
               <FaBars />
             </button>
@@ -1134,9 +1296,33 @@ function StudentDashboard({ user }) {
           
           {/* User Actions */}
           <div className="d-flex align-items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              className="btn btn-sm"
+              onClick={toggleTheme}
+              style={{
+                background: isDarkMode ? colors.surfaceHover : 'rgba(255,255,255,0.2)',
+                color: isDarkMode ? colors.primary : '#fff',
+                border: `1px solid ${isDarkMode ? colors.border : 'rgba(255,255,255,0.3)'}`,
+                transition: 'all 0.2s ease'
+              }}
+              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+            >
+              {isDarkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
+            </button>
+
             {/* Notifications */}
             <div className="dropdown">
-              <button className="btn btn-outline-light position-relative" data-bs-toggle="dropdown">
+              <button 
+                className="btn btn-sm"
+                style={{
+                  background: isDarkMode ? colors.surfaceHover : 'rgba(255,255,255,0.2)',
+                  color: isDarkMode ? colors.text : '#fff',
+                  border: `1px solid ${isDarkMode ? colors.border : 'rgba(255,255,255,0.3)'}`,
+                  position: 'relative'
+                }}
+                data-bs-toggle="dropdown"
+              >
                 <FaBell />
                 {notifications.filter(n => !n.read).length > 0 && (
                   <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -1144,20 +1330,26 @@ function StudentDashboard({ user }) {
                   </span>
                 )}
               </button>
-              <ul className="dropdown-menu dropdown-menu-end">
-                <li className="dropdown-header">Recent Notifications</li>
+              <ul className="dropdown-menu dropdown-menu-end" style={{ background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', minWidth: '280px' }}>
+                <li className="dropdown-header" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Recent Notifications</li>
                 {notifications.slice(0, 3).map((notif, index) => (
                   <li key={index}>
                     <a className="dropdown-item small" href="#" 
-                       onClick={() => setActiveView('notifications')}>
+                       onClick={() => setActiveView('notifications')}
+                       style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
+                       onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       {typeof notif.title === 'string' ? notif.title : 'Notification'}
                     </a>
                   </li>
                 ))}
-                <li><hr className="dropdown-divider" /></li>
+                <li><hr className="dropdown-divider" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
                 <li>
                   <a className="dropdown-item text-center" href="#"
-                     onClick={() => setActiveView('notifications')}>
+                     onClick={() => setActiveView('notifications')}
+                     style={{ color: isDarkMode ? colors.primary : '#0d6efd', background: 'transparent' }}
+                     onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     View All
                   </a>
                 </li>
@@ -1166,25 +1358,43 @@ function StudentDashboard({ user }) {
 
             {/* Profile Dropdown */}
             <div className="dropdown">
-              <button className="btn btn-outline-light d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+              <button 
+                className="btn btn-sm d-flex align-items-center gap-2"
+                style={{
+                  background: isDarkMode ? colors.surfaceHover : 'rgba(255,255,255,0.2)',
+                  color: isDarkMode ? colors.text : '#fff',
+                  border: `1px solid ${isDarkMode ? colors.border : 'rgba(255,255,255,0.3)'}`,
+                  whiteSpace: 'nowrap'
+                }}
+                data-bs-toggle="dropdown"
+              >
                 <FaUserCircle /> 
                 <span className="d-none d-md-inline">{user?.name?.split(' ')[0]}</span>
               </button>
-              <ul className="dropdown-menu dropdown-menu-end">
+              <ul className="dropdown-menu dropdown-menu-end" style={{ background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6' }}>
                 <li>
-                  <button className="dropdown-item" onClick={() => setActiveView('profile')}>
+                  <button className="dropdown-item" onClick={() => setActiveView('profile')}
+                    style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <FaUserEdit className="me-2" /> View Profile
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item" onClick={() => setShowProfile(true)}>
+                  <button className="dropdown-item" onClick={() => setShowProfile(true)}
+                    style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <FaUserEdit className="me-2" /> Edit Profile
                   </button>
                 </li>
-                <li><hr className="dropdown-divider" /></li>
+                <li><hr className="dropdown-divider" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
                 <li>
                   <button 
-                    className="dropdown-item text-danger"
+                    className="dropdown-item"
+                    style={{ color: '#dc3545', background: 'transparent' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'; }}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => {
                       localStorage.removeItem("token");
                       window.location.href = "/login";
@@ -1199,9 +1409,9 @@ function StudentDashboard({ user }) {
         </div>
       </nav>
 
-  <div className="d-flex" style={{ width: "100vw", maxWidth: "100vw", margin: 0, padding: 0, height: "calc(100vh - 90px)" }}>
+  <div className="d-flex" style={{ width: "100%", maxWidth: "100%", margin: 0, padding: 0, height: "calc(100vh - 72px)" }}>
         {/* Sidebar for large screens */}
-        <div className="bg-white shadow-sm border-end d-none d-lg-block"
+        <div className="shadow-sm border-end d-none d-lg-block"
              style={{
                width: '250px',
                minWidth: '250px',
@@ -1210,30 +1420,48 @@ function StudentDashboard({ user }) {
                flexShrink: 0,
                overflowX: 'hidden',
                margin: 0,
-               padding: 0
+               padding: 0,
+               background: isDarkMode ? colors.surface : '#fff',
+               borderColor: isDarkMode ? colors.border : '#dee2e6',
              }}>
           <div className="p-3">
-            <h6 className="text-muted text-uppercase small fw-bold mb-3">Navigation</h6>
+            <h6 className="text-uppercase small fw-bold mb-3" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Navigation</h6>
             <nav className="nav flex-column">
               {sidebarItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <button
                     key={item.id}
-                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2 ${
-                      activeView === item.id ? 'bg-primary text-white' : 'text-dark'
-                    }`}
+                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2`}
                     onClick={() => setActiveView(item.id)}
-                    style={{ textDecoration: 'none' }}
+                    style={{ 
+                      textDecoration: 'none',
+                      background: activeView === item.id ? colors.primary : 'transparent',
+                      color: activeView === item.id ? '#fff' : isDarkMode ? colors.text : '#212529',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeView !== item.id) {
+                        e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeView !== item.id) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
                   >
                     <span className="d-flex align-items-center gap-2">
                       <IconComponent size={16} />
                       {item.label}
                     </span>
                     {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
-                      <span className={`badge ${
-                        activeView === item.id ? 'bg-white text-primary' : 'bg-primary text-white'
-                      } rounded-pill`}>
+                      <span className={`badge rounded-pill`}
+                        style={{
+                          background: activeView === item.id ? '#fff' : colors.primary,
+                          color: activeView === item.id ? colors.primary : '#fff'
+                        }}
+                      >
                         {item.badge}
                       </span>
                     )}
@@ -1243,19 +1471,20 @@ function StudentDashboard({ user }) {
             </nav>
           </div>
           {/* Sidebar Footer */}
-          <div className="mt-auto p-3 border-top">
+          <div className="mt-auto p-3" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
             <div className="d-flex align-items-center gap-2 mb-3">
               <FaUserCircle className="text-primary" size={32} />
               <div>
-                <div className="fw-semibold small">{user?.name}</div>
-                <div className="text-muted small">{user?.role}</div>
+                <div className="fw-semibold small" style={{ color: isDarkMode ? colors.text : undefined }}>{user?.name}</div>
+                <div className="small" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>{user?.role}</div>
               </div>
             </div>
-            <div className="small text-muted mb-3">
+            <div className="small mb-3" style={{ color: isDarkMode ? colors.textMuted : '#6c757d' }}>
               Last refresh: {lastRefresh.toLocaleTimeString()}
             </div>
             <button 
               className="btn btn-outline-danger btn-sm w-100"
+              style={{ borderColor: isDarkMode ? colors.border : '#dc3545', color: isDarkMode ? colors.text : '#dc3545' }}
               onClick={async () => {
                 const result = await Swal.fire({
                   title: 'Are you sure?',
@@ -1274,6 +1503,7 @@ function StudentDashboard({ user }) {
                     text: 'You have been successfully logged out.',
                     icon: 'success',
                     timer: 1500,
+                    timerProgressBar: true,
                     showConfirmButton: false
                   }).then(() => {
                     window.location.href = '/login';
@@ -1288,7 +1518,7 @@ function StudentDashboard({ user }) {
         </div>
         {/* Sidebar for mobile screens */}
         <div
-          className={`bg-white shadow-sm border-end position-fixed top-0 start-0 h-100 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
+          className={`shadow-sm border-end position-fixed top-0 start-0 h-100 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
           style={{
             width: '80vw',
             maxWidth: '320px',
@@ -1296,12 +1526,22 @@ function StudentDashboard({ user }) {
             transition: 'transform 0.3s',
             transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
             boxShadow: sidebarOpen ? '2px 0 16px rgba(0,0,0,0.08)' : 'none',
+            background: isDarkMode ? colors.surface : '#fff',
+            borderColor: isDarkMode ? colors.border : '#dee2e6',
           }}
         >
           <div className="p-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="text-muted text-uppercase small fw-bold mb-0">Navigation</h6>
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar menu">
+              <h6 className="text-uppercase small fw-bold mb-0" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Navigation</h6>
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={() => setSidebarOpen(false)} 
+                aria-label="Close sidebar menu"
+                style={{
+                  borderColor: isDarkMode ? colors.border : '#dee2e6',
+                  color: isDarkMode ? colors.text : 'inherit'
+                }}
+              >
                 <FaTimes />
               </button>
             </div>
@@ -1311,23 +1551,39 @@ function StudentDashboard({ user }) {
                 return (
                   <button
                     key={item.id}
-                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2 ${
-                      activeView === item.id ? 'bg-primary text-white' : 'text-dark'
-                    }`}
+                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2`}
                     onClick={() => {
                       setActiveView(item.id);
                       setSidebarOpen(false);
                     }}
-                    style={{ textDecoration: 'none' }}
+                    style={{ 
+                      textDecoration: 'none',
+                      background: activeView === item.id ? colors.primary : 'transparent',
+                      color: activeView === item.id ? '#fff' : isDarkMode ? colors.text : '#212529',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeView !== item.id) {
+                        e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeView !== item.id) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
                   >
                     <span className="d-flex align-items-center gap-2">
                       <IconComponent size={16} />
                       {item.label}
                     </span>
                     {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
-                      <span className={`badge ${
-                        activeView === item.id ? 'bg-white text-primary' : 'bg-primary text-white'
-                      } rounded-pill`}>
+                      <span className={`badge rounded-pill`}
+                        style={{
+                          background: activeView === item.id ? '#fff' : colors.primary,
+                          color: activeView === item.id ? colors.primary : '#fff'
+                        }}
+                      >
                         {item.badge}
                       </span>
                     )}
@@ -1336,7 +1592,7 @@ function StudentDashboard({ user }) {
               })}
             </nav>
             {/* Mobile Sidebar Logout Button */}
-            <div className="mt-4 pt-2 border-top d-lg-none">
+            <div className="mt-4 pt-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
               <button
                 className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
                 onClick={async () => {
@@ -1373,12 +1629,14 @@ function StudentDashboard({ user }) {
 
         {/* Main Content */}
         <div className="flex-grow-1 p-2 p-md-3" style={{ 
-          width: "100vw",
+          width: "100%",
           maxWidth: "100%",
           overflowX: "hidden",
+          overflowY: "auto",
           minWidth: 0,
           height: "100%",
-          margin: 0
+          margin: 0,
+          WebkitOverflowScrolling: 'touch'
         }}>
           {/* Breadcrumb */}
           {/* <nav aria-label="breadcrumb" className="mb-4">
@@ -1741,8 +1999,7 @@ function StudentDashboard({ user }) {
                 </div>
               </div>
               <div className="modal-footer">
-                <button 
-                  className="btn btn-danger me-auto"
+                <button className="btn btn-danger me-auto"
                   onClick={async () => { await deleteNotification(selectedNotification._id); }}
                   disabled={deletingNotificationIds.includes(selectedNotification._id)}
                 >
@@ -1898,6 +2155,33 @@ function StudentDashboard({ user }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
+      {/* Quick Actions Widget */}
+      <QuickActionsWidget 
+        activeElections={elections.filter(e => getElectionStatus(e).status === 'active')}
+        onNavigate={setActiveView}
+        onVote={(election) => {
+          setSelectedElection(election);
+          setActiveView('elections');
+        }}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal 
+        isOpen={showKeyboardShortcuts} 
+        onClose={() => setShowKeyboardShortcuts(false)} 
+      />
+
+      {/* Candidate Comparison Modal */}
+      {showComparisonModal && selectedElection && (
+        <CandidateComparison 
+          candidates={selectedElection.candidates || []}
+          onClose={() => setShowComparisonModal(false)}
+        />
       )}
       </div>
     </>

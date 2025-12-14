@@ -16,6 +16,8 @@ import AuditLogs from './components/superAdmin/AuditLogs';
 import ElectionOversight from './components/superAdmin/ElectionOversight';
 import DataMaintenance from './components/superAdmin/DataMaintenance';
 import Reporting from './components/superAdmin/Reporting';
+import { ThemeProvider } from './contexts/ThemeContext';
+import './styles/darkmode.css';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -109,7 +111,9 @@ function App() {
           path="/student-dashboard/*"
           element={
             <ProtectedRoute user={currentUser} requiredRole="student">
-              <StudentDashboard user={currentUser} onLogout={handleLogout} />
+              <ThemeProvider>
+                <StudentDashboard user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
             </ProtectedRoute>
           }
         />
@@ -125,7 +129,9 @@ function App() {
           path="/super-admin/*"
           element={
             <ProtectedRoute user={currentUser} requiredRole="super_admin">
-              <SuperAdmin user={currentUser} onLogout={handleLogout} />
+              <ThemeProvider>
+                <SuperAdmin user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
             </ProtectedRoute>
           }
         />

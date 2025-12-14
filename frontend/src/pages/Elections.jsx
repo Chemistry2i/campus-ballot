@@ -27,6 +27,7 @@ import {
   faExclamationTriangle,
   faBullhorn
 } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from "../contexts/ThemeContext";
 
 function Elections({ user }) {
   const [elections, setElections] = useState([]);
@@ -56,6 +57,8 @@ function Elections({ user }) {
     status: "upcoming",
     positions: ["President", "Vice President", "Secretary"]
   });
+
+  const { isDarkMode, colors } = useTheme();
 
   // Helper: convert ISO date -> datetime-local (local timezone) string 'YYYY-MM-DDTHH:MM'
   const toDateTimeLocal = (iso) => {
@@ -197,7 +200,7 @@ function Elections({ user }) {
   const filterElections = () => {
     let filtered = elections;
 
-    // Search filter
+    // Search filter - use searchTerm instead of search
     if (searchTerm) {
       filtered = filtered.filter(election =>
         election.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -375,6 +378,39 @@ function Elections({ user }) {
     });
   };
 
+  // Add missing exportToCSV function
+  const exportToCSV = () => {
+    try {
+      const headers = ['Title', 'Status', 'Start Date', 'End Date', 'Candidates', 'Votes'];
+      const rows = [headers];
+      
+      filteredElections.forEach(election => {
+        rows.push([
+          election.title || '',
+          election.status || '',
+          election.startDate ? new Date(election.startDate).toLocaleDateString() : '',
+          election.endDate ? new Date(election.endDate).toLocaleDateString() : '',
+          election.candidatesCount || 0,
+          election.votesCount || 0
+        ]);
+      });
+      
+      const csvContent = rows.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `elections_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      Swal.fire('Error', 'Failed to export elections', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
@@ -387,325 +423,236 @@ function Elections({ user }) {
   }
 
   return (
-    <div className="container-fluid">
-      <style>{`
-        .stat-card-hover {
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .stat-card-hover:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.06);
-        }
-      `}</style>
-      {/* Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h4 className="fw-bold text-primary mb-1">
-                <FontAwesomeIcon icon={faBullhorn} className="me-2" />
-                Elections Management
-              </h4>
-              <p className="text-muted mb-0">Manage all university elections and voting processes</p>
-            </div>
-            <button
-              className="btn btn-primary d-flex align-items-center"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-2" />
-              Create Election
-            </button>
+    <div className="container-fluid py-4" style={{ backgroundColor: colors.background }}>
+      {/* Banner */}
+      <div
+        className="mb-4 rounded shadow-sm"
+        style={{
+          background: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 90,
+          padding: '2.5rem 2rem',
+        }}
+      >
+        <div>
+          <h2 className="fw-bold mb-1" style={{ fontSize: '2rem' }}>
+            <i className="fa-solid fa-vote-yea me-2 text-warning"></i>
+            Elections Management
+          </h2>
+          <div style={{ fontSize: '1.1rem', opacity: 0.95 }}>
+            Manage all elections in the system.
           </div>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-  <div className="row mb-1 tight-row">
-  {/* Total Elections */}
-  <div className="col-8th mb-1 tight">
-  <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-primary bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faChartBar} className="text-primary" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-  <h5 className="fw-bold mb-0 fs-6">{stats.total}</h5>
-  <p className="text-muted mb-0 small stat-label">Total Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Active Elections */}
-  <div className="col-8th mb-1 tight">
-  <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-success bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faPlayCircle} className="text-success" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-    <h5 className="fw-bold mb-0 fs-6">{stats.ongoing}</h5>
-    <p className="text-muted mb-0 small stat-label">Ongoing Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Upcoming Elections */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-warning bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faCalendarAlt} className="text-warning" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-  <h5 className="fw-bold mb-0 fs-6">{stats.upcoming}</h5>
-  <p className="text-muted mb-0 small stat-label">Upcoming Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Completed Elections */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-secondary bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faCheck} className="text-secondary" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-  <h5 className="fw-bold mb-0 fs-6">{stats.completed}</h5>
-  <p className="text-muted mb-0 small stat-label">Complete Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Cancelled Elections */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-danger bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faBan} className="text-danger" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-  <h5 className="fw-bold mb-0 fs-6">{stats.cancelled || 0}</h5>
-  <p className="text-muted mb-0 small stat-label">Cancelled Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Total Votes Cast */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-info bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faPoll} className="text-info" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">
-          {elections.reduce((sum, e) => sum + (e.votesCount || 0), 0)}
-        </h5>
-        <p className="text-muted mb-0 small stat-label">Total Votes Cast</p>
-      </div>
-    </div>
-  </div>
-  {/* Ongoing Elections */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-info bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faPlay} className="text-info" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-          <h5 className="fw-bold mb-0 fs-6">
-          {elections.filter(e => e.status === "ongoing").length}
-        </h5>
-        <p className="text-muted mb-0 small stat-label">Ongoing Elections</p>
-      </div>
-    </div>
-  </div>
-  {/* Total Candidates */}
-  <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
-      <div className="d-flex justify-content-center mt-3">
-        <div className="bg-primary bg-opacity-10 rounded-circle p-2">
-          <FontAwesomeIcon icon={faUsers} className="text-primary" size="lg" />
-        </div>
-      </div>
-      <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">
-          {elections.reduce((sum, e) => sum + (e.candidatesCount || 0), 0)}
-        </h5>
-        <p className="text-muted mb-0 small stat-label">Total Candidates</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-      {/* Filters */}
-          <div className="row mb-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-            <div className="card-body">
-              <div className="row align-items-center">
-                <div className="col-md-6">
-                  <div className="input-group">
-                    <span className="input-group-text ">
-                      <FontAwesomeIcon icon={faSearch} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search elections by title or description..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      // style={{width:800}}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4">
-                  <select
-                    className="form-select"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="upcoming">upcoming</option>
-                    <option value="ongoing">ongoing</option>
-                    <option value="ended">Ended</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-                <div className="col-md-2">
-                  <button className="btn btn-outline-secondary w-100">
-                    <FontAwesomeIcon icon={faFilter} className="me-2" />
-                    Filter
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Controls */}
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h3 className="fw-bold" style={{ color: colors.text }}>
+          <i className="fa-solid fa-vote-yea me-2"></i>
+          All Elections
+        </h3>
+        <div className="d-flex align-items-center flex-wrap">
+          <button className="btn btn-success me-2" onClick={() => setShowCreateModal(true)}>
+            <i className="fa fa-plus me-2"></i> Create Election
+          </button>
+          <button className="btn btn-outline-primary me-2" onClick={exportToCSV}>
+            <i className="fa fa-download me-2"></i> Export CSV
+          </button>
         </div>
       </div>
 
-      {/* Elections Table */}
-          <div className="row">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-            <div className="card-header bg-white border-0 py-3">
-              <h5 className="mb-0 fw-bold">Elections List</h5>
-            </div>
-            <div className="card-body p-0">
+      {/* Search and Filter Controls */}
+      <div className="row mb-3">
+        <div className="col-md-4 mb-2">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search elections..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}
+          />
+        </div>
+        <div className="col-md-3 mb-2">
+          <select
+            className="form-select"
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}
+          >
+            <option value="all">All Status</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 200 }}>
+          <div className="spinner-border text-primary" role="status" />
+          <span className="ms-3" style={{ color: colors.text }}>Loading elections...</span>
+        </div>
+      ) : (
+        <div style={{
+          borderRadius: '0.75rem',
+          overflow: 'hidden',
+          boxShadow: isDarkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        }}>
+          <table className="table table-hover table-striped mb-0" style={{
+            ...(isDarkMode && {
+              '--bs-table-bg': colors.surface,
+              '--bs-table-striped-bg': '#2d3748',
+              '--bs-table-hover-bg': '#3b4a5c',
+              '--bs-table-border-color': colors.border,
+            })
+          }}>
+            <thead style={{ 
+              backgroundColor: isDarkMode ? '#334155' : '#f8f9fa',
+              borderBottom: `2px solid ${colors.border}`
+            }}>
+              <tr>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  Election Title
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  Status
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  Start Date
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  End Date
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  Candidates
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                  Votes
+                </th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.025em', width: '200px' }}>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
               {filteredElections.length === 0 ? (
-                <div className="text-center py-5">
-                  <FontAwesomeIcon icon={faBullhorn} size="3x" className="text-muted mb-3" />
-                  <h5 className="text-muted">No elections found</h5>
-                  <p className="text-muted">Create your first election to get started</p>
-                </div>
+                <tr>
+                  <td 
+                    colSpan={7} 
+                    className="text-center"
+                    style={{ 
+                      padding: '3rem',
+                      color: colors.textMuted,
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    <i className="fa-solid fa-vote-yea fa-2x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                    No elections found
+                  </td>
+                </tr>
               ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover table-bordered mb-0">
-                    <thead className="bg-light">
-                      <tr>
-                        <th className="fw-bold border-end">Election Title</th>
-                        <th className="fw-bold border-end">Status</th>
-                        <th className="fw-bold border-end">Start Date</th>
-                        <th className="fw-bold border-end">End Date</th>
-                        <th className="fw-bold border-end">Candidates</th>
-                        <th className="fw-bold border-end">Votes</th>
-                        <th className="fw-bold text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredElections.map((election) => (
-                        <tr key={election._id}>
-                          <td className="border-end">
-                            <div>
-                              <h6 className="mb-1 fw-bold">{election.title}</h6>
-                              <p className="text-muted small mb-0">
-                                {election.description?.length > 50 
-                                  ? `${election.description.substring(0, 50)}...` 
-                                  : election.description}
-                              </p>
-                            </div>
-                          </td>
-                          <td className="border-end">{getStatusBadge(election.status)}</td>
-                          <td className="border-end">
-                            <small className="text-muted">
-                              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
-                              {election.startDate ? formatDate(election.startDate) : 'Not set'}
-                            </small>
-                          </td>
-                          <td className="border-end">
-                            <small className="text-muted">
-                              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
-                              {election.endDate ? formatDate(election.endDate) : 'Not set'}
-                            </small>
-                          </td>
-                          <td className="border-end">
-                            <span className="badge bg-info">
-                              <FontAwesomeIcon icon={faUsers} className="me-1" />
-                              {election.candidatesCount || 0}
-                            </span>
-                          </td>
-                          <td className="border-end">
-                            <span className="badge bg-primary">
-                              <FontAwesomeIcon icon={faVoteYea} className="me-1" />
-                              {election.votesCount || 0}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="d-flex justify-content-center gap-1">
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() => openDetailsModal(election)}
-                                title="View Details"
-                              >
-                                <FontAwesomeIcon icon={faEye} />
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-warning"
-                                onClick={() => openEditModal(election)}
-                                title="Edit Election"
-                              >
-                                <FontAwesomeIcon icon={faEdit} />
-                              </button>
-                              {election.status === 'upcoming' && (
-                                <button
-                                  className="btn btn-sm btn-outline-success"
-                                  onClick={() => handleStatusChange(election, 'active')}
-                                  title="Start Election"
-                                >
-                                  <FontAwesomeIcon icon={faPlay} />
-                                </button>
-                              )}
-                              {election.status === 'ongoing' && (
-                                <button
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() => handleStatusChange(election, 'completed')}
-                                  title="End Election"
-                                >
-                                  <FontAwesomeIcon icon={faStop} />
-                                </button>
-                              )}
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => handleDelete(election)}
-                                title="Delete Election"
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                filteredElections.map(election => (
+                  <tr 
+                    key={election._id || election.id}
+                    style={{
+                      borderBottom: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <td style={{ padding: '0.75rem' }}>
+                      <div>
+                        <div style={{ color: colors.text, fontWeight: 500 }}>{election.title}</div>
+                        <small style={{ color: colors.textMuted }}>{election.description || 'No description'}</small>
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <span className={`badge ${
+                        election.status === 'completed' ? 'bg-success' : 
+                        election.status === 'ongoing' ? 'bg-primary' : 
+                        'bg-secondary'
+                      }`} style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: election.status === 'completed' ? '#10b981' : 
+                                           election.status === 'ongoing' ? '#3b82f6' : '#6c757d'
+                          }}
+                        ></span>
+                        {election.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem', color: colors.textSecondary }}>
+                      <div style={{ fontSize: '0.875rem' }}>
+                        <i className="fa fa-calendar me-1"></i>
+                        {election.startDate ? new Date(election.startDate).toLocaleDateString() : '-'}
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.75rem', color: colors.textSecondary }}>
+                      <div style={{ fontSize: '0.875rem' }}>
+                        <i className="fa fa-calendar me-1"></i>
+                        {election.endDate ? new Date(election.endDate).toLocaleDateString() : '-'}
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <span className="badge bg-info" style={{ fontSize: '0.8rem' }}>
+                        {election.candidatesCount || 0}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <span className="badge bg-primary" style={{ fontSize: '0.8rem' }}>
+                        {election.votesCount || 0}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <div className="btn-group" role="group">
+                        <button
+                          className="btn btn-sm btn-outline-info"
+                          onClick={() => openDetailsModal(election)}
+                          title="View"
+                        >
+                          <i className="fa fa-eye"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-warning"
+                          onClick={() => openEditModal(election)}
+                          title="Edit"
+                        >
+                          <i className="fa fa-edit"></i>
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(election)}
+                          title="Delete"
+                        >
+                          <i className="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
 
       {/* Create Election Modal */}
       {showCreateModal && (

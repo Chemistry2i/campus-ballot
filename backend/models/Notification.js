@@ -1,41 +1,44 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-    title: { // Notification title/subject
-        type: String,
-        required: true,
-        trim: true
-    },
-    message: { // Main content of the notification
-        type: String,
-        required: true,
-        trim: true
-    },
-    type: { // Category or severity of notification
-        type: String,
-        enum: ['election', 'vote', 'candidate', 'general', 'info', 'success', 'warning', 'error'],
-        required: true
-    },
-    targetAudience: { // Who should receive this notification
-        type: String,
-        enum: ['all', 'students', 'admins'],
-        default: 'all'
-    },
-    createdBy: { // User who created the notification
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    relatedId: { // Optional: Reference to related election, candidate, or vote
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
-    readBy: [{ // Optional: Users who have read the notification
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }]
-}, {timestamps: true});
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['info', 'success', 'warning', 'error'],
+    default: 'info'
+  },
+  targetAudience: {
+    type: String,
+    enum: ['all', 'admins', 'students'],
+    default: 'all'
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  readBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, {
+  timestamps: true
+});
 
-const Notification = mongoose.model('Notification', notificationSchema);
-module.exports = Notification;
-// Export the Notification model for use in other parts of the application
+// Index for better query performance
+notificationSchema.index({ targetAudience: 1, createdAt: -1 });
+notificationSchema.index({ readBy: 1 });
+
+module.exports = mongoose.model('Notification', notificationSchema);

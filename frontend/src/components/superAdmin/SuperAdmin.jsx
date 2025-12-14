@@ -9,6 +9,14 @@ import AuditLogs from './AuditLogs';
 import ElectionOversight from './ElectionOversight';
 import DataMaintenance from './DataMaintenance';
 import Reporting from './Reporting';
+import SystemHealth from './SystemHealth';
+import SecurityAudit from './SecurityAudit';
+import BackupRecovery from './BackupRecovery';
+import SystemConfiguration from './SystemConfiguration';
+import AdminActivityMonitor from './AdminActivityMonitor';
+import { useTheme } from '../../contexts/ThemeContext';
+import ThemeToggle from '../admin/ThemeToggle';
+import '../../styles/darkmode.css';
 
 // Responsive sidebar state is managed here and passed to Sidebar
 const SIDEBAR_WIDTH = 280;
@@ -17,6 +25,7 @@ const SIDEBAR_COLLAPSED_WIDTH = 64;
 const SuperAdmin = ({ user, onLogout }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -46,7 +55,7 @@ const SuperAdmin = ({ user, onLogout }) => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', background: '#f8f9fc', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', background: colors.background, overflow: 'hidden' }}>
       <SuperAdminSidebar
         user={user}
         collapsed={collapsed}
@@ -62,25 +71,25 @@ const SuperAdmin = ({ user, onLogout }) => {
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          background: '#f8f9fc',
+          background: colors.background,
           transition: 'margin-left 0.2s, width 0.2s'
         }}
       >
         {/* Header Bar */}
         <div
           style={{
-            background: '#fff',
-            borderBottom: '1px solid #eee',
+            background: colors.surface,
+            borderBottom: `1px solid ${colors.border}`,
             padding: '1rem 2rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             minHeight: 64,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.07)'
+            boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)'
           }}
         >
-          <div className="d-flex align-items-center ">
-            <span className="fw-bold" style={{ fontSize: '1.2rem', color: '#2563eb' }}>
+          <div className="d-flex align-items-center">
+            <span className="fw-bold" style={{ fontSize: '1.2rem', color: colors.primary }}>
               <i className="fa-solid fa-crown me-2 text-warning"></i>
               Super Admin Panel
             </span>
@@ -88,8 +97,9 @@ const SuperAdmin = ({ user, onLogout }) => {
               Welcome, {user?.name}
             </span>
           </div>
-          <div>
-            <span className="me-3 text-muted">{user?.email}</span>
+          <div className="d-flex align-items-center">
+            <ThemeToggle />
+            <span className="me-3 ms-3" style={{ color: colors.textSecondary }}>{user?.email}</span>
             <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>
               <i className="fa-solid fa-right-from-bracket me-1"></i> Logout
             </button>
@@ -109,12 +119,17 @@ const SuperAdmin = ({ user, onLogout }) => {
         >
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="manage-admins" element={<ManageAdmins />} />
+            <Route path="manage-admins" element={<ManageAdmins collapsed={collapsed} isMobile={isMobile} />} />
             <Route path="global-settings" element={<GlobalSettings />} />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="election-oversight" element={<ElectionOversight />} />
             <Route path="data-maintenance" element={<DataMaintenance />} />
             <Route path="reporting" element={<Reporting />} />
+            <Route path="system-health" element={<SystemHealth />} />
+            <Route path="security-audit" element={<SecurityAudit />} />
+            <Route path="backup-recovery" element={<BackupRecovery />} />
+            <Route path="system-config" element={<SystemConfiguration />} />
+            <Route path="admin-activity" element={<AdminActivityMonitor />} />
             <Route path="*" element={<Dashboard />} />
           </Routes>
         </div>

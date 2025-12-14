@@ -140,7 +140,7 @@ const ElectionsDashboard = ({
                           </div>
                           <div className="col-sm-6">
                             <small className="text-muted d-flex align-items-center gap-1">
-                              {formatTimeRemaining(election.endDate)}
+                              {formatTimeRemaininwhichg(election.endDate)}
                             </small>
                           </div>
                         </div>

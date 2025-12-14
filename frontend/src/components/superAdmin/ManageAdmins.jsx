@@ -3,10 +3,11 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import { CSVLink } from 'react-csv';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const dummyAdmins = [
-  { id: 1, name: 'Jane Doe', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
-  { id: 2, name: 'John Smith', email: 'john@kyu.ac.ug', role: 'admin', status: 'inactive' },
+  { id: 1, name: 'Aine Bridget', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
+  { id: 2, name: 'Natu Nah', email: 'john@kyu.ac.ug', role: 'admin', status: 'inactive' },
   { id: 3, name: 'Super Admin', email: 'super@kyu.ac.ug', role: 'super_admin', status: 'active' },
 ];
 
@@ -27,45 +28,23 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     createdAt: '',
     // Add other fields from your user model as needed
   });
+  const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
         const token = localStorage.getItem('token');
-        // Try all possible endpoints for admins
-        let adminsList = [];
-        let res = null;
-        // Try /api/admins first (if you have a dedicated admins endpoint)
-        try {
-          res = await axios.get('/api/admins', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (Array.isArray(res.data)) {
-            adminsList = res.data;
-          } else if (res.data && Array.isArray(res.data.admins)) {
-            adminsList = res.data.admins;
-          }
-        } catch (err) {
-          // Fallback to /api/users
-          try {
-            res = await axios.get('/api/users', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (Array.isArray(res.data)) {
-              adminsList = res.data.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            } else if (res.data && Array.isArray(res.data.users)) {
-              adminsList = res.data.users.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            } else if (res.data && Array.isArray(res.data.data)) {
-              adminsList = res.data.data.filter(u => u.role === 'admin' || u.role === 'super_admin');
-            }
-          } catch (err2) {
-            // Fallback to dummy data if all fail
-            adminsList = dummyAdmins;
-          }
-        }
+        // Use the new super admin endpoint
+        const res = await axios.get('/api/super-admin/admins', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        // Backend now returns admins directly
+        const adminsList = Array.isArray(res.data) ? res.data : [];
         setAdmins(adminsList);
       } catch (err) {
-        setAdmins(dummyAdmins); // fallback to dummy data if all fail
+        console.error('Error fetching admins:', err);
+        setAdmins([]); // fallback to empty array
       } finally {
         setLoading(false);
       }
@@ -89,8 +68,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     }
     try {
       const token = localStorage.getItem('token');
-      // Create user with admin/super_admin role
-      await axios.post('/api/users', newAdmin, {
+      await axios.post('/api/super-admin/admins', newAdmin, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Swal.fire('Success', 'Admin added', 'success');
@@ -107,15 +85,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         createdAt: '',
       });
       // Refresh list
-      setLoading(true);
-      const res = await axios.get('/api/users', {
+      const res = await axios.get('/api/super-admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const adminsList = Array.isArray(res.data)
-        ? res.data.filter(u => u.role === 'admin' || u.role === 'super_admin')
-        : [];
-      setAdmins(adminsList);
-      setLoading(false);
+      setAdmins(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       Swal.fire('Error', 'Failed to add admin', 'error');
     }
@@ -134,7 +107,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     if (!result.isConfirmed) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/users/${id}`, {
+      await axios.delete(`/api/super-admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       Swal.fire('Deleted', 'Admin removed', 'success');
@@ -147,18 +120,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   const handleToggleStatus = async (id, status) => {
     try {
       const token = localStorage.getItem('token');
-      if (status === 'active') {
-        await axios.put(`/api/users/${id}/suspend`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } else {
-        await axios.put(`/api/users/${id}/activate`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
+      const newStatus = status === 'active' ? 'suspended' : 'active';
+      await axios.put(`/api/super-admin/admins/${id}/status`, 
+        { status: newStatus }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setAdmins(admins.map(a =>
         (a._id === id || a.id === id)
-          ? { ...a, status: status === 'active' ? 'suspended' : 'active' }
+          ? { ...a, status: newStatus, accountStatus: newStatus }
           : a
       ));
       Swal.fire('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
@@ -274,7 +243,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         minHeight: '100vh',
         transition: 'margin-left 0.2s, width 0.2s',
         width: '100%',
-        background: '#f8f9fc',
+        background: colors.background,
       }}
     >
       {/* Banner */}
@@ -357,17 +326,46 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
           <span className="ms-3">Loading admins...</span>
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table admin-table table-bordered table-hover align-middle">
-            <thead className="table-light">
+        <div className="table-responsive" style={{
+          borderRadius: '0.75rem',
+          overflow: 'hidden',
+          boxShadow: isDarkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        }}>
+          <table className="table table-hover table-striped mb-0" style={{
+            ...(isDarkMode && {
+              '--bs-table-bg': colors.surface,
+              '--bs-table-striped-bg': '#2d3748',
+              '--bs-table-hover-bg': '#3b4a5c',
+              '--bs-table-border-color': colors.border,
+            })
+          }}>
+            <thead style={{ 
+              background: isDarkMode ? '#334155' : '#f8f9fa',
+              borderBottom: `2px solid ${colors.border}`
+            }}>
               <tr>
                 {columns.map(col => (
-                  <th key={col.key} style={col.style || {}}>
+                  <th 
+                    key={col.key} 
+                    style={{ 
+                      ...col.style,
+                      color: colors.text,
+                      fontWeight: 600,
+                      padding: '1rem 0.75rem',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.025em',
+                      borderBottom: `2px solid ${colors.border}`,
+                    }}
+                  >
                     {col.label}
                     {col.sortable && (
                       <button
-                        className="btn btn-link btn-sm p-0 ms-1"
-                        style={{ verticalAlign: 'middle' }}
+                        className="btn btn-link btn-sm p-0 ms-2"
+                        style={{ 
+                          verticalAlign: 'middle',
+                          color: colors.textSecondary 
+                        }}
                         onClick={() => handleSort(col.key)}
                         title={`Sort by ${col.label}`}
                       >
@@ -381,21 +379,42 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
             <tbody>
               {statusFilteredAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="text-center text-muted">No admins found</td>
+                  <td 
+                    colSpan={columns.length} 
+                    className="text-center"
+                    style={{ 
+                      padding: '3rem',
+                      color: colors.textMuted,
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    <i className="fa-solid fa-users-slash fa-2x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                    No admins found
+                  </td>
                 </tr>
               ) : (
                 statusFilteredAdmins.map(admin => (
-                  <tr key={admin._id || admin.id}>
-                    {/* Bulk select checkbox */}
-                    <td>
+                  <tr 
+                    key={admin._id || admin.id}
+                    style={{
+                      borderBottom: `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <td style={{ padding: '0.75rem' }}>
                       <input
                         type="checkbox"
+                        className="form-check-input"
                         checked={selectedIds.includes(admin._id || admin.id)}
                         onChange={e => handleSelectOne(admin._id || admin.id, e.target.checked)}
-                        aria-label="Select admin"
+                        style={{
+                          ...(isDarkMode && {
+                            backgroundColor: colors.inputBg,
+                            borderColor: colors.inputBorder
+                          })
+                        }}
                       />
                     </td>
-                    <td>
+                    <td style={{ padding: '0.75rem' }}>
                       <img
                         src={admin.profilePicture || admin.image || '/default-avatar.png'}
                         alt={admin.name}
@@ -404,18 +423,29 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                           height: 40,
                           objectFit: 'cover',
                           borderRadius: '50%',
-                          border: '1px solid #eee',
-                          background: '#f3f4f6'
+                          border: `2px solid ${colors.border}`,
+                          background: colors.surfaceHover
                         }}
                       />
                     </td>
-                    <td>
-                      <a href={`/super-admin/profile/${admin._id || admin.id}`} style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                    <td style={{ padding: '0.75rem' }}>
+                      <a 
+                        href={`/super-admin/profile/${admin._id || admin.id}`} 
+                        style={{ 
+                          color: colors.primary, 
+                          textDecoration: 'none',
+                          fontWeight: 500 
+                        }}
+                        onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                        onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                      >
                         {admin.name}
                       </a>
                     </td>
-                    <td>{admin.email}</td>
-                    <td>
+                    <td style={{ padding: '0.75rem', color: colors.textSecondary }}>
+                      {admin.email}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
                       <select
                         className="form-select form-select-sm"
                         value={admin.role}
@@ -428,7 +458,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         <option value="super_admin">Super Admin</option>
                       </select>
                     </td>
-                    <td>
+                    <td style={{ padding: '0.75rem' }}>
                       <span className={`badge bg-${(admin.status === 'active' || admin.accountStatus === 'active') ? 'success' : 'secondary'}`}>
                         <span
                           style={{
@@ -444,15 +474,15 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         {admin.status || admin.accountStatus || '-'}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ padding: '0.75rem' }}>
                       {admin.emailVerified
                         ? <span className="badge bg-success">Verified</span>
                         : <span className="badge bg-warning text-dark">Unverified</span>}
                     </td>
-                    <td>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : '-'}</td>
-                    <td>{admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : '-'}</td>
-                    <td>{admin.phone || '-'}</td>
-                    <td>
+                    <td style={{ padding: '0.75rem' }}>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>{admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>{admin.phone || '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>
                       <button
                         className="btn btn-sm btn-info me-2"
                         onClick={() => Swal.fire('Info', 'View details not implemented', 'info')}
@@ -494,36 +524,28 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
               )}
             </tbody>
           </table>
-          {/* Bulk select all */}
-          <div className="mb-2">
-            <input
-              type="checkbox"
-              checked={selectedIds.length === statusFilteredAdmins.length && statusFilteredAdmins.length > 0}
-              onChange={e => handleSelectAll(e.target.checked)}
-              aria-label="Select all admins"
-            />{' '}
-            <span className="ms-2">Select All</span>
-          </div>
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <nav className="mt-3">
-              <ul className="pagination justify-content-center">
-                <li className={`page-item${page === 1 ? ' disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(page - 1)}>Previous</button>
-                </li>
-                {[...Array(totalPages)].map((_, idx) => (
-                  <li key={idx} className={`page-item${page === idx + 1 ? ' active' : ''}`}>
-                    <button className="page-link" onClick={() => setPage(idx + 1)}>{idx + 1}</button>
-                  </li>
-                ))}
-                <li className={`page-item${page === totalPages ? ' disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(page + 1)}>Next</button>
-                </li>
-              </ul>
-            </nav>
-          )}
         </div>
       )}
+      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <nav className="mt-3">
+          <ul className="pagination justify-content-center">
+            <li className={`page-item${page === 1 ? ' disabled' : ''}`}>
+              <button className="page-link" onClick={() => setPage(page - 1)}>Previous</button>
+            </li>
+            {[...Array(totalPages)].map((_, idx) => (
+              <li key={idx} className={`page-item${page === idx + 1 ? ' active' : ''}`}>
+                <button className="page-link" onClick={() => setPage(idx + 1)}>{idx + 1}</button>
+              </li>
+            ))}
+            <li className={`page-item${page === totalPages ? ' disabled' : ''}`}>
+              <button className="page-link" onClick={() => setPage(page + 1)}>Next</button>
+            </li>
+          </ul>
+        </nav>
+      )}
+
       {/* Add Admin Modal */}
       {showAddModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>

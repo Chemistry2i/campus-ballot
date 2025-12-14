@@ -1,4 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useTheme } from "../../contexts/ThemeContext";
 import {
   faUsers,
   faCheckCircle,
@@ -11,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function OverviewCards({ stats }) {
+  const { isDarkMode, colors } = useTheme();
   const cardClass = "col-6 col-sm-4 col-md-3 col-lg-3 col-xl-15";
 
   const cardData = [
@@ -83,12 +85,16 @@ function OverviewCards({ stats }) {
   const handleCardHover = (e, card, isEntering) => {
     if (isEntering) {
       e.currentTarget.style.transform = "translateY(-3px)";
-      e.currentTarget.style.boxShadow = "0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
-      e.currentTarget.style.borderColor = `${card.color}40`;
+      e.currentTarget.style.boxShadow = isDarkMode
+        ? "none"
+        : "0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
+      e.currentTarget.style.borderColor = isDarkMode ? "#0d6efd" : `${card.color}40`;
     } else {
       e.currentTarget.style.transform = "translateY(0)";
-      e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)";
-      e.currentTarget.style.borderColor = `${card.color}20`;
+      e.currentTarget.style.boxShadow = isDarkMode
+        ? "none"
+        : "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)";
+      e.currentTarget.style.borderColor = isDarkMode ? "#0d6efd" : `${card.color}20`;
     }
   };
 
@@ -98,15 +104,18 @@ function OverviewCards({ stats }) {
         {cardData.map((card, index) => (
           <div key={index} className={cardClass} style={{ flex: '1 1 12.5%', maxWidth: '12.5%' }}>
             <div 
-              className="card border-0 h-100"
+              className={`card h-100 ${isDarkMode ? 'overview-card-dark' : ''}`}
               style={{
-                backgroundColor: card.bgColor,
+                backgroundColor: isDarkMode ? colors.surface : card.bgColor,
                 transition: "all 0.3s ease",
                 cursor: "pointer",
                 minHeight: "120px",
-                border: `1px solid ${card.color}20`,
+                border: isDarkMode ? "2px solid #0d6efd" : `1px solid ${card.color}20`,
                 borderRadius: "8px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)"
+                boxShadow: isDarkMode
+                  ? "none"
+                  : "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)"
+                
               }}
               onMouseEnter={(e) => handleCardHover(e, card, true)}
               onMouseLeave={(e) => handleCardHover(e, card, false)}
@@ -122,8 +131,9 @@ function OverviewCards({ stats }) {
                       width: "40px",
                       height: "40px",
                       backgroundColor: `${card.color}15`,
-                      border: `2px solid ${card.color}30`,
-                      boxShadow: `0 2px 4px ${card.color}20`
+                      border: `2px solid ${card.color}`,
+                      boxShadow: isDarkMode ? "none" : `0 2px 4px ${card.color}20`,
+
                     }}
                   >
                     <FontAwesomeIcon 
@@ -141,7 +151,7 @@ function OverviewCards({ stats }) {
                   style={{ 
                     fontSize: "0.8rem", 
                     fontWeight: "600",
-                    color: "#6c757d",
+                    color: isDarkMode ? colors.textSecondary : "#6c757d",
                     textTransform: "uppercase",
                     letterSpacing: "0.3px",
                     lineHeight: "1.1"
@@ -170,7 +180,7 @@ function OverviewCards({ stats }) {
                     lineHeight: "1.1"
                   }}
                 >
-                  {card.description}
+                  <span style={{ color: isDarkMode ? colors.textMuted : undefined }}>{card.description}</span>
                 </div>
               </div>
             </div>
@@ -179,6 +189,25 @@ function OverviewCards({ stats }) {
       </div>
       
   <style>{`
+        /* Override darkmode.css card styles for overview cards */
+        body.admin-dark-mode .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
+        .admin-dark-mode .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
+        .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
         @media (max-width: 1200px) {
           .col-xl-15 {
             flex: 1 1 25% !important;
@@ -213,14 +242,11 @@ function OverviewCards({ stats }) {
           }
         }
         
-        .card:focus {
-          outline: 2px solid #0d6efd;
-          outline-offset: 2px;
-        }
-        
+        .card:focus,
         .card:focus-visible {
           outline: 2px solid #0d6efd;
           outline-offset: 2px;
+          box-shadow: 0 0 0 2px #0d6efd40;
         }
       `}</style>
     </div>

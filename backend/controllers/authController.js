@@ -483,6 +483,7 @@ const login = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {

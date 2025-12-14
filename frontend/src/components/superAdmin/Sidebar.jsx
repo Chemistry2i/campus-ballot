@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const navItems = [
+  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
-  { label: 'Global Settings', icon: 'fa-solid fa-sliders', to: '/super-admin/global-settings' },
+  { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
+  { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
+  { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
+  { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
+  { label: 'Global Settings', icon: 'fa-solid fa-cogs', to: '/super-admin/global-settings' },
   { label: 'Audit Logs', icon: 'fa-solid fa-clipboard-list', to: '/super-admin/audit-logs' },
   { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
   { label: 'Data Maintenance', icon: 'fa-solid fa-database', to: '/super-admin/data-maintenance' },
@@ -17,12 +23,13 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [logCount, setLogCount] = useState(0);
+  const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     const fetchLogCount = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('/api/audit-logs/count', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get('/api/logs/count', { headers: { Authorization: `Bearer ${token}` } });
         setLogCount(res.data.count || 0);
       } catch (err) {
         console.error('Error fetching log count', err);
@@ -62,7 +69,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         />
       )}
       <aside
-        className={`superadmin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
+        className={`superadmin-sidebar shadow-sm${collapsed ? ' collapsed' : ''}`}
         style={{
           minWidth: collapsed ? 64 : 280,
           width: collapsed ? 64 : 280,
@@ -72,25 +79,29 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           top: 0,
           zIndex: 100,
           transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
-          boxShadow: '0 0 12px rgba(37,99,235,0.07)',
-          background: '#fff',
-          color: '#222'
+          boxShadow: isDarkMode ? '0 0 12px rgba(0,0,0,0.3)' : '0 0 12px rgba(37,99,235,0.07)',
+          background: isDarkMode ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)' : '#fff',
+          color: colors.text,
+          borderRight: `1px solid ${colors.border}`,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowX: 'hidden'
         }}
         aria-label="Super Admin Sidebar"
       >
-        <div className="sidebar-header text-center py-4" style={{ padding: collapsed ? '1rem 0' : '2rem 0', position: 'relative' }}>
+        <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative' }}>
           {/* Avatar/Profile Dropdown */}
           <div
             className="avatar bg-primary text-white mx-auto mb-2"
             style={{
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               borderRadius: '50%',
-              fontSize: '2rem',
+              fontSize: '1.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: collapsed ? 0 : 12,
+              marginBottom: collapsed ? 0 : 8,
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               cursor: 'pointer',
               position: 'relative'
@@ -110,13 +121,14 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   top: 60,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: '#fff',
-                  color: '#222',
+                  background: colors.surface,
+                  color: colors.text,
                   borderRadius: 8,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                  boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.12)',
                   minWidth: 160,
                   zIndex: 200,
-                  padding: '0.5rem 0'
+                  padding: '0.5rem 0',
+                  border: `1px solid ${colors.border}`
                 }}
               >
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
@@ -167,7 +179,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             ></i>
           </button>
         </div>
-        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation">
+        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', flex: 1, paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: `${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'}` }}>
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.to;
             return (
@@ -191,18 +203,20 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
                 <Link
                   to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-primary'}`}
+                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold' : ''}`}
                   style={{
-                    fontSize: '1em', // <-- changed from 1.08rem to 1em
+                    fontSize: '1em',
                     gap: '1rem',
-                    padding: collapsed ? '0.85rem 0.5rem' : '0.85rem 1.5rem',
+                    padding: collapsed ? '0.5rem 0.5rem' : '0.6rem 1rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     borderRadius: 4,
                     fontWeight: isActive ? 700 : 500,
-                    background: isActive ? '#e7f1ff' : 'transparent',
-                    boxShadow: isActive ? '0 2px 8px rgba(37,99,235,0.07)' : 'none',
+                    background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
+                    boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
                     minWidth: collapsed ? 0 : 220,
-                    outline: 'none'
+                    outline: 'none',
+                    color: colors.text,
+                    borderLeft: isActive ? `3px solid ${colors.primary}` : 'none'
                   }}
                   aria-current={isActive ? 'page' : undefined}
                   tabIndex={0}
@@ -210,8 +224,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   onClick={() => isMobile && setCollapsed(true)}
                   title={collapsed ? item.label : undefined}
                 >
-                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: '#2563eb' }}></i>
-                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: '#2563eb' }}>{item.label}</span>}
+                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: colors.primary }}></i>
+                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: colors.text }}>{item.label}</span>}
                   {/* Badge for Audit Logs */}
                   {item.label === 'Audit Logs' && logCount > 0 && !collapsed && (
                     <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
@@ -223,18 +237,45 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             );
           })}
         </nav>
-        {/* Footer Section */}
+        {/* Footer */}
         {!collapsed && (
-          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: '#888' }}>
-            <hr />
-            <div>
-              &copy; {new Date().getFullYear()} KYU Voting v1.0
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.7rem',
+              textAlign: 'center',
+              flexShrink: 0
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <i className="fa fa-book-open" style={{ marginRight: '0.25rem' }}></i>
+              v1.0.0 © 2025 VoteSys
             </div>
-            <div>
-              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
-                University Site
-              </a>
-            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login';
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <i className="fa fa-sign-out-alt" style={{ marginRight: '0.25rem' }}></i>
+              Logout
+            </button>
           </div>
         )}
         <style>{`

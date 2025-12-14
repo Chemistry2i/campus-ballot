@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import Select from 'react-select';
+import { useTheme } from '../../contexts/ThemeContext';
 
 function CreateElection({ onCreated }) {
   const [title, setTitle] = useState("");
@@ -20,6 +21,8 @@ function CreateElection({ onCreated }) {
   const [autoPublish, setAutoPublish] = useState(false);
   const [saveDraft, setSaveDraft] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const { isDarkMode, colors } = useTheme();
 
   const timezone = useMemo(() => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){ return 'UTC'; }
@@ -206,9 +209,12 @@ function CreateElection({ onCreated }) {
   };
 
   return (
-    <div className="card shadow-sm border-0 mb-4">
+    <div className="card shadow-sm border-0 mb-4" style={{
+      backgroundColor: colors.cardBg,
+      borderColor: colors.border + ' !important'
+    }}>
       <div className="card-body">
-        <h5 className="card-title mb-3 fw-bold">Create New Election</h5>
+        <h5 className="card-title mb-3 fw-bold" style={{ color: colors.text }}>Create New Election</h5>
         <form onSubmit={handleSubmit} className="row g-3">
           <div className="col-md-6">
             <input
@@ -217,6 +223,11 @@ function CreateElection({ onCreated }) {
               placeholder="Election Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              style={{
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+                color: colors.text
+              }}
               required
             />
           </div>
@@ -227,24 +238,71 @@ function CreateElection({ onCreated }) {
               placeholder="Short Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              style={{
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBorder,
+                color: colors.text
+              }}
             />
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Start Date & Time</label>
+            <label className="form-label small" style={{ color: colors.text }}>Start Date & Time</label>
             <div className="d-flex gap-2">
-              <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} required />
-              <select className="form-select" style={{maxWidth: '110px'}} value={startAmPm} onChange={e => setStartAmPm(e.target.value)}>
+              <input 
+                type="datetime-local" 
+                className="form-control" 
+                value={startDate} 
+                onChange={e => setStartDate(e.target.value)}
+                style={{
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                  color: colors.text
+                }}
+                required 
+              />
+              <select 
+                className="form-select" 
+                style={{
+                  maxWidth: '110px',
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                  color: colors.text
+                }} 
+                value={startAmPm} 
+                onChange={e => setStartAmPm(e.target.value)}
+              >
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
             </div>
           </div>
           <div className="col-md-6">
-            <label className="form-label small">End Date & Time</label>
+            <label className="form-label small" style={{ color: colors.text }}>End Date & Time</label>
             <div className="d-flex gap-2">
-              <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} required />
-              <select className="form-select" style={{maxWidth: '110px'}} value={endAmPm} onChange={e => setEndAmPm(e.target.value)}>
+              <input 
+                type="datetime-local" 
+                className="form-control" 
+                value={endDate} 
+                onChange={e => setEndDate(e.target.value)}
+                style={{
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                  color: colors.text
+                }}
+                required 
+              />
+              <select 
+                className="form-select" 
+                style={{
+                  maxWidth: '110px',
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.inputBorder,
+                  color: colors.text
+                }} 
+                value={endAmPm} 
+                onChange={e => setEndAmPm(e.target.value)}
+              >
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
@@ -252,12 +310,44 @@ function CreateElection({ onCreated }) {
           </div>
 
           <div className="col-12">
-            <label className="form-label small">Positions</label>
+            <label className="form-label small" style={{ color: colors.text }}>Positions</label>
             {positions.map((p, idx) => (
               <div key={idx} className="d-flex gap-2 mb-2">
-                <input className="form-control" placeholder="Position name" value={p.name} onChange={e => updatePosition(idx, 'name', e.target.value)} />
-                <input className="form-control" style={{maxWidth: '110px'}} type="number" min={1} value={p.seats} onChange={e => updatePosition(idx, 'seats', e.target.value)} />
-                <select className="form-select" style={{maxWidth: '180px'}} value={p.method} onChange={e => updatePosition(idx, 'method', e.target.value)}>
+                <input 
+                  className="form-control" 
+                  placeholder="Position name" 
+                  value={p.name} 
+                  onChange={e => updatePosition(idx, 'name', e.target.value)}
+                  style={{
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.text
+                  }}
+                />
+                <input 
+                  className="form-control" 
+                  style={{
+                    maxWidth: '110px',
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.text
+                  }} 
+                  type="number" 
+                  min={1} 
+                  value={p.seats} 
+                  onChange={e => updatePosition(idx, 'seats', e.target.value)} 
+                />
+                <select 
+                  className="form-select" 
+                  style={{
+                    maxWidth: '180px',
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
+                    color: colors.text
+                  }} 
+                  value={p.method} 
+                  onChange={e => updatePosition(idx, 'method', e.target.value)}
+                >
                   <option value="fptp">First-past-the-post</option>
                   <option value="approval">Approval</option>
                   <option value="ranked">Ranked-choice</option>
@@ -269,7 +359,7 @@ function CreateElection({ onCreated }) {
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Eligibility</label>
+            <label className="form-label small" style={{ color: colors.text }}>Eligibility</label>
             <select className="form-select" value={eligibilityType} onChange={e => setEligibilityType(e.target.value)}>
               <option value="all">All registered students</option>
               <option value="faculty">Faculty / Department</option>
@@ -279,7 +369,7 @@ function CreateElection({ onCreated }) {
           </div>
             {eligibilityType === 'faculty' && (
               <div className="col-md-6">
-                <label className="form-label small">Select Faculties</label>
+                <label className="form-label small" style={{ color: colors.text }}>Select Faculties</label>
                 <Select
                   isMulti
                   isSearchable
@@ -292,7 +382,7 @@ function CreateElection({ onCreated }) {
             )}
             {eligibilityType === 'cohort' && (
               <div className="col-md-6">
-                <label className="form-label small">Select Cohorts / Years</label>
+                <label className="form-label small" style={{ color: colors.text }}>Select Cohorts / Years</label>
                 <Select
                   isMulti
                   isSearchable
@@ -312,13 +402,13 @@ function CreateElection({ onCreated }) {
           <div className="col-md-4 d-flex align-items-center">
             <div className="form-check me-3">
               <input id="autoPublish" className="form-check-input" type="checkbox" checked={autoPublish} onChange={e => setAutoPublish(e.target.checked)} />
-              <label className="form-check-label" htmlFor="autoPublish">Auto-publish results</label>
+              <label className="form-check-label" htmlFor="autoPublish" style={{ color: colors.text }}>Auto-publish results</label>
             </div>
           </div>
           <div className="col-md-4 d-flex align-items-center">
             <div className="form-check me-3">
               <input id="saveDraft" className="form-check-input" type="checkbox" checked={saveDraft} onChange={e => setSaveDraft(e.target.checked)} />
-              <label className="form-check-label" htmlFor="saveDraft">Save as draft</label>
+              <label className="form-check-label" htmlFor="saveDraft" style={{ color: colors.text }}>Save as draft</label>
             </div>
           </div>
           <div className="col-md-4">
