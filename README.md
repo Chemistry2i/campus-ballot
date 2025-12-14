@@ -1,3 +1,4 @@
+<!-- Campus Ballot-->
 # 🗳️ Campus Voting System (MERN Stack)
 
 ![MERN Stack](https://img.shields.io/badge/MERN-Stack-blueviolet?style=for-the-badge&logo=mongodb&logoColor=white)
