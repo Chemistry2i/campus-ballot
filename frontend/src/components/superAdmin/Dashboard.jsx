@@ -91,7 +91,8 @@ const SuperAdminDashboard = ({ user }) => {
         </div>
       </div>
       {/* Use the OverviewCards component for stats display */}
-      <OverviewCards stats={stats} />
+      {/* <OverviewCards stats={stats} /> */}
+      <OverviewCards />
       <div className="mt-4">
         <Link to="/super-admin/manage-admins" className="btn btn-primary me-2">Manage Admins</Link>
         <Link to="/super-admin/global-settings" className="btn btn-secondary me-2">Global Settings</Link>
