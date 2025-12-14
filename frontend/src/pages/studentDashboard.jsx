@@ -514,7 +514,8 @@ function StudentDashboard({ user }) {
                   borderRadius: '12px', 
                   border: `1px solid ${border}`,
                   background: isDarkMode ? colors.surface : '#fff',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
                 }}
               >
                 <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-1 p-md-2">
