@@ -118,6 +118,7 @@ const SuperAdmin = ({ user, onLogout }) => {
           }}
         >
           <Routes>
+            <Route path="system-health" element={<SystemHealth />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="manage-admins" element={<ManageAdmins collapsed={collapsed} isMobile={isMobile} />} />
             <Route path="global-settings" element={<GlobalSettings />} />
@@ -125,7 +126,6 @@ const SuperAdmin = ({ user, onLogout }) => {
             <Route path="election-oversight" element={<ElectionOversight />} />
             <Route path="data-maintenance" element={<DataMaintenance />} />
             <Route path="reporting" element={<Reporting />} />
-            <Route path="system-health" element={<SystemHealth />} />
             <Route path="security-audit" element={<SecurityAudit />} />
             <Route path="backup-recovery" element={<BackupRecovery />} />
             <Route path="system-config" element={<SystemConfiguration />} />
