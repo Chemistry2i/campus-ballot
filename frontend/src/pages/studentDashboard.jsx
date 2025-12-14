@@ -461,7 +461,7 @@ function StudentDashboard({ user }) {
     <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
       {/* Welcome Banner */}
       <div 
-        className="mb-1 rounded-md shadow-sm p-4 p-md-5"
+        className="mb-4 rounded-md shadow-sm p-4 p-md-5"
         style={{
           background: isDarkMode 
             ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
