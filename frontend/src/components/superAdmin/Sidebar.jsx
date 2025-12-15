@@ -130,8 +130,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           <div
             className="avatar bg-primary text-white mx-auto mb-2 avatar-upload-wrapper"
             style={{
-              width: 48,
-              height: 48,
+              width: 55,
+              height: 55,
               borderRadius: '50%',
               fontSize: '1.5rem',
               display: 'flex',
@@ -218,15 +218,16 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           {!collapsed && (
             <>
               {/* Logo/Brand */}
-              <span className="fw-bold" style={{ fontSize: '1.45rem', color: '#2563eb', letterSpacing: '-1px' }}>
+              {/* <span className="fw-bold" style={{ fontSize: '1.45rem', color: '#2563eb', letterSpacing: '-1px' }}>
                 <i className="fa-solid fa-graduation-cap me-2"></i>Super Admin
-              </span>
-              <div className="mt-2 mb-2">
-                <span className="badge bg-danger" style={{ fontSize: '0.95rem', fontWeight: 600, borderRadius: '50px' }}>super_admin</span>
-              </div>
-              <div className="text-muted small mb-2" style={{ fontWeight: 500 }}>
+              </span> */}
+              <div className="text-muted  mb-2" style={{ fontWeight: 500, fontSize: '1.0rem' }}>
                 Welcome, {user?.name || 'Super Admin'}
               </div>
+              <div className="mt-2 mb-1">
+                <span className="badge bg-danger" style={{ fontSize: '0.8rem', fontWeight: 600, borderRadius: '50px' }}>super_admin</span>
+              </div>
+              
             </>
           )}
           {/* Collapse/Expand Button */}
