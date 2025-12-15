@@ -21,10 +21,42 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'admin', 'super_admin'], // Added 'super_admin'
+        enum: ['student', 'admin', 'super_admin'], // Primary role
         default: 'student',
         required: true,
         trim: true,
+    },
+    // Additional roles for multi-role support (student can also be candidate/agent)
+    additionalRoles: {
+        type: [String],
+        enum: ['candidate', 'agent'],
+        default: []
+    },
+    // Candidate-specific fields
+    candidateInfo: {
+        electionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Election'
+        },
+        position: String,
+        manifesto: String,
+        status: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'pending'
+        }
+    },
+    // Agent-specific fields
+    agentInfo: {
+        assignedCandidateId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        permissions: {
+            type: [String],
+            enum: ['updateMaterials', 'postUpdates', 'respondToQuestions', 'viewStatistics', 'manageTasks'],
+            default: []
+        }
     },
     studentId: {
         type: String,

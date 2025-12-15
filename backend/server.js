@@ -98,6 +98,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/user', require('./routes/roleManagement'));
 
 
 // Catch-all: send React index.html for any non-API route

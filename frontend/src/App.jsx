@@ -27,19 +27,25 @@ function ProtectedRoute({ user, requiredRole, children }) {
     return <Navigate to="/login" replace />;
   }
   
+  // Get all user roles (primary + additional)
+  const userRoles = [user.role, ...(user.additionalRoles || [])];
+  
   // If a specific role is required, check if user has it
-  if (requiredRole && user.role !== requiredRole) {
-    // Redirect to appropriate dashboard based on user role
+  if (requiredRole && !userRoles.includes(requiredRole)) {
+    // Redirect to appropriate dashboard based on user's primary role
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;
     } else if (user.role === 'super_admin') {
       return <Navigate to="/super-admin/system-health" replace />;
-    } else if (user.role === 'candidate') {
-      return <Navigate to="/candidate" replace />;
-    } else if (user.role === 'agent') {
-      return <Navigate to="/agent" replace />;
     } else {
-      return <Navigate to="/student-dashboard" replace />;
+      // For students, check additional roles
+      if (user.additionalRoles?.includes('candidate')) {
+        return <Navigate to="/candidate" replace />;
+      } else if (user.additionalRoles?.includes('agent')) {
+        return <Navigate to="/agent" replace />;
+      } else {
+        return <Navigate to="/student-dashboard" replace />;
+      }
     }
   }
   
@@ -88,14 +94,14 @@ function App() {
           path="/"
           element={
             currentUser ? (
-              currcurrentUser.role === 'candidate' ? (
-                <Navigate to="/candidate" replace />
-              ) : currentUser.role === 'agent' ? (
-                <Navigate to="/agent" replace />
-              ) : entUser.role === 'admin' ? (
+              currentUser.role === 'admin' ? (
                 <Navigate to="/admin" replace />
               ) : currentUser.role === 'super_admin' ? (
                 <Navigate to="/super-admin/system-health" replace />
+              ) : currentUser.additionalRoles?.includes('candidate') ? (
+                <Navigate to="/candidate" replace />
+              ) : currentUser.additionalRoles?.includes('agent') ? (
+                <Navigate to="/agent" replace />
               ) : (
                 <Navigate to="/student-dashboard" replace />
               )

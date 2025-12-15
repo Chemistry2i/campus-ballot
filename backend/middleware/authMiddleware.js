@@ -141,8 +141,49 @@ const superAdminOnly = (req, res, next) => {
   }
 };
 
+// 🎯 Multi-role authorization (checks primary role OR additional roles)
+const hasRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      if (!req.user) {
+        console.log("[AUTH] ❗ User not authenticated");
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Check primary role
+      const userRoles = [req.user.role, ...(req.user.additionalRoles || [])];
+      const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+
+      if (!hasPermission) {
+        console.log(`[AUTH] 🚫 User roles [${userRoles.join(', ')}] not authorized. Required: [${allowedRoles.join(', ')}]`);
+        return res.status(403).json({
+          message: `Access denied: requires one of [${allowedRoles.join(', ')}]`,
+        });
+      }
+
+      console.log(`[AUTH] ✅ User authorized with roles: [${userRoles.join(', ')}]`);
+      next();
+    } catch (err) {
+      console.log("[AUTH ERROR] ❌", err);
+      return res.status(500).json({ message: "Server error in authorization" });
+    }
+  };
+};
+
+// Helper middleware for specific role combinations
+const studentOrCandidate = hasRole('student', 'candidate');
+const studentOrAgent = hasRole('student', 'agent');
+const candidateOnly = hasRole('candidate');
+const agentOnly = hasRole('agent');
+
 module.exports = {
   protect,
+  authorize,
   adminOnly,
   superAdminOnly,
+  hasRole,
+  studentOrCandidate,
+  studentOrAgent,
+  candidateOnly,
+  agentOnly
 };
