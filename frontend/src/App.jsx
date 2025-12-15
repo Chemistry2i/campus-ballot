@@ -6,6 +6,8 @@ import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/studentDashboard";
+import CandidateDashboard from "./pages/CandidateDashboard";
+import AgentDashboard from "./pages/AgentDashboard";
 import { useState, useEffect } from "react";
 import useSocket from './hooks/useSocket';
 import VotingPage from "./pages/VotingPage";
@@ -30,8 +32,12 @@ function ProtectedRoute({ user, requiredRole, children }) {
     // Redirect to appropriate dashboard based on user role
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;
-    }if(user.role === 'super_admin'){
-      return <Navigate to="/system-health" replace />;
+    } else if (user.role === 'super_admin') {
+      return <Navigate to="/super-admin/system-health" replace />;
+    } else if (user.role === 'candidate') {
+      return <Navigate to="/candidate" replace />;
+    } else if (user.role === 'agent') {
+      return <Navigate to="/agent" replace />;
     } else {
       return <Navigate to="/student-dashboard" replace />;
     }
@@ -82,7 +88,11 @@ function App() {
           path="/"
           element={
             currentUser ? (
-              currentUser.role === 'admin' ? (
+              currcurrentUser.role === 'candidate' ? (
+                <Navigate to="/candidate" replace />
+              ) : currentUser.role === 'agent' ? (
+                <Navigate to="/agent" replace />
+              ) : entUser.role === 'admin' ? (
                 <Navigate to="/admin" replace />
               ) : currentUser.role === 'super_admin' ? (
                 <Navigate to="/super-admin/system-health" replace />
@@ -127,7 +137,27 @@ function App() {
         />
         <Route
           path="/super-admin/*"
+          elem
+          path="/candidate/*"
           element={
+            <ProtectedRoute user={currentUser} requiredRole="candidate">
+              <ThemeProvider>
+                <CandidateDashboard user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agent/*"
+          element={
+            <ProtectedRoute user={currentUser} requiredRole="agent">
+              <ThemeProvider>
+                <AgentDashboard user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
+            </ProtectedRoute>
+          }
+        />
+        <Routeent={
             <ProtectedRoute user={currentUser} requiredRole="super_admin">
               <ThemeProvider>
                 <SuperAdmin user={currentUser} onLogout={handleLogout} />
