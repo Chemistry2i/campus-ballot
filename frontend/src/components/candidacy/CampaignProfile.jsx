@@ -161,6 +161,12 @@ const CampaignProfile = () => {
         <button
           className={`btn ${editing ? 'btn-secondary' : 'btn-primary'}`}
           onClick={() => setEditing(!editing)}
+          style={{
+            backgroundColor: editing ? colors.cardBackground : '#0d6efd',
+            borderColor: editing ? colors.border : '#0d6efd',
+            color: editing ? colors.text : '#fff',
+            fontWeight: '500'
+          }}
         >
           <FaEdit className="me-2" />
           {editing ? 'Cancel' : 'Edit Profile'}
@@ -447,6 +453,12 @@ const CampaignProfile = () => {
                           type="button"
                           className="btn btn-danger"
                           onClick={() => removeArrayItem('campaignPromises', index)}
+                          style={{
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            color: '#fff',
+                            fontWeight: 'bold'
+                          }}
                         >
                           ×
                         </button>
@@ -458,6 +470,19 @@ const CampaignProfile = () => {
                       type="button"
                       className="btn btn-sm btn-outline-primary mt-2"
                       onClick={() => addArrayItem('campaignPromises')}
+                      style={{
+                        color: '#0d6efd',
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#0d6efd';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#0d6efd';
+                      }}
                     >
                       + Add Promise
                     </button>
@@ -486,6 +511,12 @@ const CampaignProfile = () => {
                           type="button"
                           className="btn btn-danger"
                           onClick={() => removeArrayItem('qualifications', index)}
+                          style={{
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            color: '#fff',
+                            fontWeight: 'bold'
+                          }}
                         >
                           ×
                         </button>
@@ -497,6 +528,19 @@ const CampaignProfile = () => {
                       type="button"
                       className="btn btn-sm btn-outline-primary mt-2"
                       onClick={() => addArrayItem('qualifications')}
+                      style={{
+                        color: '#0d6efd',
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#0d6efd';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#0d6efd';
+                      }}
                     >
                       + Add Qualification
                     </button>
@@ -525,6 +569,12 @@ const CampaignProfile = () => {
                           type="button"
                           className="btn btn-danger"
                           onClick={() => removeArrayItem('achievements', index)}
+                          style={{
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            color: '#fff',
+                            fontWeight: 'bold'
+                          }}
                         >
                           ×
                         </button>
@@ -536,6 +586,19 @@ const CampaignProfile = () => {
                       type="button"
                       className="btn btn-sm btn-outline-primary mt-2"
                       onClick={() => addArrayItem('achievements')}
+                      style={{
+                        color: '#0d6efd',
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#0d6efd';
+                        e.target.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#0d6efd';
+                      }}
                     >
                       + Add Achievement
                     </button>
@@ -667,6 +730,12 @@ const CampaignProfile = () => {
                   type="submit"
                   className="btn btn-primary btn-lg px-5"
                   disabled={loading}
+                  style={{
+                    backgroundColor: '#0d6efd',
+                    borderColor: '#0d6efd',
+                    color: '#fff',
+                    fontWeight: '500'
+                  }}
                 >
                   <FaSave className="me-2" />
                   {loading ? 'Saving...' : 'Save Profile'}

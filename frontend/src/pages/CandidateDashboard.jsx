@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import Swal from 'sweetalert2';
 import {
   FaHome,
   FaUser,
@@ -15,19 +16,23 @@ import {
   FaSun
 } from 'react-icons/fa';
 
-// Import candidate components
-import CandidacyDashboard from '../components/candidacy/CandidacyDashboard';
-import CampaignProfile from '../components/candidacy/CampaignProfile';
-import ElectionStats from '../components/candidacy/ElectionStats';
-import AgentManagement from '../components/candidacy/AgentManagement';
-import CampaignMaterials from '../components/candidacy/CampaignMaterials';
-import VoterEngagement from '../components/candidacy/VoterEngagement';
+// Import candidate components  
+import Loader from '../components/common/Loader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+
+// Lazy load components for better performance
+const CandidacyDashboard = React.lazy(() => import('../components/candidacy/CandidacyDashboard'));
+const CampaignProfile = React.lazy(() => import('../components/candidacy/CampaignProfile'));
+const ElectionStats = React.lazy(() => import('../components/candidacy/ElectionStats'));
+const AgentManagement = React.lazy(() => import('../components/candidacy/AgentManagement'));
+const CampaignMaterials = React.lazy(() => import('../components/candidacy/CampaignMaterials'));
+const VoterEngagement = React.lazy(() => import('../components/candidacy/VoterEngagement'));
 
 const CandidateDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Removed unused variable
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -42,6 +47,30 @@ const CandidateDashboard = ({ user, onLogout }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: 'Confirm Logout',
+      text: 'Are you sure you want to logout from your candidate dashboard?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel',
+      background: colors.surface,
+      color: colors.text,
+      customClass: {
+        popup: 'swal-popup',
+        confirmButton: 'swal-confirm-btn',
+        cancelButton: 'swal-cancel-btn'
+      }
+    });
+
+    if (result.isConfirmed) {
+      onLogout();
+    }
+  };
 
   const menuItems = [
     { path: '/candidate', icon: FaHome, label: 'Dashboard', exact: true },
@@ -230,7 +259,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
             </div>
             <button
               className="btn btn-sm w-100"
-              onClick={onLogout}
+              onClick={handleLogout}
               style={{
                 background: '#dc3545',
                 color: '#fff',
@@ -359,15 +388,28 @@ const CandidateDashboard = ({ user, onLogout }) => {
           overflow: 'hidden',
           boxSizing: 'border-box'
         }}>
-          <Routes>
-            <Route path="/" element={<CandidacyDashboard />} />
-            <Route path="/profile" element={<CampaignProfile />} />
-            <Route path="/stats/:id" element={<ElectionStats />} />
-            <Route path="/stats" element={<ElectionStats />} />
-            <Route path="/agents" element={<AgentManagement />} />
-            <Route path="/materials" element={<CampaignMaterials />} />
-            <Route path="/engagement" element={<VoterEngagement />} />
-          </Routes>
+          <ErrorBoundary>
+            <Suspense fallback={
+              <div style={{ 
+                minHeight: '60vh', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <Loader message="Loading page..." size="medium" />
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<CandidacyDashboard />} />
+                <Route path="/profile" element={<CampaignProfile />} />
+                <Route path="/stats/:id" element={<ElectionStats />} />
+                <Route path="/stats" element={<ElectionStats />} />
+                <Route path="/agents" element={<AgentManagement />} />
+                <Route path="/materials" element={<CampaignMaterials />} />
+                <Route path="/engagement" element={<VoterEngagement />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </div>

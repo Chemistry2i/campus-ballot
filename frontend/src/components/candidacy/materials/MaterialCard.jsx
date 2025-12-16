@@ -90,9 +90,9 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         </h6>
         <div className="d-flex justify-content-between align-items-center mb-2">
           <span className="badge bg-primary">{material.category}</span>
-          <small className="text-muted">{formatFileSize(material.fileSize)}</small>
+          <small style={{ color: colors.textSecondary }}>{formatFileSize(material.fileSize)}</small>
         </div>
-        <div className="d-flex justify-content-between text-muted small mb-3">
+        <div className="d-flex justify-content-between small mb-3" style={{ color: colors.textSecondary }}>
           <span>
             <FaEye size={12} className="me-1" />
             {material.views}

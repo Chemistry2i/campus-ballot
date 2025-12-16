@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const Loader = ({ message = 'Loading...', size = 'medium' }) => {
+const FullScreenLoader = ({ message = 'Loading...', size = 'large' }) => {
   const { colors } = useTheme();
 
   const sizeConfig = {
@@ -10,17 +10,21 @@ const Loader = ({ message = 'Loading...', size = 'medium' }) => {
     large: { spinner: '2rem', padding: '3rem' }
   };
 
-  const config = sizeConfig[size] || sizeConfig.medium;
+  const config = sizeConfig[size] || sizeConfig.large;
 
   return (
     <div 
       className="d-flex flex-column justify-content-center align-items-center" 
       style={{ 
-        minHeight: '60vh',
-        width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999,
+        backgroundColor: colors.background,
         padding: config.padding,
-        color: colors.text,
-        position: 'relative'
+        color: colors.text
       }}
     >
       <div 
@@ -43,4 +47,4 @@ const Loader = ({ message = 'Loading...', size = 'medium' }) => {
   );
 };
 
-export default Loader;
+export default FullScreenLoader;

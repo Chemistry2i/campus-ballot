@@ -74,7 +74,7 @@ const MaterialsStats = ({ stats }) => {
                     <h3 className="fw-bold mb-0" style={{ color: stat.color }}>
                       {stat.value}
                     </h3>
-                    <p className="text-muted mb-0 small">{stat.label}</p>
+                    <p className="mb-0 small" style={{ color: colors.textSecondary }}>{stat.label}</p>
                   </div>
                 </div>
               </div>

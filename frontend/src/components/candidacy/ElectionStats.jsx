@@ -38,10 +38,6 @@ const ElectionStats = () => {
   const [stats, setStats] = useState(null);
   const [timeRange, setTimeRange] = useState('all'); // all, week, day
 
-  useEffect(() => {
-    fetchElectionStats();
-  }, [electionId, timeRange]);
-
   const fetchElectionStats = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -113,6 +109,10 @@ const ElectionStats = () => {
     }
   };
 
+  useEffect(() => {
+    fetchElectionStats();
+  }, [electionId, timeRange]);
+
   const exportReport = () => {
     // Generate CSV report
     const csvContent = `Election Statistics Report
@@ -135,7 +135,13 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
   };
 
   if (loading) {
-    return <Loader message="Loading election statistics..." />;
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%' }}>
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Loader message="Loading election statistics..." size="medium" />
+        </div>
+      </div>
+    );
   }
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
@@ -168,7 +174,16 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
               <option value="week">This Week</option>
               <option value="day">Today</option>
             </select>
-            <button className="btn btn-primary" onClick={exportReport}>
+            <button 
+              className="btn btn-primary" 
+              onClick={exportReport}
+              style={{
+                backgroundColor: '#0d6efd',
+                borderColor: '#0d6efd',
+                color: '#fff',
+                fontWeight: '500'
+              }}
+            >
               <FaDownload className="me-2" />
               Export Report
             </button>
@@ -474,31 +489,31 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
             </div>
             <div className="card-body">
               <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead>
+                <table className={`table table-striped table-hover mb-0 ${isDarkMode ? 'table-dark' : ''}`}>
+                  <thead className={isDarkMode ? 'table-dark' : 'table-light'}>
                     <tr>
-                      <th style={{ color: colors.text }}>Rank</th>
-                      <th style={{ color: colors.text }}>Candidate</th>
-                      <th style={{ color: colors.text }}>Votes</th>
-                      <th style={{ color: colors.text }}>Percentage</th>
-                      <th style={{ color: colors.text }}>Progress</th>
+                      <th>Rank</th>
+                      <th>Candidate</th>
+                      <th>Votes</th>
+                      <th>Percentage</th>
+                      <th>Progress</th>
                     </tr>
                   </thead>
                   <tbody>
                     {stats.competitorComparison.map((competitor, index) => (
-                      <tr key={index} style={{ background: competitor.name === 'You' ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}>
+                      <tr key={index} className={competitor.name === 'You' ? 'table-primary' : ''} style={{ background: competitor.name === 'You' ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}>
                         <td style={{ color: colors.text }}>
                           <span className={`badge ${index === 0 ? 'bg-warning' : index === 1 ? 'bg-secondary' : 'bg-info'}`}>
                             #{index + 1}
                           </span>
                         </td>
-                        <td style={{ color: colors.text, fontWeight: competitor.name === 'You' ? 'bold' : 'normal' }}>
+                        <td style={{ fontWeight: competitor.name === 'You' ? 'bold' : 'normal' }}>
                           {competitor.name}
                         </td>
-                        <td style={{ color: colors.text }}>{competitor.votes}</td>
-                        <td style={{ color: colors.text }}>{competitor.percentage}%</td>
+                        <td>{competitor.votes}</td>
+                        <td>{competitor.percentage}%</td>
                         <td>
-                          <div className="progress" style={{ height: '8px' }}>
+                          <div className="progress" style={{ height: '20px' }}>
                             <div
                               className="progress-bar"
                               role="progressbar"

@@ -21,6 +21,7 @@ import Reporting from './components/superAdmin/Reporting';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/darkmode.css';
 import SimpleCandidateTest from './components/SimpleCandidateTest';
+import TestingRoutes from './components/TestingRoutes';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -170,6 +171,18 @@ function App() {
                 <SuperAdmin user={currentUser} onLogout={handleLogout} />
               </ThemeProvider>
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/test-routes"
+          element={
+            currentUser ? (
+              <ThemeProvider>
+                <TestingRoutes user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
         <Route path="*" element={<Navigate to="/" />} />

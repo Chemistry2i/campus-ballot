@@ -11,7 +11,7 @@ import MaterialPreview from './materials/MaterialPreview';
 import UploadProgress from './materials/UploadProgress';
 
 const CampaignMaterials = () => {
-  const { isDarkMode, colors } = useTheme();
+  const { colors } = useTheme();
   const fileInputRef = useRef(null);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -229,7 +229,13 @@ const CampaignMaterials = () => {
   };
 
   if (loading) {
-    return <Loader message="Loading materials..." />;
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Loader message="Loading materials..." size="medium" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -248,6 +254,12 @@ const CampaignMaterials = () => {
             <button
               className="btn btn-primary w-100 w-md-auto"
               onClick={() => fileInputRef.current?.click()}
+              style={{
+                backgroundColor: '#0d6efd',
+                borderColor: '#0d6efd',
+                color: '#fff',
+                fontWeight: '500'
+              }}
             >
               <FaPlus className="me-2" />
               Upload Materials

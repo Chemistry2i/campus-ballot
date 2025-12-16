@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SimpleCandidateTest = ({ user, onLogout }) => {
-  const { isDarkMode, colors } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <div style={{ padding: '20px', minHeight: '100vh', background: colors.background }}>

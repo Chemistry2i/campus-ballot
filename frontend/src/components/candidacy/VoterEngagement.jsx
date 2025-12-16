@@ -3,10 +3,44 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FaComments } from 'react-icons/fa';
+import Loader from '../common/Loader';
 import EngagementStats from './engagement/EngagementStats';
 import QuestionsSection from './engagement/QuestionsSection';
 import AnnouncementsSection from './engagement/AnnouncementsSection';
 import MessagesSection from './engagement/MessagesSection';
+
+// Fallback local loader component
+const LocalLoader = ({ message = 'Loading...' }) => {
+  const { colors } = useTheme();
+  return (
+    <div 
+      className="d-flex flex-column justify-content-center align-items-center" 
+      style={{ 
+        minHeight: '60vh',
+        width: '100%',
+        padding: '2rem',
+        color: colors.text
+      }}
+    >
+      <div 
+        className="spinner-border text-primary mb-3" 
+        role="status"
+        style={{
+          width: '1.5rem',
+          height: '1.5rem'
+        }}
+      >
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      <p className="mb-0" style={{ 
+        color: colors.textSecondary,
+        fontSize: '0.9rem'
+      }}>
+        {message}
+      </p>
+    </div>
+  );
+};
 
 const VoterEngagement = () => {
   const { colors } = useTheme();
@@ -96,7 +130,11 @@ const VoterEngagement = () => {
   };
 
   if (loading) {
-    return <Loader message="Loading engagement data..." />;
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
+        <LocalLoader message="Loading engagement data..." />
+      </div>
+    );
   }
 
   return (

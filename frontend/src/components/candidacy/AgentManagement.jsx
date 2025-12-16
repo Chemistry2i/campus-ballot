@@ -274,7 +274,13 @@ const AgentManagement = () => {
   );
 
   if (loading) {
-    return <Loader message="Loading agents..." />;
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Loader message="Loading agents..." size="medium" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -295,6 +301,11 @@ const AgentManagement = () => {
               setSelectedAgent(null);
               resetForm();
               setShowAddModal(true);
+            }}
+            style={{
+              backgroundColor: '#0d6efd',
+              borderColor: '#0d6efd',
+              color: '#fff'
             }}
           >
             <FaPlus className="me-2" />
@@ -333,7 +344,7 @@ const AgentManagement = () => {
                   <h3 className="fw-bold mb-0" style={{ color: '#3b82f6' }}>
                     {agents.length}
                   </h3>
-                  <p className="text-muted mb-0 small">Total Agents</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Total Agents</p>
                 </div>
               </div>
             </div>
@@ -368,7 +379,7 @@ const AgentManagement = () => {
                   <h3 className="fw-bold mb-0" style={{ color: '#10b981' }}>
                     {agents.filter(a => a.status === 'active').length}
                   </h3>
-                  <p className="text-muted mb-0 small">Active Agents</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Active Agents</p>
                 </div>
               </div>
             </div>
@@ -403,7 +414,7 @@ const AgentManagement = () => {
                   <h3 className="fw-bold mb-0" style={{ color: '#f59e0b' }}>
                     {agents.reduce((sum, a) => sum + (a.tasksActive || 0), 0)}
                   </h3>
-                  <p className="text-muted mb-0 small">Active Tasks</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Active Tasks</p>
                 </div>
               </div>
             </div>
@@ -450,8 +461,8 @@ const AgentManagement = () => {
       >
         <div className="card-body p-0" style={{ overflowX: 'auto' }}>
           <div className="table-responsive">
-            <table className="table table-hover mb-0" style={{ minWidth: '800px' }}>
-              <thead style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', position: 'sticky', top: 0 }}>
+            <table className={`table table-striped table-hover mb-0 ${isDarkMode ? 'table-dark' : ''}`} style={{ minWidth: '800px' }}>
+              <thead className={isDarkMode ? 'table-dark' : 'table-light'} style={{ position: 'sticky', top: 0 }}>
                 <tr>
                   <th style={{ color: colors.text, padding: '1rem', minWidth: '200px' }}>Agent</th>
                   <th style={{ color: colors.text, minWidth: '120px' }}>Role</th>
@@ -472,7 +483,7 @@ const AgentManagement = () => {
                   </tr>
                 ) : (
                   filteredAgents.map((agent) => (
-                    <tr key={agent._id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <tr key={agent._id}>
                       <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
                         <div className="d-flex align-items-center gap-3">
                           <div
@@ -483,7 +494,7 @@ const AgentManagement = () => {
                           </div>
                           <div>
                             <div className="fw-semibold" style={{ color: colors.text }}>{agent.name}</div>
-                            <small className="text-muted">{agent.email}</small>
+                            <small style={{ color: colors.textSecondary }}>{agent.email}</small>
                           </div>
                         </div>
                       </td>
@@ -516,7 +527,12 @@ const AgentManagement = () => {
                         <button
                           className={`btn btn-sm ${agent.status === 'active' ? 'btn-success' : 'btn-secondary'}`}
                           onClick={() => toggleAgentStatus(agent._id, agent.status)}
-                          style={{ minWidth: '80px' }}
+                          style={{ 
+                            minWidth: '80px',
+                            color: agent.status === 'active' ? '#fff' : colors.text,
+                            backgroundColor: agent.status === 'active' ? '#198754' : colors.cardBackground,
+                            borderColor: agent.status === 'active' ? '#198754' : colors.border
+                          }}
                         >
                           {agent.status === 'active' ? (
                             <><FaCheckCircle className="me-1" /> Active</>
@@ -533,12 +549,38 @@ const AgentManagement = () => {
                           <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => handleEditAgent(agent)}
+                            style={{
+                              color: '#0d6efd',
+                              borderColor: '#0d6efd',
+                              backgroundColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = '#0d6efd';
+                              e.target.style.color = '#fff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = 'transparent';
+                              e.target.style.color = '#0d6efd';
+                            }}
                           >
                             <FaEdit />
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => handleDeleteAgent(agent._id)}
+                            style={{
+                              color: '#dc3545',
+                              borderColor: '#dc3545',
+                              backgroundColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = '#dc3545';
+                              e.target.style.color = '#fff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = 'transparent';
+                              e.target.style.color = '#dc3545';
+                            }}
                           >
                             <FaTrash />
                           </button>
@@ -697,10 +739,23 @@ const AgentManagement = () => {
                       setShowAddModal(false);
                       setSelectedAgent(null);
                     }}
+                    style={{
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                      color: colors.text
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    style={{
+                      backgroundColor: '#0d6efd',
+                      borderColor: '#0d6efd',
+                      color: '#fff'
+                    }}
+                  >
                     {selectedAgent ? 'Update Agent' : 'Add Agent'}
                   </button>
                 </div>
