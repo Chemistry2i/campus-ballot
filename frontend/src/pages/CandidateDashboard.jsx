@@ -121,42 +121,56 @@ const CandidateDashboard = ({ user, onLogout }) => {
           top: 0
         }}
       >
-        <div style={{ padding: '1.5rem' }}>
-          <div className="d-flex align-items-center justify-content-between mb-3">
-            <h6 className="fw-bold mb-0" style={{ color: colors.text, fontSize: '0.9rem' }}>
-              Candidate Portal
-            </h6>
+        <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
+          <div className="d-flex align-items-center justify-content-end" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
             <button
               className="btn btn-sm"
               onClick={() => setSidebarOpen(false)}
-              style={{ color: colors.text }}
+              style={{ 
+                color: colors.text,
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '50%',
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
-              <FaTimes />
+              <FaTimes size={isMobile ? 14 : 16} />
             </button>
           </div>
 
-          {/* User Info */}
-          <div className="mb-3 p-2">
+          {/* Candidate Profile */}
+          <div style={{
+            marginBottom: isMobile ? '0.75rem' : '1rem',
+            padding: isMobile ? '0.75rem' : '1rem',
+            background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+            borderRadius: isMobile ? '8px' : '12px',
+            border: `1px solid rgba(59, 130, 246, 0.2)`
+          }}>
             <div
               style={{
-                width: '60px',
-                height: '60px',
+                width: isMobile ? '60px' : '80px',
+                height: isMobile ? '60px' : '80px',
                 borderRadius: '50%',
-                background: user?.profilePicture ? 'transparent' : '#3b82f6',
+                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '1.5rem',
-                margin: '0 auto 0.5rem',
+                fontSize: isMobile ? '1.5rem' : '2rem',
+                margin: `0 auto ${isMobile ? '0.75rem' : '1rem'}`,
                 overflow: 'hidden',
-                border: `2px solid ${colors.border}`
+                border: `${isMobile ? '2px' : '3px'} solid rgba(59, 130, 246, 0.3)`,
+                boxShadow: isMobile ? '0 2px 8px rgba(59, 130, 246, 0.15)' : '0 4px 12px rgba(59, 130, 246, 0.2)'
               }}
             >
               {user?.profilePicture ? (
                 <img 
-                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
+                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
                   alt={user?.name} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={(e) => {
@@ -170,10 +184,57 @@ const CandidateDashboard = ({ user, onLogout }) => {
               </span>
             </div>
             <div className="text-center">
-              <div className="fw-semibold small" style={{ color: colors.text }}>
+              <div className="fw-bold" style={{ 
+                color: colors.text, 
+                fontSize: isMobile ? '0.95rem' : '1.1rem', 
+                marginBottom: '0.25rem',
+                lineHeight: '1.2'
+              }}>
                 {user?.name || 'Candidate'}
               </div>
-              <div style={{ fontSize: '0.75rem', color: colors.textSecondary }}>{user?.email}</div>
+              <div style={{ 
+                fontSize: isMobile ? '0.75rem' : '0.85rem', 
+                color: '#3b82f6',
+                fontWeight: '500',
+                marginBottom: '0.25rem'
+              }}>
+                🏆 Candidate
+              </div>
+              <div style={{ 
+                fontSize: isMobile ? '0.7rem' : '0.75rem', 
+                color: colors.textSecondary,
+                wordBreak: 'break-word',
+                lineHeight: '1.2'
+              }}>
+                {user?.email}
+              </div>
+            </div>
+          </div>
+
+          {/* Campaign Status */}
+          <div style={{
+            marginBottom: isMobile ? '0.5rem' : '0.75rem',
+            padding: isMobile ? '0.5rem' : '0.75rem',
+            background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+            borderRadius: isMobile ? '6px' : '8px',
+            border: `1px solid rgba(16, 185, 129, 0.2)`
+          }}>
+            <div className="text-center">
+              <div style={{ 
+                fontSize: isMobile ? '0.7rem' : '0.75rem', 
+                color: '#10b981',
+                fontWeight: '600',
+                marginBottom: isMobile ? '0.125rem' : '0.25rem'
+              }}>
+                🟢 Campaign Active
+              </div>
+              <div style={{ 
+                fontSize: isMobile ? '0.65rem' : '0.7rem', 
+                color: colors.textSecondary,
+                lineHeight: '1.2'
+              }}>
+                Ready to connect with voters
+              </div>
             </div>
           </div>
 
@@ -187,16 +248,16 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '0.75rem 1rem',
-                  marginBottom: '0.5rem',
-                  borderRadius: '8px',
+                  padding: isMobile ? '0.6rem 0.75rem' : '0.75rem 1rem',
+                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
+                  borderRadius: isMobile ? '6px' : '8px',
                   textDecoration: 'none',
                   color: colors.text,
                   background: window.location.pathname === item.path
                     ? colors.primary
                     : 'transparent',
                   transition: 'all 0.2s',
-                  fontSize: isMobile ? '1rem' : '0.875rem'
+                  fontSize: isMobile ? '0.875rem' : '0.875rem'
                 }}
                 onMouseEnter={(e) => {
                   if (window.location.pathname !== item.path) {
@@ -216,66 +277,64 @@ const CandidateDashboard = ({ user, onLogout }) => {
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="mt-auto p-3" style={{ borderTop: `1px solid ${colors.border}` }}>
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <div
+          <div style={{ 
+            marginTop: isMobile ? '0.75rem' : '1rem', 
+            paddingTop: isMobile ? '0.75rem' : '1rem', 
+            borderTop: `1px solid ${colors.border}` 
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? '0.25rem' : '0.5rem', 
+              marginBottom: isMobile ? '0.5rem' : '0.75rem' 
+            }}>
+              <button
+                className="btn btn-sm flex-fill"
+                onClick={toggleTheme}
                 style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: user?.profilePicture ? 'transparent' : '#3b82f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: '0.875rem',
-                  overflow: 'hidden',
-                  border: `1px solid ${colors.border}`
+                  background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                  color: isDarkMode ? '#f59e0b' : '#3b82f6',
+                  border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                  borderRadius: isMobile ? '4px' : '6px',
+                  padding: isMobile ? '0.4rem 0.25rem' : '0.5rem',
+                  fontSize: isMobile ? '0.7rem' : '0.75rem',
+                  fontWeight: '500'
                 }}
               >
-                {user?.profilePicture ? (
-                  <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
-                    alt={user?.name} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
-                  {user?.name?.charAt(0) || 'C'}
-                </span>
-              </div>
-              <div>
-                <div className="fw-semibold" style={{ color: colors.text, fontSize: '0.8rem' }}>{user?.name}</div>
-                <div style={{ color: colors.textSecondary, fontSize: '0.7rem' }}>{user?.role}</div>
-              </div>
+                {isDarkMode ? <FaSun size={isMobile ? 12 : 14} className="me-1" /> : <FaMoon size={isMobile ? 12 : 14} className="me-1" />}
+                {isMobile ? (isDarkMode ? 'Light' : 'Dark') : (isDarkMode ? 'Light' : 'Dark')}
+              </button>
+              <button
+                className="btn btn-sm flex-fill"
+                onClick={handleLogout}
+                style={{
+                  background: 'rgba(220, 53, 69, 0.1)',
+                  color: '#dc3545',
+                  border: '1px solid rgba(220, 53, 69, 0.3)',
+                  borderRadius: isMobile ? '4px' : '6px',
+                  padding: isMobile ? '0.4rem 0.25rem' : '0.5rem',
+                  fontSize: isMobile ? '0.7rem' : '0.75rem',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#dc3545';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
+                  e.currentTarget.style.color = '#dc3545';
+                }}
+              >
+                <FaSignOutAlt size={isMobile ? 10 : 12} className="me-1" />
+                Logout
+              </button>
             </div>
-            <div className="mb-3" style={{ color: colors.textMuted, fontSize: '0.75rem' }}>
-              Status: Online • Campaign Active
+            <div className="text-center" style={{ 
+              color: colors.textMuted, 
+              fontSize: isMobile ? '0.65rem' : '0.7rem',
+              lineHeight: '1.2'
+            }}>
+              Campus Ballot{isMobile ? '' : ' • Candidate Portal'}
             </div>
-            <button
-              className="btn btn-sm w-100"
-              onClick={handleLogout}
-              style={{
-                background: '#dc3545',
-                color: '#fff',
-                border: 'none',
-                padding: '0.5rem 1rem'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#c82333';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#dc3545';
-              }}
-            >
-              <FaSignOutAlt className="me-2" />
-              Logout
-            </button>
           </div>
         </div>
       </div>
@@ -330,20 +389,30 @@ const CandidateDashboard = ({ user, onLogout }) => {
               className="btn btn-sm"
               onClick={toggleTheme}
               style={{
-                background: colors.surfaceHover,
-                color: colors.text,
-                border: 'none',
-                borderRadius: '6px',
-                padding: '0.5rem',
-                width: '36px',
-                height: '36px',
+                background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                color: isDarkMode ? '#f59e0b' : '#3b82f6',
+                border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                borderRadius: '8px',
+                padding: '0.5rem 0.75rem',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                gap: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
               }}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = isDarkMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(59, 130, 246, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)';
+              }}
             >
-              {isDarkMode ? <FaSun size={16} /> : <FaMoon size={16} />}
+              {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
+              <span className="d-none d-sm-inline">
+                {isDarkMode ? 'Light' : 'Dark'}
+              </span>
             </button>
             
             {/* User avatar */}
