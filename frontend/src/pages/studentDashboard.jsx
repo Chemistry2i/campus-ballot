@@ -1,6 +1,6 @@
 import "./swal-zindex-override.css";
 import "../styles/animations.css";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useTheme } from '../contexts/ThemeContext';
@@ -60,7 +60,8 @@ import {
   FaTimes,
   FaHome,
   FaArrowUp,
-  FaUser
+  FaUser,
+  FaCircle
 } from "react-icons/fa";
 import { FaMoon, FaSun } from "react-icons/fa";
 import useSocket from '../hooks/useSocket';
@@ -458,31 +459,48 @@ function StudentDashboard({ user }) {
   };
 
   function renderDashboardView() { return (
-    <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
+    <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: window.innerWidth <= 768 ? '0 0.75rem' : '0 1rem' }}>
       {/* Welcome Banner */}
       <div 
-        className="mb-4 rounded shadow-sm p-4 p-md-5"
+        className="mb-4 rounded shadow-sm"
         style={{
           background: isDarkMode 
-            ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)'
-            : 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
+            ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+            : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
           color: '#fff',
           borderRadius: '12px',
-          padding: '2.5rem 2rem'
+          padding: window.innerWidth <= 768 ? '1.5rem 2rem' : '2.5rem 3.5rem',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden'
         }}
       >
-        <div className="d-flex align-items-center justify-content-between">
+        <div className="d-flex align-items-center justify-content-between flex-wrap">
           <div>
-            <h2 className="fw-bold mb-2">Welcome back, {user?.name?.split(' ')[0]}! 👋</h2>
+            <h2 className="mb-2">Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋</h2>
             <p className="mb-0 opacity-90">
               {elections.length > 0 && getElectionStatus(elections[0])?.status === 'active' 
                 ? 'An election is currently active. Cast your vote now!' 
                 : 'Stay tuned for upcoming elections. Check back soon!'}
             </p>
           </div>
-          <div className="d-none d-lg-block" style={{ fontSize: '3rem', opacity: 0.3 }}>
-            <FaPoll />
-          </div>
+          {user?.profilePicture && (
+            <div
+              style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '3px solid rgba(255,255,255,0.3)'
+              }}
+              className="d-none d-md-block"
+            >
+              <img 
+                src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                alt={user?.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -509,31 +527,48 @@ function StudentDashboard({ user }) {
           return (
             <div key={i} className="col-6 col-sm-4 col-md-3 col-lg-3 col-xl-1-5">
               <div 
-                className="card shadow-sm h-100 stat-card-hover" 
+                className="card h-100 stat-card-hover" 
                 style={{ 
                   borderRadius: '12px', 
-                  border: `1px solid ${border}`,
+                  border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
                   background: isDarkMode ? colors.surface : '#fff',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+                  transition: 'all 0.3s ease',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-1 p-md-2">
+                <div className="card-body p-1 d-flex flex-column align-items-center justify-content-center text-center">
                   <div 
-                    className={`rounded-circle mb-2 d-inline-flex align-items-center justify-content-center`} 
+                    className="d-flex align-items-center justify-content-center mb-2" 
                     style={{ 
-                      width: 44, 
-                      height: 44, 
+                      width: window.innerWidth <= 768 ? '35px' : '44px', 
+                      height: window.innerWidth <= 768 ? '35px' : '44px', 
+                      borderRadius: '50%',
                       backgroundColor: bg, 
                       border: `1px solid ${border}`,
                       color: isDarkMode ? '#fff' : 'inherit'
                     }}
                   >
-                    {c.icon}
+                    {React.cloneElement(c.icon, { size: window.innerWidth <= 768 ? 16 : 20 })}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <h5 className="fw-bold mb-0 fs-6" style={{ color: isDarkMode ? colors.text : 'inherit' }}>{c.value}</h5>
-                    <p style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }} className="mb-0 small text-truncate">{c.label}</p>
+                    <h5 className="fw-bold mb-1" style={{ 
+                      color: isDarkMode ? colors.text : 'inherit', 
+                      fontSize: window.innerWidth <= 768 ? '1.2rem' : '1.25rem' 
+                    }}>{c.value}</h5>
+                    <p style={{ 
+                      color: isDarkMode ? colors.textSecondary : '#6c757d', 
+                      fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.75rem' 
+                    }} className="mb-0 text-truncate">{c.label}</p>
                   </div>
                 </div>
               </div>
@@ -550,7 +585,9 @@ function StudentDashboard({ user }) {
           maxWidth: "100%", 
           overflowX: "hidden",
           background: isDarkMode ? colors.surface : '#fff',
-          border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`
+          border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}
       >
         <div 
@@ -630,9 +667,9 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderElectionsView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <div className="card-header border-0 py-3" 
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.surfaceHover : '#fff', color: isDarkMode ? colors.text : undefined, borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+           style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.surfaceHover : '#fff', color: isDarkMode ? colors.text : undefined, borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <div className="row align-items-center g-2">
           <div className="col-12 col-md-6 mb-2 mb-md-0">
             <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
@@ -745,9 +782,9 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderMyVotesView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <div className="card-header d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.success : '#198754', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+           style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.success : '#198754', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <span className="d-flex align-items-center gap-2">
           <FaVoteYea /> My Voting History
         </span>
@@ -771,7 +808,7 @@ function StudentDashboard({ user }) {
           <div className="row g-3">
             {myVotes.map((vote, index) => (
               <div className="col-md-6 col-lg-4" key={vote._id || index}>
-                <div className="card border shadow-sm h-100" style={{ borderRadius: '5px' }}>
+                <div className="card border shadow-sm h-100" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
                   <div className="card-body p-3">
                     <div className="d-flex align-items-center mb-3">
                       <div className="bg-success bg-opacity-10 rounded-circle p-2 me-3">
@@ -818,9 +855,9 @@ function StudentDashboard({ user }) {
   ); }
 
   function renderNotificationsView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <div className="card-header d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+           style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <span className="d-flex align-items-center gap-2">
           <FaBell /> Notifications
         </span>
@@ -909,9 +946,9 @@ function StudentDashboard({ user }) {
     <div className="row g-4" style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, marginTop: -50, color: isDarkMode ? colors.text : undefined }}>
       {/* Profile Information Section */}
       <div className="col-lg-4 col-md-5">
-        <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+        <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <div className="card-header text-center py-4"
-               style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+               style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
             {/* Profile Picture Section */}
             <div className="mb-3" style={{display: 'flex',
                 justifyContent: 'center', // Centers children horizontally
@@ -1010,11 +1047,11 @@ function StudentDashboard({ user }) {
         <div className="row g-4">
           {/* Personal Information Card */}
           <div className="col-12">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+            <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <div className="card-header border-0 py-3"
                    style={{ 
-                     borderTopLeftRadius: '5px', 
-                     borderTopRightRadius: '5px',
+                     borderTopLeftRadius: '12px', 
+                     borderTopRightRadius: '12px',
                      background: isDarkMode ? colors.primary : '#0d6efd',
                      color: '#fff',
                      borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`
@@ -1104,11 +1141,11 @@ function StudentDashboard({ user }) {
 
           {/* Recent Activity Timeline */}
           <div className="col-12">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '5px' }}>
+            <div className="card shadow-sm border-0" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <div className="card-header border-0 py-3 bg-primary text-white"
                    style={{ 
-                     borderTopLeftRadius: '5px', 
-                     borderTopRightRadius: '5px'
+                     borderTopLeftRadius: '12px', 
+                     borderTopRightRadius: '12px'
                    }}>
                 <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
                   <FaHistory /> Recent Activity
@@ -1176,9 +1213,9 @@ function StudentDashboard({ user }) {
     );
   }
   function renderHistoryView() { return (
-      <div className="card shadow-sm border-0" style={{ borderRadius: '5px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+      <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <div className="card-header d-flex align-items-center justify-content-between"
-             style={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+             style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
           <span className="d-flex align-items-center gap-2">
             <FaHistory /> Activity History
           </span>
@@ -1411,13 +1448,186 @@ function StudentDashboard({ user }) {
         </div>
       </nav>
 
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 1999,
+            display: 'block'
+          }}
+          className="d-lg-none"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Mobile Sidebar */}
+      <div
+        style={{
+          width: sidebarOpen ? '320px' : '0',
+          background: isDarkMode ? colors.surface : '#fff',
+          borderRight: `1px solid ${colors.border}`,
+          transition: 'width 0.3s ease',
+          overflow: 'hidden',
+          position: 'fixed',
+          height: '100vh',
+          zIndex: 2000,
+          left: 0,
+          top: 0
+        }}
+        className="d-lg-none"
+      >
+        <div style={{ padding: '1rem' }}>
+          <div className="d-flex align-items-center justify-content-end mb-3">
+            <button
+              className="btn btn-sm"
+              onClick={() => setSidebarOpen(false)}
+              style={{ 
+                color: colors.text,
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <FaTimes size={14} />
+            </button>
+          </div>
+          
+          {/* Mobile Profile Section */}
+          <div style={{
+            marginBottom: '0.75rem',
+            padding: '0.75rem',
+            background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+            borderRadius: '8px',
+            border: `1px solid rgba(59, 130, 246, 0.2)`
+          }}>
+            <div
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '1.3rem',
+                margin: '0 auto 0.5rem',
+                overflow: 'hidden',
+                border: '2px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+              }}
+            >
+              {user?.profilePicture ? (
+                <img 
+                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                  alt={user?.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                {user?.name?.charAt(0) || 'S'}
+              </span>
+            </div>
+            <div className="text-center">
+              <div className="fw-bold" style={{ 
+                color: colors.text, 
+                fontSize: '0.85rem', 
+                marginBottom: '0.2rem',
+                lineHeight: '1.1'
+              }}>
+                {user?.name || 'Student'}
+              </div>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#3b82f6',
+                fontWeight: '500',
+                marginBottom: '0.2rem'
+              }}>
+                🎓 Student
+              </div>
+              <div style={{ 
+                fontSize: '0.65rem', 
+                color: colors.textSecondary,
+                wordBreak: 'break-word',
+                lineHeight: '1.1'
+              }}>
+                {user?.email}
+              </div>
+            </div>
+          </div>
+          
+          {/* Mobile Menu Items */}
+          <nav>
+            {sidebarItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveView(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.5rem 0.6rem',
+                    marginBottom: '0.2rem',
+                    borderRadius: '6px',
+                    textDecoration: 'none',
+                    border: 'none',
+                    background: activeView === item.id ? colors.primary : 'transparent',
+                    color: activeView === item.id ? '#fff' : colors.text,
+                    transition: 'all 0.2s',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  <span className="d-flex align-items-center gap-2">
+                    <IconComponent size={16} />
+                    {item.label}
+                  </span>
+                  {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
+                    <span className="badge rounded-pill"
+                      style={{
+                        background: activeView === item.id ? '#fff' : colors.primary,
+                        color: activeView === item.id ? colors.primary : '#fff',
+                        fontSize: '0.65rem'
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
   <div className="d-flex" style={{ width: "100%", maxWidth: "100%", margin: 0, padding: 0, height: "calc(100vh - 72px)" }}>
         {/* Sidebar for large screens */}
         <div className="shadow-sm border-end d-none d-lg-block"
              style={{
-               width: '250px',
-               minWidth: '250px',
-               maxWidth: '250px',
+               width: '280px',
+               minWidth: '280px',
+               maxWidth: '280px',
                height: '100%',
                flexShrink: 0,
                overflowX: 'hidden',
@@ -1426,25 +1636,114 @@ function StudentDashboard({ user }) {
                background: isDarkMode ? colors.surface : '#fff',
                borderColor: isDarkMode ? colors.border : '#dee2e6',
              }}>
-          <div className="p-3">
-            <h6 className="text-uppercase small fw-bold mb-3" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Navigation</h6>
-            <nav className="nav flex-column">
+          <div style={{ padding: '1.5rem' }}>
+            {/* Student Profile Section */}
+            <div style={{
+              marginBottom: '1rem',
+              padding: '1rem',
+              background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+              borderRadius: '12px',
+              border: `1px solid rgba(59, 130, 246, 0.2)`
+            }}>
+              <div
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  fontSize: '2rem',
+                  margin: '0 auto 1rem',
+                  overflow: 'hidden',
+                  border: `3px solid rgba(59, 130, 246, 0.3)`,
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                }}
+              >
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                    alt={user?.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                  {user?.name?.charAt(0) || 'S'}
+                </span>
+              </div>
+              <div className="text-center">
+                <div className="fw-bold" style={{ color: colors.text, fontSize: '1.1rem', marginBottom: '0.25rem' }}>
+                  {user?.name || 'Student'}
+                </div>
+                <div style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#3b82f6',
+                  fontWeight: '500',
+                  marginBottom: '0.25rem'
+                }}>
+                  🎓 Student
+                </div>
+                <div style={{ fontSize: '0.75rem', color: colors.textSecondary }}>
+                  {user?.email}
+                </div>
+              </div>
+            </div>
+
+            {/* Status Section */}
+            <div style={{
+              marginBottom: '0.75rem',
+              padding: '0.75rem',
+              background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+              borderRadius: '8px',
+              border: `1px solid rgba(16, 185, 129, 0.2)`
+            }}>
+              <div className="text-center">
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  color: '#10b981',
+                  fontWeight: '600',
+                  marginBottom: '0.25rem'
+                }}>
+                  🟢 Voting Enabled
+                </div>
+                <div style={{ fontSize: '0.7rem', color: colors.textSecondary }}>
+                  Ready to participate in elections
+                </div>
+              </div>
+            </div>
+            {/* Menu Items */}
+            <nav>
               {sidebarItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <button
                     key={item.id}
-                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2`}
                     onClick={() => setActiveView(item.id)}
-                    style={{ 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '0.6rem 0.8rem',
+                      marginBottom: '0.3rem',
+                      borderRadius: '8px',
                       textDecoration: 'none',
+                      border: 'none',
                       background: activeView === item.id ? colors.primary : 'transparent',
-                      color: activeView === item.id ? '#fff' : isDarkMode ? colors.text : '#212529',
-                      transition: 'all 0.2s ease'
+                      color: activeView === item.id ? '#fff' : colors.text,
+                      transition: 'all 0.2s',
+                      fontSize: '0.85rem'
                     }}
                     onMouseEnter={(e) => {
                       if (activeView !== item.id) {
-                        e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa';
+                        e.currentTarget.style.background = colors.sidebarHover;
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -1458,10 +1757,11 @@ function StudentDashboard({ user }) {
                       {item.label}
                     </span>
                     {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
-                      <span className={`badge rounded-pill`}
+                      <span className="badge rounded-pill"
                         style={{
                           background: activeView === item.id ? '#fff' : colors.primary,
-                          color: activeView === item.id ? colors.primary : '#fff'
+                          color: activeView === item.id ? colors.primary : '#fff',
+                          fontSize: '0.7rem'
                         }}
                       >
                         {item.badge}
@@ -1473,49 +1773,84 @@ function StudentDashboard({ user }) {
             </nav>
           </div>
           {/* Sidebar Footer */}
-          <div className="mt-auto p-3" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <FaUserCircle className="text-primary" size={32} />
-              <div>
-                <div className="fw-semibold small" style={{ color: isDarkMode ? colors.text : undefined }}>{user?.name}</div>
-                <div className="small" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>{user?.role}</div>
-              </div>
-            </div>
-            <div className="small mb-3" style={{ color: isDarkMode ? colors.textMuted : '#6c757d' }}>
-              Last refresh: {lastRefresh.toLocaleTimeString()}
-            </div>
-            <button 
-              className="btn btn-outline-danger btn-sm w-100"
-              style={{ borderColor: isDarkMode ? colors.border : '#dc3545', color: isDarkMode ? colors.text : '#dc3545' }}
-              onClick={async () => {
-                const result = await Swal.fire({
-                  title: 'Are you sure?',
-                  text: 'You will be logged out of your account.',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#dc3545',
-                  cancelButtonColor: '#6c757d',
-                  confirmButtonText: 'Yes, logout',
-                  cancelButtonText: 'Cancel'
-                });
-                if (result.isConfirmed) {
-                  localStorage.removeItem('token');
-                  Swal.fire({
-                    title: 'Logged out!',
-                    text: 'You have been successfully logged out.',
-                    icon: 'success',
-                    timer: 1500,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                  }).then(() => {
-                    window.location.href = '/login';
+          <div style={{ 
+            marginTop: '1rem', 
+            paddingTop: '1rem', 
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            paddingBottom: '1.5rem',
+            borderTop: `1px solid ${colors.border}` 
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '0.5rem', 
+              marginBottom: '0.75rem' 
+            }}>
+              <button
+                className="btn btn-sm flex-fill"
+                onClick={toggleTheme}
+                style={{
+                  background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                  color: isDarkMode ? '#f59e0b' : '#3b82f6',
+                  border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                  borderRadius: '6px',
+                  padding: '0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '500'
+                }}
+              >
+                {isDarkMode ? <FaSun className="me-1" /> : <FaMoon className="me-1" />}
+                {isDarkMode ? 'Light' : 'Dark'}
+              </button>
+              <button
+                className="btn btn-sm flex-fill"
+                style={{
+                  background: 'rgba(220, 53, 69, 0.1)',
+                  color: '#dc3545',
+                  border: '1px solid rgba(220, 53, 69, 0.3)',
+                  borderRadius: '6px',
+                  padding: '0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#dc3545';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
+                  e.currentTarget.style.color = '#dc3545';
+                }}
+                onClick={async () => {
+                  const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You will be logged out of your account.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, logout',
+                    cancelButtonText: 'Cancel',
+                    background: colors.surface,
+                    color: colors.text
                   });
-                }
-              }}
-            >
-              <FaSignOutAlt className="me-2" size={14} />
-              Logout
-            </button>
+                  if (result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                  }
+                }}
+              >
+                <FaSignOutAlt className="me-1" />
+                Logout
+              </button>
+            </div>
+            <div className="text-center" style={{ 
+              color: colors.textMuted, 
+              fontSize: '0.7rem',
+              lineHeight: '1.2'
+            }}>
+              Campus Ballot • Student Portal
+            </div>
           </div>
         </div>
         {/* Sidebar for mobile screens */}
@@ -1547,13 +1882,72 @@ function StudentDashboard({ user }) {
                 <FaTimes />
               </button>
             </div>
+            
+            {/* Enhanced Profile Section */}
+            <div style={{
+              background: isDarkMode 
+                ? 'linear-gradient(135deg, #1f2937 0%, #374151 100%)'
+                : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+              borderRadius: '12px',
+              padding: '1rem',
+              margin: '0 0 1rem 0',
+              border: `1px solid ${isDarkMode ? colors.border : '#e2e8f0'}`,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <div className="d-flex align-items-center gap-3">
+                <div
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: `3px solid ${isDarkMode ? colors.primary : '#3b82f6'}`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '1.2rem'
+                  }}
+                >
+                  {user?.profilePicture ? (
+                    <img 
+                      src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                      alt={user?.name} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    user?.name?.charAt(0) || 'S'
+                  )}
+                </div>
+                <div className="text-center">
+                  <div className="fw-bold mb-1" style={{ color: isDarkMode ? colors.text : '#1f2937', fontSize: '0.95rem' }}>
+                    {user?.name || 'Student'}
+                  </div>
+                  <div 
+                    className="small px-2 py-1 rounded-pill d-inline-block"
+                    style={{
+                      background: isDarkMode ? colors.success + '20' : '#dcfce7',
+                      color: isDarkMode ? colors.success : '#166534',
+                      border: `1px solid ${isDarkMode ? colors.success + '40' : '#bbf7d0'}`,
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    <FaCircle size={5} className="me-1" style={{ color: isDarkMode ? colors.success : '#22c55e' }} />
+                    Active Student
+                  </div>
+                </div>
+              </div>
+            </div>
             <nav className="nav flex-column">
               {sidebarItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <button
                     key={item.id}
-                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between p-2`}
+                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between`}
                     onClick={() => {
                       setActiveView(item.id);
                       setSidebarOpen(false);
@@ -1562,7 +1956,10 @@ function StudentDashboard({ user }) {
                       textDecoration: 'none',
                       background: activeView === item.id ? colors.primary : 'transparent',
                       color: activeView === item.id ? '#fff' : isDarkMode ? colors.text : '#212529',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      padding: '0.6rem 0.75rem',
+                      fontSize: '0.85rem',
+                      borderRadius: '8px'
                     }}
                     onMouseEnter={(e) => {
                       if (activeView !== item.id) {
@@ -1660,7 +2057,7 @@ function StudentDashboard({ user }) {
           </nav> */}
 
           {/* Page Header */}
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-md-center mb-4">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-md-center mb-4" style={{ marginLeft: window.innerWidth <= 768 ? '0.75rem' : '1rem', marginRight: window.innerWidth <= 768 ? '0.75rem' : '1rem' }}>
             {/* <div>
               {/* <h4 className="fw-bold mb-1">
                 {sidebarItems.find(item => item.id === activeView)?.label || 'Dashboard'}
@@ -1675,7 +2072,7 @@ function StudentDashboard({ user }) {
               </p> 
             </div> */}
             {activeView === 'dashboard' && (
-              <div className="d-flex gap-2 mt-2 mt-md-0">
+              <div className="d-flex gap-2 mt-2 mt-md-0" style={{ marginRight: window.innerWidth <= 768 ? '0.75rem' : '1rem' }}>
                 <button
                   className="btn btn-outline-primary btn-sm"
                   onClick={refreshData}

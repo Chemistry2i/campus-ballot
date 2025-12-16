@@ -16,7 +16,7 @@ export default function ElectionCard({
 
   return (
     <div key={election._id || election.id} className="col-12">
-      <div className="card border-1 shadow-sm mb-3" style={{ borderRadius: '5px', background: '#f1f3f5' }}>
+      <div className="card border-1 shadow-sm mb-3" style={{ borderRadius: '12px', background: '#f1f3f5', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <div className="card-body p-3 p-md-4">
           {/* Election Header */}
           <div className="row mb-3">
@@ -81,8 +81,8 @@ export default function ElectionCard({
               <div className="row g-2">
                 {approvedCandidates.map((candidate) => (
                   <div className="col-sm-6 col-lg-4" key={candidate._id || candidate.id}>
-                    <div className="card border shadow-sm h-100" style={{ borderRadius: '5px', background: voted ? '#f8f9fa' : 'white' }}>
-                      <div className="card-body p-2 p-md-3">
+                    <div className="card border shadow-sm h-100" style={{ borderRadius: '10px', background: voted ? '#f8f9fa' : 'white', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
+                      <div className="card-body" style={{ padding: window.innerWidth <= 768 ? '0.75rem' : '1rem' }}>
                         <div className="d-flex align-items-center mb-2">
                           <img
                             src={(function(){ const s = getImageUrl(candidate.photo || '/default-avatar.png'); return s; })()}
