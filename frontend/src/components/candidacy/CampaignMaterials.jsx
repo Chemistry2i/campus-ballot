@@ -233,54 +233,40 @@ const CampaignMaterials = () => {
   }
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <div className="row align-items-center">
+          <div className="col-12 col-md-8">
+            <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
               <FaImages className="me-2" style={{ color: '#3b82f6' }} />
               Campaign Materials
-            </h2>
-            <p className="text-muted mb-0">Upload and manage your campaign content</p>
+            </h4>
+            <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Upload and manage your campaign content</p>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FaPlus className="me-2" />
-            Upload Materials
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,video/*,.pdf"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
+          <div className="col-12 col-md-4 mt-3 mt-md-0 text-md-end">
+            <button
+              className="btn btn-primary w-100 w-md-auto"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FaPlus className="me-2" />
+              Upload Materials
+            </button>
+          </div>
         </div>
       </div>
+      
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,video/*,.pdf"
+        onChange={handleFileUpload}
+        style={{ display: 'none' }}
+      />
 
       {/* Stats Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-12 col-sm-6 col-lg-3">
-          <div
-            className="card"
-            style={{
-              background: isDarkMode ? colors.surface : '#fff',
-              border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
-            }}
-          >
-            <div className="card-body p-3">
-              <div className="d-flex align-items-center gap-3">
-                <MaterialsStats stats={stats} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <MaterialsStats stats={stats} />
 
       {/* Upload Progress */}
       <UploadProgress progress={uploadProgress} />
