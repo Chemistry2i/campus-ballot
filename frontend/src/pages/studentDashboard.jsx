@@ -19,7 +19,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
+axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
 import {
   FaSignOutAlt,
   FaUserCircle,

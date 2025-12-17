@@ -48,8 +48,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",           // local dev
-    "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
+    "https://campus-ballot.onrender.com",           // local dev
+    "https://campus-ballot.onrender.com",
     CORS_ORIGIN   // deployed frontend
   ],
   credentials: true
@@ -122,8 +122,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
-      "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
+      "https://campus-ballot.onrender.com",
+      "https://campus-ballot.onrender.com",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],
