@@ -546,7 +546,7 @@ function StudentDashboard({ user }) {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-1 d-flex flex-column align-items-center justify-content-center text-center">
+                <div className="card-body p-2 d-flex flex-column align-items-center justify-content-center text-center">
                   <div 
                     className="d-flex align-items-center justify-content-center mb-2" 
                     style={{ 
@@ -587,7 +587,8 @@ function StudentDashboard({ user }) {
           background: isDarkMode ? colors.surface : '#fff',
           border: `1px solid ${isDarkMode ? colors.border : '#e0e0e0'}`,
           overflow: 'hidden',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          // border:'red'
         }}
       >
         <div 
@@ -601,14 +602,14 @@ function StudentDashboard({ user }) {
             <FaPoll className="text-primary" /> Recent Elections
           </h4>
         </div>
-        <div className="card-body p-3">
+        <div className="card-body p-2">
           <div className="table-responsive">
             {filteredElections.slice(0, 3).map((election) => {
               const { status, color, icon: StatusIcon } = getElectionStatus(election);
               const voted = myVotes.some((v) => v.election === (election._id || election.id));
               
               return (
-                <div key={election._id} className="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-2">
+                <div key={election._id} className="d-flex align-items-center justify-content-between py-3 px-2 border-bottom flex-wrap gap-2">
                   <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ minWidth: 0 }}>
                     <div className={`bg-${color} bg-opacity-10 rounded-2 p-2 flex-shrink-0`} style={{width:50,display:'flex',alignItems:'center',justifyContent:'center'}}>
                       <StatusIcon className={`text-${color}`} size={20} />
@@ -622,7 +623,7 @@ function StudentDashboard({ user }) {
                   </div>
                   <div className="d-flex gap-2 flex-shrink-0">
                     {voted && <span className="badge bg-success">Voted</span>}
-                    <span className={`badge bg-${color}`}>{status}</span>
+                    <span className={`badge bg-${color}`} style={{display:'grid', placeItems: 'center'}}>{status}</span>
                     <button 
                       className="btn btn-outline-primary btn-sm"
                       onClick={() => openElectionDetails(election)}
@@ -1328,9 +1329,9 @@ function StudentDashboard({ user }) {
             >
               <FaBars />
             </button>
-            <FaUserGraduate size={28} />
-            <span className="fw-bold fs-4 d-none d-md-inline">Student Portal</span>
-            <span className="fw-bold fs-5 d-md-none">Portal</span>
+            <FaUserGraduate size={28} class="text-white" />
+            <span className="fw-bold fs-4 d-none d-md-inline text-white">Student Portal</span>
+            <span className="fw-bold fs-5 d-md-none text-white">Portal</span>
           </span>
           
           {/* User Actions */}
@@ -1364,7 +1365,7 @@ function StudentDashboard({ user }) {
               >
                 <FaBell />
                 {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger z-3">
                     {notifications.filter(n => !n.read).length}
                   </span>
                 )}
@@ -1457,7 +1458,7 @@ function StudentDashboard({ user }) {
             left: 0,
             width: '100vw',
             height: '100vh',
-            background: 'rgba(0,0,0,0.5)',
+            // background: 'rgba(0,0,0,0.5)',
             zIndex: 1999,
             display: 'block'
           }}
@@ -1478,7 +1479,8 @@ function StudentDashboard({ user }) {
           height: '100vh',
           zIndex: 2000,
           left: 0,
-          top: 0
+          top: 0,
+          display: 'none'
         }}
         className="d-lg-none"
       >
@@ -1504,73 +1506,6 @@ function StudentDashboard({ user }) {
           </div>
           
           {/* Mobile Profile Section */}
-          <div style={{
-            marginBottom: '0.75rem',
-            padding: '0.75rem',
-            background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-            borderRadius: '8px',
-            border: `1px solid rgba(59, 130, 246, 0.2)`
-          }}>
-            <div
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: '1.3rem',
-                margin: '0 auto 0.5rem',
-                overflow: 'hidden',
-                border: '2px solid rgba(59, 130, 246, 0.3)',
-                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
-              }}
-            >
-              {user?.profilePicture ? (
-                <img 
-                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
-                  alt={user?.name} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
-                {user?.name?.charAt(0) || 'S'}
-              </span>
-            </div>
-            <div className="text-center">
-              <div className="fw-bold" style={{ 
-                color: colors.text, 
-                fontSize: '0.85rem', 
-                marginBottom: '0.2rem',
-                lineHeight: '1.1'
-              }}>
-                {user?.name || 'Student'}
-              </div>
-              <div style={{ 
-                fontSize: '0.7rem', 
-                color: '#3b82f6',
-                fontWeight: '500',
-                marginBottom: '0.2rem'
-              }}>
-                🎓 Student
-              </div>
-              <div style={{ 
-                fontSize: '0.65rem', 
-                color: colors.textSecondary,
-                wordBreak: 'break-word',
-                lineHeight: '1.1'
-              }}>
-                {user?.email}
-              </div>
-            </div>
-          </div>
           
           {/* Mobile Menu Items */}
           <nav>
@@ -1779,7 +1714,8 @@ function StudentDashboard({ user }) {
             paddingLeft: '1.5rem',
             paddingRight: '1.5rem',
             paddingBottom: '1.5rem',
-            borderTop: `1px solid ${colors.border}` 
+            borderTop: `1px solid ${colors.border}`,
+            zIndex: 2000
           }}>
             <div style={{ 
               display: 'flex', 
@@ -1857,6 +1793,7 @@ function StudentDashboard({ user }) {
         <div
           className={`shadow-sm border-end position-fixed top-0 start-0 h-100 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
           style={{
+            // display: 'none',
             width: '80vw',
             maxWidth: '320px',
             zIndex: 2000,
@@ -1885,62 +1822,73 @@ function StudentDashboard({ user }) {
             
             {/* Enhanced Profile Section */}
             <div style={{
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, #1f2937 0%, #374151 100%)'
-                : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-              borderRadius: '12px',
-              padding: '1rem',
-              margin: '0 0 1rem 0',
-              border: `1px solid ${isDarkMode ? colors.border : '#e2e8f0'}`,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <div className="d-flex align-items-center gap-3">
-                <div
-                  style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: `3px solid ${isDarkMode ? colors.primary : '#3b82f6'}`,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                    background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '1.2rem'
+            marginBottom: '0.75rem',
+            padding: '0.75rem',
+            background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+            borderRadius: '8px',
+            border: `1px solid rgba(59, 130, 246, 0.2)`
+          }}>
+            <div
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '1.3rem',
+                margin: '0 auto 0.5rem',
+                overflow: 'hidden',
+                border: '2px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+              }}
+            >
+              {user?.profilePicture ? (
+                <img 
+                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                  alt={user?.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
                   }}
-                >
-                  {user?.profilePicture ? (
-                    <img 
-                      src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
-                      alt={user?.name} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    user?.name?.charAt(0) || 'S'
-                  )}
-                </div>
-                <div className="text-center">
-                  <div className="fw-bold mb-1" style={{ color: isDarkMode ? colors.text : '#1f2937', fontSize: '0.95rem' }}>
-                    {user?.name || 'Student'}
-                  </div>
-                  <div 
-                    className="small px-2 py-1 rounded-pill d-inline-block"
-                    style={{
-                      background: isDarkMode ? colors.success + '20' : '#dcfce7',
-                      color: isDarkMode ? colors.success : '#166534',
-                      border: `1px solid ${isDarkMode ? colors.success + '40' : '#bbf7d0'}`,
-                      fontSize: '0.75rem'
-                    }}
-                  >
-                    <FaCircle size={5} className="me-1" style={{ color: isDarkMode ? colors.success : '#22c55e' }} />
-                    Active Student
-                  </div>
-                </div>
+                />
+              ) : null}
+              <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                {user?.name?.charAt(0) || 'S'}
+              </span>
+            </div>
+            <div className="text-center">
+              <div className="fw-bold" style={{ 
+                color: colors.text, 
+                fontSize: '0.85rem', 
+                marginBottom: '0.2rem',
+                lineHeight: '1.1'
+              }}>
+                {user?.name || 'Student'}
+              </div>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#3b82f6',
+                fontWeight: '500',
+                marginBottom: '0.2rem'
+              }}>
+                🎓 Student
+              </div>
+              <div style={{ 
+                fontSize: '0.65rem', 
+                color: colors.textSecondary,
+                wordBreak: 'break-word',
+                lineHeight: '1.1'
+              }}>
+                {user?.email}
               </div>
             </div>
+          </div>
+          
             <nav className="nav flex-column">
               {sidebarItems.map((item) => {
                 const IconComponent = item.icon;
@@ -1992,28 +1940,82 @@ function StudentDashboard({ user }) {
             </nav>
             {/* Mobile Sidebar Logout Button */}
             <div className="mt-4 pt-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
-              <button
-                className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
-                onClick={async () => {
-                  setSidebarOpen(false);
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("currentUser");
-                  await Swal.fire({
-                    title: "Logged Out",
-                    text: "You have logged out successfully.",
-                    icon: "success",
-                    timer: 1800,
-                    showConfirmButton: false,
-                    timerProgressBar: true,
-                    customClass: {
-                      popup: 'swal-zindex-override'
-                    }
-                  });
-                  window.location.href = "/login";
-                }}
-              >
-                <FaSignOutAlt /> Logout
-              </button>
+              {/* Sidebar Footer */}
+<div style={{ 
+  // marginTop: '1rem', 
+  padding: '1rem 1.5rem 1.5rem', // Shorthand for top, sides, bottom
+  // borderTop: `1px solid ${colors.border}`,
+  // zIndex: 2000,
+  position: 'relative' // Essential for zIndex to function
+}}>
+  <div className="d-flex" style={{ gap: '0.5rem', marginBottom: '0.75rem' }}>
+    <button
+      className="btn btn-sm flex-fill d-flex align-items-center justify-content-center"
+      onClick={toggleTheme}
+      style={{
+        background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+        color: isDarkMode ? '#f59e0b' : '#3b82f6',
+        border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+        borderRadius: '6px',
+        padding: '0.5rem',
+        fontSize: '0.75rem',
+        fontWeight: '500'
+      }}
+    >
+      {isDarkMode ? <FaSun className="me-1" /> : <FaMoon className="me-1" />}
+      {isDarkMode ? 'Light' : 'Dark'}
+    </button>
+    <button
+      className="btn btn-sm flex-fill d-flex align-items-center justify-content-center"
+      style={{
+        background: 'rgba(220, 53, 69, 0.1)',
+        color: '#dc3545',
+        border: '1px solid rgba(220, 53, 69, 0.3)',
+        borderRadius: '6px',
+        padding: '0.5rem',
+        fontSize: '0.75rem',
+        fontWeight: '500'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = '#dc3545';
+        e.currentTarget.style.color = '#fff';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
+        e.currentTarget.style.color = '#dc3545';
+      }}
+      onClick={async () => {
+        const result = await Swal.fire({
+          title: 'Are you sure?',
+          text: 'You will be logged out of your account.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, logout',
+          background: colors.surface,
+          color: colors.text,
+         
+        });
+        if (result.isConfirmed) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+      }}
+    >
+      <FaSignOutAlt className="me-1" />
+      Logout
+    </button>
+  </div>
+  <div className="text-center" style={{ 
+    color: colors.textMuted, 
+    fontSize: '0.7rem',
+    lineHeight: '1.2'
+  }}>
+    Campus Ballot • Student Portal
+  </div>
+</div>
+
             </div>
           </div>
         </div>
