@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
+//         const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/reset-password/${token}`;
+//         const resetUrl = `https://campus-ballot.onrender.com/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
@@ -394,7 +394,7 @@ const register = asyncHandler(async (req, res) => {
     await newUser.save();
 
     /* ------------------ EMAIL VERIFICATION ------------------ */
-    const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
+    const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
     const html = `
       <h2>Verify Your Email</h2>
       <p>Hello ${newUser.name},</p>
@@ -473,23 +473,45 @@ const login = asyncHandler(async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    console.log("[LOGIN]:", user.email);
+    console.log("[LOGIN]:", user.email, "Role:", user.role);
+    
+    // Prepare user response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      additionalRoles: user.additionalRoles || [],
+      isVerified: user.isVerified,
+      profilePicture: user.profilePicture,
+    };
+
+    // Add candidate-specific fields if user is a candidate
+    if (user.role === 'candidate' && user.candidateInfo) {
+      console.log("[LOGIN] Adding candidate info for:", user.email);
+      userResponse.candidateInfo = user.candidateInfo;
+    }
+
     res.json({
       message: "Login successful",
       token: generateToken(user._id),
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        additionalRoles: user.additionalRoles || [],
-        isVerified: user.isVerified,
-        profilePicture: user.profilePicture,
-      },
+      user: userResponse,
     });
   } catch (error) {
     console.error("[LOGIN ERROR]:", error.message);
-    res.status(500).json({ message: "Server error during login" });
+    console.error("[LOGIN ERROR STACK]:", error.stack);
+    console.error("[LOGIN ERROR DETAILS]:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      path: error.path,
+      value: error.value
+    });
+    res.status(500).json({ 
+      message: "Server error during login", 
+      error: error.message,
+      errorType: error.name 
+    });
   }
 });
 
@@ -544,7 +566,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
     await user.save();
 
-    const resetUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/reset-password/${token}`;
+    const resetUrl = `https://campus-ballot.onrender.com/reset-password/${token}`;
     const html = `
       <h2>Reset Your Password</h2>
       <p>Hello ${user.name},</p>
@@ -679,7 +701,7 @@ const resendVerification = asyncHandler(async (req, res) => {
     await user.save();
 
     // Send verification email
-    const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
+    const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
     const html = `
       <h2>Verify Your Email</h2>
       <p>Hello ${user.name},</p>

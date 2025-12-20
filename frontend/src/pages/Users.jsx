@@ -127,7 +127,7 @@ const Users = ({ user }) => {
 
     const handleSuspendUser = async (userId) => {
         try {
-            await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}/suspend`, {}, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/suspend`, {}, {
                 headers: getAuthHeaders()
             });
             Toast.fire({ icon: 'success', title: 'User suspended successfully' });
@@ -140,7 +140,7 @@ const Users = ({ user }) => {
 
     const handleActivateUser = async (userId) => {
         try {
-            await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}/activate`, {}, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/activate`, {}, {
                 headers: getAuthHeaders()
             });
             Toast.fire({ icon: 'success', title: 'User activated successfully' });
@@ -164,7 +164,7 @@ const Users = ({ user }) => {
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}`, {
+                await axios.delete(`https://campus-ballot-backend.onrender.com/api/users/${userId}`, {
                     headers: getAuthHeaders()
                 });
                 Swal.fire('Deleted!', 'User has been deleted.', 'success');
@@ -178,7 +178,7 @@ const Users = ({ user }) => {
 
     const handleChangeRole = async (userId, newRole, options = { suppressToast: false }) => {
         try {
-            await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}/role`, 
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/role`, 
                 { role: newRole }, 
                 { headers: getAuthHeaders() }
             );
@@ -195,7 +195,7 @@ const Users = ({ user }) => {
         try {
             // Try the export endpoint first
             try {
-                const response = await axios.get('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/export', {
+                const response = await axios.get('https://campus-ballot-backend.onrender.com/api/users/export', {
                     headers: getAuthHeaders(),
                     responseType: 'blob'
                 });
@@ -261,7 +261,7 @@ const Users = ({ user }) => {
 
     const viewUserDetails = async (userId) => {
         try {
-            const userResponse = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}`, {
+            const userResponse = await axios.get(`https://campus-ballot-backend.onrender.com/api/users/${userId}`, {
                 headers: getAuthHeaders()
             });
             setSelectedUser(userResponse.data.user || userResponse.data);
@@ -280,7 +280,7 @@ const Users = ({ user }) => {
     const handleUpdateUser = async () => {
         try {
             const idToUpdate = editUser._id || editUser.id;
-            await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${idToUpdate}`, editUser, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${idToUpdate}`, editUser, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User updated successfully', 'success');
@@ -294,7 +294,7 @@ const Users = ({ user }) => {
 
     const handleVerifyToggle = async (userId, shouldVerify) => {
         try {
-            await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/${userId}`, { isVerified: shouldVerify }, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}`, { isVerified: shouldVerify }, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', `User ${shouldVerify ? 'verified' : 'unverified'} successfully`, 'success');
