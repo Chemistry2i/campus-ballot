@@ -48,7 +48,7 @@ const Users = ({ user }) => {
 
     useEffect(() => {
         if (user) {
-            fetchUsers();
+            fetchUsers(1, itemsPerPage, ''); // Initialize with default values
         }
     }, [user]);
 
@@ -210,9 +210,13 @@ const Users = ({ user }) => {
                 
                 Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             } catch (exportError) {
-                console.log('Export endpoint not available, creating client-side export');
-                // If export endpoint doesn't exist, create CSV client-side
-                const csvContent = generateCSV(users);
+                console.log('Export endpoint not available, fetching all users for export');
+                // If export endpoint doesn't exist, fetch all users for export
+                const response = await axios.get('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?limit=10000', {
+                    headers: getAuthHeaders()
+                });
+                const allUsers = response.data.users || response.data || [];
+                const csvContent = generateCSV(allUsers);
                 downloadCSV(csvContent, `users_${new Date().toISOString().split('T')[0]}.csv`);
                 Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             }
