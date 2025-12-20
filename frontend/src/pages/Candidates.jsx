@@ -18,10 +18,11 @@ function CreateCandidateModal({
   elections,
   positionsOptions,
 }) {
-  const userOptions = users.map((u) => ({
+  const { isDarkMode, colors } = useTheme();
+  const userOptions = Array.isArray(users) ? users.map((u) => ({
     value: u._id,
     label: `${u.name} (${u.email})`,
-  }));
+  })) : [];
 
   return (
     <div
@@ -30,7 +31,25 @@ function CreateCandidateModal({
       style={{ background: "rgba(0,0,0,0.5)" }}
     >
       <div className="modal-dialog modal-lg">
-        <div className="modal-content">
+        <div className="modal-content" style={{ backgroundColor: colors.cardBackground, color: colors.text }}>
+          <style>
+            {isDarkMode && `
+              .form-select option {
+                background-color: ${colors.cardBackground} !important;
+                color: ${colors.text} !important;
+              }
+              .react-select__menu {
+                background-color: ${colors.cardBackground} !important;
+              }
+              .react-select__option {
+                background-color: ${colors.cardBackground} !important;
+                color: ${colors.text} !important;
+              }
+              .react-select__option--is-focused {
+                background-color: #555555 !important;
+              }
+            `}
+          </style>
           <div className="modal-header">
             <h5 className="modal-title">Create Candidate</h5>
             <button
@@ -53,23 +72,55 @@ function CreateCandidateModal({
                     onChange={handleUserSelect}
                     placeholder="Search or select user..."
                     isClearable
-                    styles={{
+                    styles={isDarkMode ? {
                       control: (provided) => ({
                         ...provided,
-                        backgroundColor: '#444444',
-                        color: '#ffffff',
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        color: colors.text || '#ffffff',
                         borderColor: '#555555',
+                        opacity: 1,
+                        boxShadow: 'none',
+                        '&:hover': {
+                          borderColor: '#666666',
+                        },
                       }),
                       option: (provided, state) => ({
                         ...provided,
-                        backgroundColor: state.isFocused ? '#555555' : '#444444',
-                        color: '#ffffff',
+                        backgroundColor: state.isFocused ? '#4a5568' : (colors.cardBackground || '#2d3748'),
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
+                        '&:hover': {
+                          backgroundColor: '#4a5568',
+                        },
+                      }),
+                      menu: (provided) => ({
+                        ...provided,
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        border: '1px solid #555555',
+                        opacity: 1,
+                        zIndex: 9999,
+                      }),
+                      menuList: (provided) => ({
+                        ...provided,
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        opacity: 1,
+                      }),
+                      singleValue: (provided) => ({
+                        ...provided,
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
+                      }),
+                      input: (provided) => ({
+                        ...provided,
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
                       }),
                       placeholder: (provided) => ({
                         ...provided,
                         color: '#aaaaaa',
+                        opacity: 1,
                       }),
-                    }}
+                    } : {}}
                   />
                 </div>
                 <div className="col-md-6">
@@ -80,10 +131,25 @@ function CreateCandidateModal({
                     value={form.election}
                     onChange={handleFormChange}
                     required
+                    style={isDarkMode ? { 
+                      backgroundColor: colors.cardBackground, 
+                      color: colors.text, 
+                      borderColor: '#555555',
+                      option: {
+                        backgroundColor: colors.cardBackground,
+                        color: colors.text,
+                      }
+                    } : {}}
                   >
-                    <option value="">Select Election</option>
+                    <option value="" style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text } : {}}>
+                      Select Election
+                    </option>
                     {elections.map((e) => (
-                      <option key={e._id} value={e._id}>
+                      <option 
+                        key={e._id} 
+                        value={e._id}
+                        style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text } : {}}
+                      >
                         {e.title || e.name}
                       </option>
                     ))}
@@ -97,6 +163,7 @@ function CreateCandidateModal({
                     value={form.name}
                     onChange={handleFormChange}
                     required
+                    style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text, borderColor: '#555555' } : {}}
                   />
                 </div>
                 <div className="col-md-6">
@@ -119,10 +186,21 @@ function CreateCandidateModal({
                       value={form.position}
                       onChange={handleFormChange}
                       required
+                      style={isDarkMode ? { 
+                        backgroundColor: colors.cardBackground, 
+                        color: colors.text, 
+                        borderColor: '#555555'
+                      } : {}}
                     >
-                      <option value="">Select Position</option>
+                      <option value="" style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text } : {}}>
+                        Select Position
+                      </option>
                       {positionsOptions.map((p) => (
-                        <option key={p.value} value={p.value}>
+                        <option 
+                          key={p.value} 
+                          value={p.value}
+                          style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text } : {}}
+                        >
                           {p.label}
                         </option>
                       ))}
@@ -135,6 +213,7 @@ function CreateCandidateModal({
                       onChange={handleFormChange}
                       placeholder="Enter position (no positions found for selected election)"
                       required
+                      style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text, borderColor: '#555555' } : {}}
                     />
                   )}
                 </div>
@@ -162,23 +241,55 @@ function CreateCandidateModal({
                     placeholder="Search or select party..."
                     isClearable
                     classNamePrefix="react-select"
-                    styles={{
+                    styles={isDarkMode ? {
                       control: (provided) => ({
                         ...provided,
-                        backgroundColor: '#444444',
-                        color: '#ffffff',
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        color: colors.text || '#ffffff',
                         borderColor: '#555555',
+                        opacity: 1,
+                        boxShadow: 'none',
+                        '&:hover': {
+                          borderColor: '#666666',
+                        },
                       }),
                       option: (provided, state) => ({
                         ...provided,
-                        backgroundColor: state.isFocused ? '#555555' : '#444444',
-                        color: '#ffffff',
+                        backgroundColor: state.isFocused ? '#4a5568' : (colors.cardBackground || '#2d3748'),
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
+                        '&:hover': {
+                          backgroundColor: '#4a5568',
+                        },
+                      }),
+                      menu: (provided) => ({
+                        ...provided,
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        border: '1px solid #555555',
+                        opacity: 1,
+                        zIndex: 9999,
+                      }),
+                      menuList: (provided) => ({
+                        ...provided,
+                        backgroundColor: colors.cardBackground || '#2d3748',
+                        opacity: 1,
+                      }),
+                      singleValue: (provided) => ({
+                        ...provided,
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
+                      }),
+                      input: (provided) => ({
+                        ...provided,
+                        color: colors.text || '#ffffff',
+                        opacity: 1,
                       }),
                       placeholder: (provided) => ({
                         ...provided,
                         color: '#aaaaaa',
+                        opacity: 1,
                       }),
-                    }}
+                    } : {}}
                   />
                 </div>
                 <div className="col-md-12">
@@ -189,6 +300,7 @@ function CreateCandidateModal({
                     value={form.description}
                     onChange={handleFormChange}
                     required
+                    style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text, borderColor: '#555555' } : {}}
                   />
                 </div>
                 <div className="col-md-12">
@@ -198,6 +310,7 @@ function CreateCandidateModal({
                     name="manifesto"
                     value={form.manifesto}
                     onChange={handleFormChange}
+                    style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text, borderColor: '#555555' } : {}}
                   />
                 </div>
               </div>

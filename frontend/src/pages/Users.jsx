@@ -34,6 +34,12 @@ const Users = ({ user }) => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editUser, setEditUser] = useState({});
     const [roleChangingId, setRoleChangingId] = useState(null);
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     // Debug the user object
     console.log('User object in Users component:', user);
@@ -42,7 +48,7 @@ const Users = ({ user }) => {
 
     useEffect(() => {
         if (user) {
-            fetchUsers();
+            fetchUsers(1, itemsPerPage, ''); // Initialize with default values
         }
     }, [user]);
 
@@ -54,14 +60,46 @@ const Users = ({ user }) => {
         };
     };
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page = currentPage, limit = itemsPerPage, search = searchTerm) => {
         try {
             setLoading(true);
-            const response = await axios.get('https://campus-ballot-backend.onrender.com/api/users', {
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString()
+            });
+            
+            if (search && search.trim()) {
+                params.append('search', search.trim());
+            }
+            
+            const response = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?${params}`, {
                 headers: getAuthHeaders()
             });
+            
             console.log('Fetch users response:', response.data);
-            setUsers(response.data.users || response.data || []);
+            
+            // Handle different response structures
+            if (response.data.users) {
+                // Paginated response
+                setUsers(response.data.users);
+                setTotalUsers(response.data.totalUsers || response.data.total || 0);
+                setTotalPages(response.data.totalPages || Math.ceil((response.data.totalUsers || response.data.total || 0) / limit));
+            } else if (Array.isArray(response.data)) {
+                // Non-paginated response - handle client-side pagination
+                const allUsers = response.data;
+                const startIndex = (page - 1) * limit;
+                const endIndex = startIndex + limit;
+                const paginatedUsers = allUsers.slice(startIndex, endIndex);
+                
+                setUsers(paginatedUsers);
+                setTotalUsers(allUsers.length);
+                setTotalPages(Math.ceil(allUsers.length / limit));
+            } else {
+                // Fallback
+                setUsers([]);
+                setTotalUsers(0);
+                setTotalPages(0);
+            }
         } catch (error) {
             console.error('Error fetching users:', error);
             if (error.response?.status === 401) {
@@ -77,45 +115,14 @@ const Users = ({ user }) => {
     };
 
     const handleSearch = async () => {
-        if (!searchTerm.trim()) {
-            fetchUsers();
-            return;
-        }
-        
-        try {
-            setLoading(true);
-            
-            // Try different search approaches
-            // First try the search endpoint if it exists
-            let response;
-            try {
-                response = await axios.get(`https://campus-ballot-backend.onrender.com/api/users/search?q=${searchTerm}`, {
-                    headers: getAuthHeaders()
-                });
-            } catch (searchError) {
-                console.log('Search endpoint not available, using client-side search');
-                // If search endpoint doesn't exist, do client-side filtering
-                const allUsersResponse = await axios.get('https://campus-ballot-backend.onrender.com/api/users', {
-                    headers: getAuthHeaders()
-                });
-                const allUsers = allUsersResponse.data.users || allUsersResponse.data || [];
-                const filteredUsers = allUsers.filter(userItem => 
-                    userItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    userItem.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    userItem.studentId?.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                setUsers(filteredUsers);
-                return;
-            }
-            
-            console.log('Search response:', response.data);
-            setUsers(response.data.users || response.data || []);
-        } catch (error) {
-            console.error('Search error:', error);
-            Swal.fire('Error', 'Search failed', 'error');
-        } finally {
-            setLoading(false);
-        }
+        setCurrentPage(1); // Reset to first page when searching
+        await fetchUsers(1, itemsPerPage, searchTerm);
+    };
+    
+    const clearSearch = async () => {
+        setSearchTerm('');
+        setCurrentPage(1);
+        await fetchUsers(1, itemsPerPage, '');
     };
 
     const handleSuspendUser = async (userId) => {
@@ -161,10 +168,10 @@ const Users = ({ user }) => {
                     headers: getAuthHeaders()
                 });
                 Swal.fire('Deleted!', 'User has been deleted.', 'success');
-                fetchUsers();
+                await fetchUsers();
             } catch (error) {
                 console.error('Delete error:', error);
-                Toast.fire({ icon: 'error', title: 'Failed to delete user' });
+                Swal.fire('Error!', 'Failed to delete user.', 'error');
             }
         }
     };
@@ -203,9 +210,13 @@ const Users = ({ user }) => {
                 
                 Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             } catch (exportError) {
-                console.log('Export endpoint not available, creating client-side export');
-                // If export endpoint doesn't exist, create CSV client-side
-                const csvContent = generateCSV(users);
+                console.log('Export endpoint not available, fetching all users for export');
+                // If export endpoint doesn't exist, fetch all users for export
+                const response = await axios.get('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?limit=10000', {
+                    headers: getAuthHeaders()
+                });
+                const allUsers = response.data.users || response.data || [];
+                const csvContent = generateCSV(allUsers);
                 downloadCSV(csvContent, `users_${new Date().toISOString().split('T')[0]}.csv`);
                 Toast.fire({ icon: 'success', title: 'Users exported successfully' });
             }
@@ -274,7 +285,7 @@ const Users = ({ user }) => {
             });
             Swal.fire('Success', 'User updated successfully', 'success');
             setShowEditModal(false);
-            fetchUsers();
+            await fetchUsers();
         } catch (error) {
             console.error('Update error:', error);
             Swal.fire('Error', 'Failed to update user', 'error');
@@ -287,11 +298,59 @@ const Users = ({ user }) => {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', `User ${shouldVerify ? 'verified' : 'unverified'} successfully`, 'success');
-            fetchUsers();
+            await fetchUsers();
         } catch (error) {
             console.error('Verify toggle error:', error);
             Swal.fire('Error', `Failed to ${shouldVerify ? 'verify' : 'unverify'} user`, 'error');
         }
+    };
+    
+    // Pagination functions
+    const handlePageChange = async (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            await fetchUsers(newPage, itemsPerPage, searchTerm);
+        }
+    };
+    
+    const handleItemsPerPageChange = async (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1);
+        await fetchUsers(1, newItemsPerPage, searchTerm);
+    };
+    
+    const getPaginationRange = () => {
+        const delta = 2; // Number of pages to show on each side of current page
+        const range = [];
+        const rangeWithDots = [];
+        
+        // Handle case where there are very few pages
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                range.push(i);
+            }
+            return range;
+        }
+        
+        for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+            range.push(i);
+        }
+        
+        if (currentPage - delta > 2) {
+            rangeWithDots.push(1, '...');
+        } else {
+            rangeWithDots.push(1);
+        }
+        
+        rangeWithDots.push(...range);
+        
+        if (currentPage + delta < totalPages - 1) {
+            rangeWithDots.push('...', totalPages);
+        } else if (totalPages > 1) {
+            rangeWithDots.push(totalPages);
+        }
+        
+        return rangeWithDots;
     };
 
     // Only show unauthorized message if we're sure the user isn't an admin
@@ -380,19 +439,36 @@ const Users = ({ user }) => {
                                         </button>
                                         <button 
                                             className="btn btn-outline-secondary"
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                fetchUsers();
-                                            }}
+                                            onClick={clearSearch}
                                         >
                                             <i className="fas fa-times"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div className="col-md-6 text-end">
-                                    <span className="text-muted">
-                                        {searchTerm ? `Found ${users.length} user(s)` : `Total Users: ${users.length}`}
-                                    </span>
+                                <div className="col-md-6">
+                                    <div className="d-flex justify-content-end align-items-center gap-3">
+                                        <div className="d-flex align-items-center">
+                                            <label className="form-label me-2 mb-0">Show:</label>
+                                            <select 
+                                                className="form-select form-select-sm" 
+                                                style={{width: 'auto'}}
+                                                value={itemsPerPage} 
+                                                onChange={(e) => handleItemsPerPageChange(parseInt(e.target.value))}
+                                            >
+                                                <option value={5}>5</option>
+                                                <option value={10}>10</option>
+                                                <option value={25}>25</option>
+                                                <option value={50}>50</option>
+                                                <option value={100}>100</option>
+                                            </select>
+                                        </div>
+                                        <span className="text-muted">
+                                            {searchTerm ? 
+                                                `Found ${totalUsers} user(s) - Page ${currentPage} of ${totalPages}` : 
+                                                `Total: ${totalUsers} users - Page ${currentPage} of ${totalPages}`
+                                            }
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -555,6 +631,60 @@ const Users = ({ user }) => {
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="row mt-3">
+                                    <div className="col-12">
+                                        <nav aria-label="Users pagination">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div className="text-muted">
+                                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} users
+                                                </div>
+                                                <ul className="pagination mb-0">
+                                                    {/* Previous button */}
+                                                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                                        <button 
+                                                            className="page-link" 
+                                                            onClick={() => handlePageChange(currentPage - 1)}
+                                                            disabled={currentPage === 1}
+                                                        >
+                                                            <i className="fas fa-chevron-left"></i>
+                                                        </button>
+                                                    </li>
+                                                    
+                                                    {/* Page numbers */}
+                                                    {getPaginationRange().map((page, index) => (
+                                                        <li key={index} className={`page-item ${page === currentPage ? 'active' : page === '...' ? 'disabled' : ''}`}>
+                                                            {page === '...' ? (
+                                                                <span className="page-link">...</span>
+                                                            ) : (
+                                                                <button 
+                                                                    className="page-link" 
+                                                                    onClick={() => handlePageChange(page)}
+                                                                >
+                                                                    {page}
+                                                                </button>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                    
+                                                    {/* Next button */}
+                                                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                                        <button 
+                                                            className="page-link" 
+                                                            onClick={() => handlePageChange(currentPage + 1)}
+                                                            disabled={currentPage === totalPages}
+                                                        >
+                                                            <i className="fas fa-chevron-right"></i>
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </nav>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
