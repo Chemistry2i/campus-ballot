@@ -64,8 +64,8 @@ const AnalyticsChart = ({ myVotes, electionStats }) => {
                         className="w-100"
                         style={{
                           height: `${height}%`,
-                          background: `linear-gradient(to top, ${colors.primary}, ${isDarkMode ? '#6366f1' : '#93c5fd'})`,
-                          borderRadius: '6px 6px 0 0',
+                          background: `linear-gradient(to top, ${colors.primary}, ${isDarkMode ? '#1d4ed8' : '#1d4ed8d'})`,
+                          borderRadius: '4px 4px 0 0',
                           transition: 'height 0.3s ease',
                           minHeight: data.votes > 0 ? '20px' : '0'
                         }}
@@ -123,9 +123,9 @@ const AnalyticsChart = ({ myVotes, electionStats }) => {
           <div
             className="card shadow-sm flex-fill"
             style={{
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${isDarkMode ? '#4f46e5' : '#6366f1'} 100%)`,
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${isDarkMode ? '#1d4ed8' : '#1d4ed8'} 100%)`,
               border: 'none',
-              borderRadius: '12px',
+              borderRadius: '4px',
               color: '#fff'
             }}
           >
