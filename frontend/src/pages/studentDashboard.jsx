@@ -535,7 +535,8 @@ function StudentDashboard({ user }) {
                   transition: 'all 0.3s ease',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  padding: '10px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1888,6 +1889,29 @@ function StudentDashboard({ user }) {
               </div>
             </div>
           </div>
+
+          {/* Status Section */}
+            <div style={{
+              marginBottom: '0.75rem',
+              padding: '0.75rem',
+              background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+              borderRadius: '8px',
+              border: `1px solid rgba(16, 185, 129, 0.2)`
+            }}>
+              <div className="text-center">
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  color: '#10b981',
+                  fontWeight: '600',
+                  marginBottom: '0.25rem'
+                }}>
+                  🟢 Voting Enabled
+                </div>
+                <div style={{ fontSize: '0.7rem', color: colors.textSecondary }}>
+                  Ready to participate in elections
+                </div>
+              </div>
+            </div>
           
             <nav className="nav flex-column">
               {sidebarItems.map((item) => {
@@ -1939,7 +1963,7 @@ function StudentDashboard({ user }) {
               })}
             </nav>
             {/* Mobile Sidebar Logout Button */}
-            <div className="mt-4 pt-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
+            <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
               {/* Sidebar Footer */}
 <div style={{ 
   // marginTop: '1rem', 
