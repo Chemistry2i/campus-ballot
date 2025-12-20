@@ -122,7 +122,7 @@ Backend → http://localhost:5000
 - Complete **installation + deployment** instructions for **Render**
 - Professional structure for both **technical readers** and **stakeholders**
 
-<a href="https://campus-ballot.onrender.com">Visit: campus ballot</a>
+<a href="https://campus-ballot.onrender.com">Live Demo: campus ballot</a>
 
 ---
 
