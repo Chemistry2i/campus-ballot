@@ -3,14 +3,62 @@ const User = require("../models/User");
 const fs = require('fs');
 const path = require('path');
 
-// @desc    Get all users (admin)
+// @desc    Get all users (admin) with pagination and search
 // @route   GET /api/users
 // @access  Admin only
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const users = await User.find().select("-password");
-    console.log({ message: "Fetched all users" });
-    res.json(users);
+    // Extract pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+    
+    // Build search query
+    let query = {};
+    if (search && search.trim()) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { studentId: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+    
+    // Execute queries
+    const [users, totalUsers] = await Promise.all([
+      User.find(query)
+        .select("-password")
+        .sort({ createdAt: -1 }) // Sort by newest first
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(query)
+    ]);
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / limit);
+    
+    console.log({ 
+      message: "Fetched users with pagination", 
+      page, 
+      limit, 
+      totalUsers, 
+      totalPages,
+      search: search || 'none'
+    });
+    
+    res.json({
+      users,
+      totalUsers,
+      totalPages,
+      currentPage: page,
+      itemsPerPage: limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    });
   } catch (error) {
     console.log({ message: "Error fetching users", error: error.message });
     res.status(500).json({ message: error.message });
