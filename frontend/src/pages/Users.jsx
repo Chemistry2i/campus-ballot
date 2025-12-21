@@ -72,7 +72,7 @@ const Users = ({ user }) => {
                 params.append('search', search.trim());
             }
             
-            const response = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?${params}`, {
+            const response = await axios.get(`https://campus-ballot-backend.onrender.com/api/users?${params}`, {
                 headers: getAuthHeaders()
             });
             
@@ -212,7 +212,7 @@ const Users = ({ user }) => {
             } catch (exportError) {
                 console.log('Export endpoint not available, fetching all users for export');
                 // If export endpoint doesn't exist, fetch all users for export
-                const response = await axios.get('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?limit=10000', {
+                const response = await axios.get('https://campus-ballot-backend.onrender.com/api/users?limit=10000', {
                     headers: getAuthHeaders()
                 });
                 const allUsers = response.data.users || response.data || [];

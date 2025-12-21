@@ -25,7 +25,7 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
           justifyContent: 'center',
           zIndex: 1000,
           border: 'none',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
           transition: 'all 0.3s ease',
           transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)'
         }}
