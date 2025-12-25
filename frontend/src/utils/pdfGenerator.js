@@ -22,7 +22,7 @@ export const generateVoteReceipt = (voteData) => {
           max-width: 800px;
           margin: 20px auto;
           padding: 20px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #f8f9fa;
           min-height: 100vh;
         }
         
@@ -35,7 +35,7 @@ export const generateVoteReceipt = (voteData) => {
         }
         
         .header {
-          background: linear-gradient(135deg, #0d6efd, #6610f2);
+          background: #1e3a8a;
           color: white;
           padding: 40px 30px 30px;
           text-align: center;
@@ -99,14 +99,14 @@ export const generateVoteReceipt = (voteData) => {
           width: 100px;
           height: 100px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #10b981, #059669);
+          background: #059669;
           margin: 0 auto 20px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-size: 48px;
-          box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
           animation: checkmarkPulse 2s ease-in-out;
         }
         
@@ -117,7 +117,7 @@ export const generateVoteReceipt = (voteData) => {
         
         .success-text {
           font-size: 1.5em;
-          color: #10b981;
+          color: #059669;
           font-weight: 600;
           margin-bottom: 10px;
         }
@@ -128,11 +128,11 @@ export const generateVoteReceipt = (voteData) => {
         }
         
         .receipt-details {
-          background: #f8f9fa;
+          background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(102, 16, 242, 0.05));
           border-radius: 10px;
           padding: 30px;
           margin: 30px 0;
-          border: 1px solid #e9ecef;
+          border: 1px solid rgba(13, 110, 253, 0.2);
         }
         
         .detail-row {
@@ -160,8 +160,8 @@ export const generateVoteReceipt = (voteData) => {
         }
         
         .verification-section {
-          background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-          border: 2px solid #ffc107;
+          background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(102, 16, 242, 0.1));
+          border: 2px solid #0d6efd;
           border-radius: 12px;
           padding: 25px;
           margin: 30px 0;
@@ -175,7 +175,7 @@ export const generateVoteReceipt = (voteData) => {
           top: -15px;
           left: 50%;
           transform: translateX(-50%);
-          background: #ffc107;
+          background: #0d6efd;
           width: 30px;
           height: 30px;
           border-radius: 50%;
@@ -187,7 +187,7 @@ export const generateVoteReceipt = (voteData) => {
         
         .verification-title {
           font-weight: 600;
-          color: #856404;
+          color: #0d6efd;
           margin-bottom: 15px;
           font-size: 1.1em;
         }
@@ -208,15 +208,15 @@ export const generateVoteReceipt = (voteData) => {
         
         .verification-note {
           font-size: 0.9em;
-          color: #856404;
+          color: #495057;
           line-height: 1.5;
         }
         
         .footer {
-          background: #f8f9fa;
+          background: linear-gradient(135deg, rgba(13, 110, 253, 0.03), rgba(102, 16, 242, 0.03));
           padding: 30px;
           text-align: center;
-          border-top: 1px solid #e9ecef;
+          border-top: 1px solid rgba(13, 110, 253, 0.2);
         }
         
         .footer-logo {
@@ -233,22 +233,23 @@ export const generateVoteReceipt = (voteData) => {
         }
         
         .print-button {
-          background: linear-gradient(135deg, #0d6efd, #6610f2);
+          background: #0d6efd;
           color: white;
           border: none;
           padding: 15px 30px;
-          border-radius: 25px;
+          border-radius: 8px;
           font-size: 1em;
           font-weight: 600;
           cursor: pointer;
           margin: 20px 0;
           transition: all 0.3s ease;
-          box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+          box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
         }
         
         .print-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(13, 110, 253, 0.4);
+          background: #0b5ed7;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
         }
         
         .watermark {
