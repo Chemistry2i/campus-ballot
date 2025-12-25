@@ -38,9 +38,30 @@ export default function ElectionCard({
   openElectionDetails,
   getElectionStatus,
   formatTimeRemaining,
+  setSelectedElection,
+  setSelectedCandidateForVoting,
+  setShowVotingModal,
+  setVotingStep,
 }) {
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
-  const voted = myVotes.some((v) => v.election === (election._id || election.id));
+  
+  // More precise vote checking - check if user voted for this specific election and position
+  const voted = myVotes.some((vote) => {
+    const voteElectionId = vote.election?._id || vote.election?.id || vote.election;
+    const electionId = election._id || election.id;
+    return voteElectionId === electionId;
+  });
+  
+  console.log('Vote check for election', election.title, ':', {
+    voted,
+    myVotes: myVotes.length,
+    electionId: election._id || election.id,
+    myVoteElections: myVotes.map(v => ({
+      electionId: v.election?._id || v.election?.id || v.election,
+      position: v.position
+    }))
+  });
+  
   const { status, color, icon: StatusIcon } = getElectionStatus(election);
 
   return (
@@ -255,12 +276,11 @@ export default function ElectionCard({
                                     electionPositions: election.positions
                                   });
                                   
-                                  handleVote(
-                                    election._id || election.id,
-                                    candidate._id || candidate.id,
-                                    candidatePosition,
-                                    electionPosition || electionFirstPosition || "General"
-                                  );
+                                  // Set modal state first, then call vote function
+                                  setSelectedElection(election);
+                                  setSelectedCandidateForVoting(candidate);
+                                  setShowVotingModal(true);
+                                  setVotingStep(1);
                                 }}
                               >
                                 <FaVoteYea className="me-1" size={12} /> 

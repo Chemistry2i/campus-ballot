@@ -19,7 +19,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -102,6 +102,7 @@ function StudentDashboard({ user }) {
   const [showVotingModal, setShowVotingModal] = useState(false);
   const [selectedCandidateForVoting, setSelectedCandidateForVoting] = useState(null);
   const [votingStep, setVotingStep] = useState(1); // 1: candidate review, 2: confirmation, 3: success
+  const [voteVerificationCode, setVoteVerificationCode] = useState(null);
   const [showCandidateComparison, setShowCandidateComparison] = useState(false);
   const [comparisonMode, setComparisonMode] = useState('side-by-side'); // 'side-by-side' or 'table'
   const [selectedCandidatesForComparison, setSelectedCandidatesForComparison] = useState([]);
@@ -110,6 +111,11 @@ function StudentDashboard({ user }) {
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  
+  // Receipt management
+  const [savedReceipts, setSavedReceipts] = useState([]);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   const token = localStorage.getItem("token");
   const { socketRef } = useSocket();
@@ -118,6 +124,11 @@ function StudentDashboard({ user }) {
     fetchElections();
     fetchMyVotes();
     fetchNotifications();
+    loadReceipts();
+    
+    // Debug localStorage on load
+    console.log('All localStorage voteReceipts:', JSON.parse(localStorage.getItem('voteReceipts') || '[]'));
+    console.log('Current user:', user);
     // setup socket listeners for real-time notifications
     let socketCleanup;
     const attachSocket = () => {
@@ -297,6 +308,18 @@ function StudentDashboard({ user }) {
     }
   };
 
+  const loadReceipts = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('voteReceipts') || '[]');
+      const userReceipts = saved.filter(receipt => receipt.userId === (user._id || user.id));
+      setSavedReceipts(userReceipts);
+      console.log('Loaded receipts:', userReceipts.length, userReceipts);
+    } catch (err) {
+      console.error("Failed to load receipts:", err);
+      setSavedReceipts([]);
+    }
+  };
+
   // Determine election status robustly (handles missing/invalid dates)
   const getElectionStatus = (election) => {
     const now = new Date();
@@ -362,19 +385,22 @@ function StudentDashboard({ user }) {
     setShowProfile(true);
   };
 
-  const handleVote = async (electionId, candidateId, position, fallbackPosition) => {
-    const result = await Swal.fire({
-      title: 'Confirm Your Vote',
-      text: 'Are you sure you want to cast this vote? This action cannot be undone.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#2563eb',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Cast Vote',
-      cancelButtonText: 'Cancel'
-    });
+  const handleVote = async (electionId, candidateId, position, fallbackPosition, skipConfirmation = false, candidateData = null, electionData = null) => {
+    // If this is called from the confirmation modal, skip the SweetAlert
+    if (!skipConfirmation) {
+      const result = await Swal.fire({
+        title: 'Confirm Your Vote',
+        text: 'Are you sure you want to cast this vote? This action cannot be undone.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Cast Vote',
+        cancelButtonText: 'Cancel'
+      });
 
-    if (!result.isConfirmed) return;
+      if (!result.isConfirmed) return false;
+    }
 
     try {
       // Better position resolution with more fallbacks
@@ -392,14 +418,51 @@ function StudentDashboard({ user }) {
                        "General";
       }
       
+      // Additional fallback: if we have selectedCandidateForVoting, use its position
+      if (!finalPosition && selectedCandidateForVoting) {
+        finalPosition = selectedCandidateForVoting.position || 
+                       selectedCandidateForVoting.role || 
+                       selectedCandidateForVoting.post;
+      }
+      
+      // Additional fallback: if we have selectedElection, try its positions
+      if (!finalPosition && selectedElection) {
+        finalPosition = Array.isArray(selectedElection.positions) && selectedElection.positions[0];
+      }
+      
       console.log('Voting with:', { 
         electionId, 
         candidateId, 
         position, 
         fallbackPosition, 
         finalPosition,
-        detectedFrom: position ? 'candidate.position' : fallbackPosition ? 'election.positions' : 'fallback'
+        detectedFrom: position ? 'candidate.position' : fallbackPosition ? 'election.positions' : 'fallback',
+        selectedCandidateForVotingPosition: selectedCandidateForVoting?.position,
+        selectedElectionPositions: selectedElection?.positions
       });
+      
+      console.log('Selected Election:', selectedElection);
+      console.log('Selected Candidate:', selectedCandidateForVoting);
+      console.log('Election candidates:', elections.find(e => (e._id || e.id) === electionId)?.candidates);
+      
+      // Validate that we have the required data
+      if (!electionId) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Election ID is missing. Please try again.',
+          icon: 'error',
+        });
+        return false;
+      }
+      
+      if (!candidateId) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Candidate ID is missing. Please try again.',
+          icon: 'error',
+        });
+        return false;
+      }
       
       if (!finalPosition) {
         Swal.fire({
@@ -407,7 +470,7 @@ function StudentDashboard({ user }) {
           text: 'No position found for this candidate. Please contact admin or check election setup.',
           icon: 'error',
         });
-        return;
+        return false;
       }
       
       await axios.post(
@@ -416,48 +479,43 @@ function StudentDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Generate verification code and receipt
-      const verificationCode = generateVerificationCode();
-      const election = elections.find(e => (e._id || e.id) === electionId);
-      const candidate = election?.candidates?.find(c => (c._id || c.id) === candidateId);
+      return true; // Vote successful
       
-      Swal.fire({
-        title: 'Vote Cast Successfully!',
-        html: `
-          <p>Thank you for participating in the democratic process.</p>
-          <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 16px 0;">
-            <p style="margin: 0; font-size: 14px; color: #666;">Verification Code:</p>
-            <p style="margin: 8px 0; font-size: 18px; font-weight: bold; font-family: monospace; color: #0d6efd;">${verificationCode}</p>
-          </div>
-          <button id="download-receipt" class="btn btn-outline-primary btn-sm mt-2">
-            <i class="fas fa-download"></i> Download Receipt
-          </button>
-        `,
-        icon: 'success',
-        timer: 5000,
-        timerProgressBar: true,
-        showConfirmButton: true,
-        didOpen: () => {
-          document.getElementById('download-receipt')?.addEventListener('click', () => {
-            generateVoteReceipt({
-              election,
-              candidate,
-              votedAt: new Date(),
-              verificationCode
-            });
-          });
-        }
-      });
+    } catch (error) {
+      console.error('Voting error:', error);
+      console.error('Error response:', error.response?.data);
       
-      // Show toast notification
-      success('Vote recorded successfully!');
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'Failed to cast vote. Please try again.';
       
-      fetchMyVotes();
-      fetchElections();
-      calculateElectionStats(elections);
-    } catch (err) {
-      error('Failed to cast vote. Please try again.');
-      Swal.fire("Error", err.response?.data?.message || "Failed to vote", "error");
+      // Handle specific error cases
+      if (errorMessage.includes('already voted')) {
+        // Refresh vote data to ensure UI is updated
+        fetchMyVotes();
+        fetchElections();
+        
+        Swal.fire({
+          title: 'Already Voted',
+          text: 'You have already cast your vote for this position in this election. Each voter can only vote once per position.',
+          icon: 'warning',
+          confirmButtonText: 'View My Votes',
+          showCancelButton: true,
+          cancelButtonText: 'OK'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Navigate to my votes section
+            setActiveView('my-votes');
+          }
+        });
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: errorMessage,
+          icon: 'error',
+        });
+      }
+      return false;
     }
   };
 
@@ -465,6 +523,7 @@ function StudentDashboard({ user }) {
     { id: 'dashboard', label: 'Dashboard', icon: FaChartBar, badge: null },
     { id: 'elections', label: 'Elections', icon: FaPoll, badge: electionStats.total },
     { id: 'my-votes', label: 'My Votes', icon: FaVoteYea, badge: myVotes.length },
+    { id: 'receipts', label: 'Receipts', icon: FaFileAlt, badge: savedReceipts.length },
     { id: 'notifications', label: 'Notifications', icon: FaBell, badge: notifications.filter(n => !n.read).length },
     { id: 'profile', label: 'Profile', icon: FaUserCircle, badge: null },
     { id: 'history', label: 'History', icon: FaHistory, badge: null },
@@ -478,6 +537,8 @@ function StudentDashboard({ user }) {
         return renderElectionsView();
       case 'my-votes':
         return renderMyVotesView();
+      case 'receipts':
+        return renderReceiptsView();
       case 'notifications':
         return renderNotificationsView();
       case 'profile':
@@ -814,6 +875,10 @@ function StudentDashboard({ user }) {
                 openElectionDetails={openElectionDetails}
                 getElectionStatus={getElectionStatus}
                 formatTimeRemaining={formatTimeRemaining}
+                setSelectedElection={setSelectedElection}
+                setSelectedCandidateForVoting={setSelectedCandidateForVoting}
+                setShowVotingModal={setShowVotingModal}
+                setVotingStep={setVotingStep}
               />
             ))}
           </div>
@@ -884,6 +949,116 @@ function StudentDashboard({ user }) {
                         <FaClock className="me-1" />
                         {vote.createdAt ? new Date(vote.createdAt).toLocaleTimeString() : 'N/A'}
                       </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  ); }
+
+  function renderReceiptsView() { return (
+    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <div className="card-header d-flex align-items-center justify-content-between"
+           style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+        <span className="d-flex align-items-center gap-2">
+          <FaFileAlt /> Vote Receipts
+        </span>
+        <span className="badge bg-white text-success">{savedReceipts.length}</span>
+      </div>
+      <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
+        {savedReceipts.length === 0 ? (
+          <div className="text-center py-5">
+            <FaFileAlt className="mb-3 text-muted" size={48} />
+            <h3 className="text-muted">No receipts available</h3>
+            <p className="text-muted">Vote receipts will appear here after you cast your votes.</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setActiveView('elections')}
+            >
+              <FaPoll className="me-2" />
+              Browse Elections
+            </button>
+          </div>
+        ) : (
+          <div className="row g-3">
+            {savedReceipts
+              .sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt))
+              .map((receipt, index) => (
+              <div className="col-md-6 col-lg-4" key={receipt.id || index}>
+                <div 
+                  className="card border h-100 receipt-card"
+                  style={{ 
+                    borderRadius: '12px', 
+                    overflow: 'hidden', 
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    background: isDarkMode ? colors.surfaceHover : '#fff'
+                  }}
+                  onClick={() => {
+                    setSelectedReceipt(receipt);
+                    setShowReceiptModal(true);
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+                  }}
+                >
+                  <div className="card-body p-3">
+                    <div className="d-flex align-items-center mb-3">
+                      <div 
+                        className="rounded-circle p-2 me-3"
+                        style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+                      >
+                        <FaCheckCircle className="text-success" size={20} />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="fw-bold text-truncate" title={receipt.election?.title || 'Unknown Election'}>
+                          {receipt.election?.title || 'Unknown Election'}
+                        </div>
+                        <small className="text-muted">
+                          {new Date(receipt.votedAt).toLocaleDateString()}
+                        </small>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-2">
+                      <small className="text-muted d-block">Verification Code</small>
+                      <code className="bg-light px-2 py-1 rounded small" style={{ color: '#0d6efd', fontFamily: 'monospace' }}>
+                        {receipt.verificationCode}
+                      </code>
+                    </div>
+                    
+                    <div className="d-flex gap-2 mt-3">
+                      <button 
+                        className="btn btn-outline-primary btn-sm flex-grow-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          generateVoteReceipt(receipt);
+                        }}
+                      >
+                        <FaDownload className="me-1" />
+                        Print
+                      </button>
+                      <button 
+                        className="btn btn-outline-success btn-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(receipt.verificationCode);
+                          success('Verification code copied to clipboard!');
+                        }}
+                      >
+                        <FaStar className="me-1" />
+                        Copy
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2165,7 +2340,7 @@ function StudentDashboard({ user }) {
       {/* Enhanced Election Details Modal */}
       {selectedElection && showElectionModal && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, padding: '1rem' }}>
-          <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ margin: '2rem auto' }}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ margin: '1rem auto' }}>
             <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : 'inherit', borderRadius: '4px' }}>
               <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
                 <div className="d-flex align-items-center gap-3">
@@ -2723,7 +2898,7 @@ function StudentDashboard({ user }) {
       {/* Enhanced Voting Modal */}
       {showVotingModal && selectedCandidateForVoting && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060, padding: '1rem' }}>
-          <div className="modal-dialog modal-lg modal-dialog-centered" style={{ margin: '2rem auto' }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered" style={{ margin: '1rem auto' }}>
             <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : 'inherit', borderRadius: '4px' }}>
               {votingStep === 1 && (
                 // Step 1: Candidate Review
@@ -2889,22 +3064,63 @@ function StudentDashboard({ user }) {
                       className="btn btn-danger btn-lg px-4"
                       onClick={async () => {
                         try {
-                          setVotingStep(3);
-                          // Call the handleVote function to cast the vote
-                          await handleVote(
-                            selectedElection._id,
-                            selectedCandidateForVoting._id,
+                          // First show SweetAlert confirmation
+                          const result = await Swal.fire({
+                            title: 'Final Confirmation',
+                            text: 'Are you absolutely sure you want to cast this vote? This action cannot be undone.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6b7280',
+                            confirmButtonText: 'Yes, Cast My Vote!',
+                            cancelButtonText: 'Cancel'
+                          });
+
+                          if (!result.isConfirmed) return;
+
+                          // Generate verification code
+                          const verificationCode = generateVerificationCode();
+                          setVoteVerificationCode(verificationCode);
+
+                          // Cast the vote
+                          const voteSuccessful = await handleVote(
+                            selectedElection._id || selectedElection.id,
+                            selectedCandidateForVoting._id || selectedCandidateForVoting.id,
                             selectedCandidateForVoting.position,
-                            Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 ? selectedElection.positions[0] : undefined
+                            Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 ? selectedElection.positions[0] : undefined,
+                            true // Skip confirmation in handleVote since we already confirmed
                           );
-                          // Close the election modal if it's open
-                          setShowElectionModal(false);
-                          // Close modal after a short delay
-                          setTimeout(() => {
-                            setShowVotingModal(false);
-                            setSelectedCandidateForVoting(null);
-                            setVotingStep(1);
-                          }, 3000);
+                          
+                          if (voteSuccessful) {
+                            // Store receipt data
+                            const receiptData = {
+                              id: Date.now().toString(),
+                              election: selectedElection,
+                              candidate: selectedCandidateForVoting,
+                              votedAt: new Date().toISOString(),
+                              verificationCode: verificationCode,
+                              userId: user._id || user.id
+                            };
+                            
+                            // Save to localStorage
+                            const existingReceipts = JSON.parse(localStorage.getItem('voteReceipts') || '[]');
+                            existingReceipts.push(receiptData);
+                            localStorage.setItem('voteReceipts', JSON.stringify(existingReceipts));
+                            
+                            // Refresh receipts list
+                            loadReceipts();
+                            
+                            // Show success modal
+                            setVotingStep(3);
+                            // Close the election modal if it's open
+                            setShowElectionModal(false);
+                            // Refresh data
+                            fetchElections();
+                            fetchMyVotes();
+                          } else {
+                            // If voting failed, stay on confirmation step
+                            setVotingStep(2);
+                          }
                         } catch (error) {
                           console.error('Voting failed:', error);
                           setVotingStep(2); // Go back to confirmation step
@@ -2949,6 +3165,18 @@ function StudentDashboard({ user }) {
                       <h3 className="fw-bold text-success">Vote Recorded Successfully!</h3>
                       <p className="text-muted">Thank you for participating in the democratic process.</p>
                     </div>
+
+                    {/* Verification Code Section */}
+                    <div className={`p-4 rounded border mb-4`} style={{ background: isDarkMode ? 'rgba(13, 110, 253, 0.05)' : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+                      <h5 className="fw-bold mb-2 text-primary">Verification Code</h5>
+                      <div 
+                        className="fs-4 fw-bold text-primary font-monospace mb-2"
+                        style={{ letterSpacing: '2px' }}
+                      >
+                        {voteVerificationCode}
+                      </div>
+                      <small className="text-muted">Save this code for your records. You can use it to verify your vote.</small>
+                    </div>
                     
                     <div className={`p-4 rounded border`} style={{ background: isDarkMode ? 'rgba(34, 197, 94, 0.05)' : 'rgba(34, 197, 94, 0.05)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
                       <h5 className="fw-bold mb-2">Your Vote Summary</h5>
@@ -2971,13 +3199,28 @@ function StudentDashboard({ user }) {
                       <small className="text-muted d-block mt-2">Election: {selectedElection.title}</small>
                     </div>
                   </div>
-                  <div className={`modal-footer border-top justify-content-center`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                  <div className={`modal-footer border-top justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <button 
+                      className="btn btn-outline-primary"
+                      onClick={() => {
+                        generateVoteReceipt({
+                          election: selectedElection,
+                          candidate: selectedCandidateForVoting,
+                          votedAt: new Date(),
+                          verificationCode: voteVerificationCode
+                        });
+                      }}
+                    >
+                      <FaDownload className="me-2" />
+                      Print Receipt
+                    </button>
                     <button 
                       className="btn btn-success"
                       onClick={() => {
                         setShowVotingModal(false);
                         setSelectedCandidateForVoting(null);
                         setVotingStep(1);
+                        setVoteVerificationCode(null);
                         setActiveView('my-votes');
                       }}
                     >
@@ -2995,7 +3238,7 @@ function StudentDashboard({ user }) {
       {/* Notification Details Modal */}
       {selectedNotification && showNotificationModal && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
+          <div className="modal-dialog" style={{ margin: '1rem auto' }}>
             <div className={`modal-content border border-1`} style={{ background: selectedNotification?.read ? '#ffffff' : '#f1f3f5' }}>
               <div className="modal-header">
                 <h5 className="modal-title d-flex align-items-center gap-2">
@@ -3103,7 +3346,7 @@ function StudentDashboard({ user }) {
       {/* Enhanced Profile Edit Modal */}
       {showProfile && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-lg" style={{ margin: '1rem auto' }}>
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title d-flex align-items-center gap-2">
@@ -3238,6 +3481,129 @@ function StudentDashboard({ user }) {
           candidates={selectedElection.candidates || []}
           onClose={() => setShowComparisonModal(false)}
         />
+      )}
+
+      {/* Receipt Details Modal */}
+      {selectedReceipt && showReceiptModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+          <div className="modal-dialog modal-lg" style={{ margin: '1rem auto' }}>
+            <div className={`modal-content border border-1`} style={{ 
+              background: isDarkMode ? colors.surface : '#ffffff',
+              borderColor: isDarkMode ? colors.border : '#dee2e6'
+            }}>
+              <div className={`modal-header border-bottom`} style={{ 
+                borderColor: isDarkMode ? colors.border : '#dee2e6',
+                background: 'linear-gradient(135deg, #10b981, #059669)'
+              }}>
+                <h5 className="modal-title d-flex align-items-center gap-2 text-white">
+                  <FaFileAlt />
+                  Vote Receipt Details
+                </h5>
+                <button 
+                  className="btn-close btn-close-white" 
+                  onClick={() => {
+                    setShowReceiptModal(false);
+                    setSelectedReceipt(null);
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="text-center mb-4">
+                  <div 
+                    className="mx-auto rounded-circle d-flex align-items-center justify-content-center mb-3"
+                    style={{ width: 80, height: 80, background: 'rgba(16, 185, 129, 0.1)' }}
+                  >
+                    <FaCheckCircle className="text-success" size={36} />
+                  </div>
+                  <h4 className="fw-bold text-success">Vote Successfully Recorded</h4>
+                  <p className="text-muted">Official receipt from Campus Ballot System</p>
+                </div>
+
+                <div className={`p-4 rounded border mb-4`} style={{ 
+                  background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                  borderColor: isDarkMode ? colors.border : '#e9ecef'
+                }}>
+                  <h5 className="fw-bold mb-3">Election Details</h5>
+                  <div className="row">
+                    <div className="col-sm-4 text-muted">Election:</div>
+                    <div className="col-sm-8 fw-semibold">{selectedReceipt.election?.title || 'Unknown Election'}</div>
+                  </div>
+                  <div className="row mt-2">
+                    <div className="col-sm-4 text-muted">Candidate ID:</div>
+                    <div className="col-sm-8">
+                      <code className="bg-light px-2 py-1 rounded">
+                        {(selectedReceipt.candidate?._id || selectedReceipt.candidate?.id || 'N/A').substring(0, 8)}****
+                      </code>
+                    </div>
+                  </div>
+                  <div className="row mt-2">
+                    <div className="col-sm-4 text-muted">Position:</div>
+                    <div className="col-sm-8">{selectedReceipt.candidate?.position || selectedReceipt.candidate?.role || 'General'}</div>
+                  </div>
+                  <div className="row mt-2">
+                    <div className="col-sm-4 text-muted">Date & Time:</div>
+                    <div className="col-sm-8">{new Date(selectedReceipt.votedAt).toLocaleString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      timeZoneName: 'short'
+                    })}</div>
+                  </div>
+                  <div className="row mt-2">
+                    <div className="col-sm-4 text-muted">Election Type:</div>
+                    <div className="col-sm-8">{selectedReceipt.election?.type || 'General Election'}</div>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded border text-center`} style={{
+                  background: 'linear-gradient(135deg, #fff3cd, #ffeaa7)',
+                  borderColor: '#ffc107'
+                }}>
+                  <h5 className="fw-bold mb-2" style={{ color: '#856404' }}>🔐 Verification Code</h5>
+                  <div 
+                    className="fs-3 fw-bold text-primary font-monospace mb-2 p-3 rounded bg-white border-2"
+                    style={{ 
+                      letterSpacing: '3px',
+                      border: '2px dashed #0d6efd',
+                      fontFamily: 'Courier New, monospace'
+                    }}
+                  >
+                    {selectedReceipt.verificationCode}
+                  </div>
+                  <small style={{ color: '#856404' }}>
+                    <strong>Important:</strong> Save this verification code for your records. 
+                    You can use it to verify your vote in the system.
+                  </small>
+                </div>
+              </div>
+              <div className={`modal-footer border-top`} style={{ 
+                borderColor: isDarkMode ? colors.border : '#dee2e6',
+                background: isDarkMode ? colors.surfaceHover : '#f8f9fa'
+              }}>
+                <button 
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedReceipt.verificationCode);
+                    success('Verification code copied to clipboard!');
+                  }}
+                >
+                  <FaStar className="me-2" />
+                  Copy Code
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => generateVoteReceipt(selectedReceipt)}
+                >
+                  <FaDownload className="me-2" />
+                  Print Receipt
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       </div>
     </>

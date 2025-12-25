@@ -18,7 +18,7 @@ function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post("https://campus-ballot-backend.onrender.com/api/auth/forgot-password", { email });
+      const res = await axios.post("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/forgot-password", { email });
       Swal.fire({
         title: "Success",
         text: res.data.message + " Redirecting to login page...",

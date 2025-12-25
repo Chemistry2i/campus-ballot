@@ -11,7 +11,7 @@
 //   const handleVerify = async () => {
 //     setVerifying(true);
 //     try {
-//       const res = await axios.get(`https://campus-ballot-backend.onrender.com/api/auth/verify/${token}`);
+//       const res = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/verify/${token}`);
 //       Swal.fire("Success", res.data.message, "success");
 //       setTimeout(() => {
 //         navigate("/login");
@@ -63,7 +63,7 @@ function VerifyEmail() {
   const handleVerify = async () => {
     setVerifying(true);
     try {
-      const res = await axios.get(`https://campus-ballot-backend.onrender.com/api/auth/verify/${token}`);
+      const res = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/verify/${token}`);
       Swal.fire("Success", res.data.message, "success");
       setTimeout(() => {
         navigate("/login");
@@ -106,7 +106,7 @@ function VerifyEmail() {
     if (email) {
       setResending(true);
       try {
-        const res = await axios.post('https://campus-ballot-backend.onrender.com/api/auth/resend-verification', {
+        const res = await axios.post('https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/resend-verification', {
           email: email
         });
         

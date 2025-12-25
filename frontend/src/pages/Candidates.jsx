@@ -448,8 +448,8 @@ function Candidates({ user }) {
     setLoading(true);
     try {
       const url = query
-        ? `https://campus-ballot-backend.onrender.com/api/candidates/search?q=${encodeURIComponent(query)}`
-        : "https://campus-ballot-backend.onrender.com/api/candidates";
+        ? `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates/search?q=${encodeURIComponent(query)}`
+        : "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates";
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -463,7 +463,7 @@ function Candidates({ user }) {
 
   const approveCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://campus-ballot-backend.onrender.com/api/candidates/${candidateId}/approve`, {}, {
+      await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates/${candidateId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate approved successfully', 'success');
@@ -475,7 +475,7 @@ function Candidates({ user }) {
 
   const disqualifyCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://campus-ballot-backend.onrender.com/api/candidates/${candidateId}/disqualify`, {}, {
+      await axios.put(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates/${candidateId}/disqualify`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate disqualified successfully', 'success');
@@ -497,7 +497,7 @@ function Candidates({ user }) {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`https://campus-ballot-backend.onrender.com/api/candidates/${candidateId}`, {
+        await axios.delete(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         Swal.fire('Success', 'Candidate deleted successfully', 'success');
@@ -511,15 +511,15 @@ function Candidates({ user }) {
   const fetchElectionsAndUsers = async () => {
     try {
       const [electionRes, userRes] = await Promise.all([
-        axios.get("https://campus-ballot-backend.onrender.com/api/elections", {
+        axios.get("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/elections", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://campus-ballot-backend.onrender.com/api/users", {
+        axios.get("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
       setElections(electionRes.data.elections || []);
-      setUsers(userRes.data);
+      setUsers(userRes.data.users || []);
       // If a specific election already selected in form, populate positionsOptions
       if (form.election) {
         const selected = (electionRes.data.elections || []).find((ev) => ev._id === form.election);
@@ -592,7 +592,7 @@ function Candidates({ user }) {
       Object.entries(form).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
-      await axios.post("https://campus-ballot-backend.onrender.com/api/candidates", data, {
+      await axios.post("https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/candidates", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

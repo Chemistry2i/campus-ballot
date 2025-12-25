@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from '../../contexts/ThemeContext';
 
-axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);

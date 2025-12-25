@@ -16,7 +16,8 @@ const {
     getUserNotifications,
     deactivateOwnAccount,
     reactivateOwnAccount,
-    exportUsers
+    exportUsers,
+    getAllUsersForSelect
 } = require('../controllers/userController');
 const { updateUserPhoto, deleteUserPhoto } = require('../controllers/userController');
 
@@ -27,6 +28,9 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 // Admin: Get all users
 router.get('/', protect, adminOnly, getAllUsers);
+
+// Admin: Get all users for dropdown/select (without pagination)
+router.get('/all', protect, adminOnly, getAllUsersForSelect);
 
 // Admin: Get a user by ID
 router.get('/:id', protect, adminOnly, getUserById);

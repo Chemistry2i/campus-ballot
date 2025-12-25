@@ -442,6 +442,46 @@ const exportUsers = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get all users for dropdown/select (without pagination)
+// @route   GET /api/users/all
+// @access  Admin only
+const getAllUsersForSelect = asyncHandler(async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    
+    // Build search query
+    let query = {};
+    if (search && search.trim()) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { studentId: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+    
+    // Fetch all users without pagination, only essential fields for dropdown
+    const users = await User.find(query)
+      .select("name email studentId _id")
+      .sort({ name: 1 }); // Sort by name alphabetically
+    
+    console.log({ 
+      message: "Fetched all users for select dropdown", 
+      totalUsers: users.length,
+      search: search || 'none'
+    });
+    
+    res.json({
+      users,
+      totalUsers: users.length
+    });
+  } catch (error) {
+    console.log({ message: "Error fetching users for select", error: error.message });
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -458,7 +498,7 @@ module.exports = {
   deactivateOwnAccount,
   reactivateOwnAccount,
   exportUsers,
-  updateUserPhoto
-  ,
-  deleteUserPhoto
+  updateUserPhoto,
+  deleteUserPhoto,
+  getAllUsersForSelect
 };
