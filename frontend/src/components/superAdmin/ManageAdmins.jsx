@@ -22,11 +22,9 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     role: 'admin',
     phone: '',
     image: '',
-    emailVerified: false,
     password: '',
     lastLogin: '',
     createdAt: '',
-    // Add other fields from your user model as needed
   });
   const { isDarkMode, colors } = useTheme();
 
@@ -66,12 +64,34 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       Swal.fire('Error', 'Name, email, and password are required', 'error');
       return;
     }
+    
+    // Validate password strength
+    if (newAdmin.password.length < 6) {
+      Swal.fire('Error', 'Password must be at least 6 characters long', 'error');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/super-admin/admins', newAdmin, {
-        headers: { Authorization: `Bearer ${token}` },
+      
+      // Send the admin data including the base64 image
+      const adminData = {
+        name: newAdmin.name,
+        email: newAdmin.email,
+        password: newAdmin.password,
+        role: newAdmin.role,
+        phone: newAdmin.phone,
+        image: newAdmin.image // This will be the base64 string
+      };
+      
+      await axios.post('/api/super-admin/admins', adminData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
-      Swal.fire('Success', 'Admin added', 'success');
+      
+      Swal.fire('Success', 'Admin created successfully. Password has been hashed securely and account is automatically verified.', 'success');
       setShowAddModal(false);
       setNewAdmin({
         name: '',
@@ -79,18 +99,19 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         role: 'admin',
         phone: '',
         image: '',
-        emailVerified: false,
         password: '',
         lastLogin: '',
         createdAt: '',
       });
+      
       // Refresh list
       const res = await axios.get('/api/super-admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAdmins(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      Swal.fire('Error', 'Failed to add admin', 'error');
+      const errorMessage = err.response?.data?.message || 'Failed to add admin';
+      Swal.fire('Error', errorMessage, 'error');
     }
   };
 
@@ -636,16 +657,11 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         <option value="super_admin">Super Admin</option>
                       </select>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Email Verified</label>
-                      <select
-                        className="form-select"
-                        value={newAdmin.emailVerified ? 'true' : 'false'}
-                        onChange={e => setNewAdmin({ ...newAdmin, emailVerified: e.target.value === 'true' })}
-                      >
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
-                      </select>
+                    <div className="col-md-12 mb-3">
+                      <div className="alert alert-info" role="alert">
+                        <i className="fa-solid fa-circle-info me-2"></i>
+                        <strong>Note:</strong> Admin accounts created by Super Admin are automatically verified and can login immediately.
+                      </div>
                     </div>
                   </div>
                 </form>

@@ -103,7 +103,7 @@ const getAllAdmins = asyncHandler(async (req, res) => {
 // @access  Super Admin only
 const createAdmin = asyncHandler(async (req, res) => {
   try {
-    const { name, email, password, role, phone, emailVerified } = req.body;
+    const { name, email, password, role, phone, image } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -111,21 +111,24 @@ const createAdmin = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "User with this email already exists" });
     }
 
+    // Create user with proper fields - admins created by super admin are automatically verified
     const user = await User.create({
       name,
       email,
-      password,
+      password, // Password will be hashed by the User model pre-save hook
       role: role || 'admin',
       phone,
-      emailVerified: emailVerified || false,
-      accountStatus: 'active'
+      emailVerified: true, // Automatically verified when created by super admin
+      isVerified: true, // Automatically verified when created by super admin
+      accountStatus: 'active',
+      profilePicture: image || null
     });
 
     const userResponse = user.toObject();
     delete userResponse.password;
 
     res.status(201).json({
-      message: "Admin created successfully",
+      message: "Admin created successfully and automatically verified",
       user: userResponse
     });
   } catch (error) {
