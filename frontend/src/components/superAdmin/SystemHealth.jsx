@@ -92,8 +92,82 @@ const SystemHealth = () => {
 
   return (
     <div className="container-fluid">
+      {/* Welcome Banner */}
+      <div 
+        className="mb-4 rounded-3 position-relative overflow-hidden"
+        style={{
+          background: isDarkMode 
+            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' 
+            : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+          color: '#fff',
+          boxShadow: '0 8px 24px rgba(37, 99, 235, 0.15)',
+          padding: '2.5rem 2rem'
+        }}
+      >
+        <div className="position-relative" style={{ zIndex: 1 }}>
+          <div className="d-flex align-items-center gap-3 mb-3">
+            <div 
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <i className="fa-solid fa-heartbeat" style={{ fontSize: '1.8rem' }}></i>
+            </div>
+            <div>
+              <h2 className="mb-1 fw-bold">System Health Monitor</h2>
+              <p className="mb-0 opacity-90">Real-time monitoring of your application's vital signs</p>
+            </div>
+          </div>
+          <div className="d-flex gap-4 mt-3">
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-circle-check"></i>
+              <span className="small">Live Metrics</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-chart-line"></i>
+              <span className="small">Performance Tracking</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-bell"></i>
+              <span className="small">Alert System</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div 
+          className="position-absolute"
+          style={{
+            top: '-40px',
+            right: '-40px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            filter: 'blur(40px)'
+          }}
+        />
+        <div 
+          className="position-absolute"
+          style={{
+            bottom: '-20px',
+            right: '100px',
+            width: '150px',
+            height: '150px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.08)',
+            filter: 'blur(30px)'
+          }}
+        />
+      </div>
+
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold">System Health Monitor</h3>
+        <h5 className="fw-bold" style={{ color: colors.text }}>System Metrics Dashboard</h5>
         <label className="form-check form-switch">
           <input
             className="form-check-input"
@@ -101,7 +175,7 @@ const SystemHealth = () => {
             checked={autoRefresh}
             onChange={(e) => setAutoRefresh(e.target.checked)}
           />
-          <span className="form-check-label">Auto-refresh (30s)</span>
+          <span className="form-check-label" style={{ color: colors.text }}>Auto-refresh (30s)</span>
         </label>
       </div>
 

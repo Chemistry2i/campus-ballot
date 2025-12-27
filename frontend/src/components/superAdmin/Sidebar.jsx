@@ -113,11 +113,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           borderRight: `1px solid ${colors.border}`,
           display: 'flex',
           flexDirection: 'column',
-          overflowX: 'hidden'
+          overflow: 'scroll'
         }}
         aria-label="Super Admin Sidebar"
       >
-        <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative' }}>
+        <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative', flexShrink: 0 }}>
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
@@ -252,11 +252,22 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             ></i>
           </button>
         </div>
-        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', overflowX: 'hidden', flex: 1, paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: `${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'}` }}>
+        <nav className="nav flex-column px-2 sidebar-nav-scroll" role="navigation" aria-label="Sidebar navigation" style={{ 
+          overflowY: 'auto', 
+          overflowX: 'hidden', 
+          flex: '1 1 auto',
+          minHeight: 0,
+          paddingBottom: '0.5rem',
+          paddingTop: '0.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'nowrap',
+          width: '100%'
+        }}>
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.to;
             return (
-              <div key={item.to} style={{ position: 'relative' }}>
+              <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
                 {/* Active indicator */}
                 {isActive && (
                   <span
@@ -287,9 +298,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                     background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
                     boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
                     minWidth: collapsed ? 0 : 220,
+                    width: '100%',
                     outline: 'none',
                     color: colors.text,
-                    borderLeft: isActive ? `3px solid ${colors.primary}` : 'none'
+                    borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+                    flexShrink: 0
                   }}
                   aria-current={isActive ? 'page' : undefined}
                   tabIndex={0}
@@ -353,6 +366,30 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         )}
         <style>{`
           .superadmin-sidebar { background: #fff; border-right: 1px solid #eee; }
+          
+          /* Custom Scrollbar Styles */
+          .sidebar-nav-scroll::-webkit-scrollbar {
+            width: 8px;
+          }
+          .sidebar-nav-scroll::-webkit-scrollbar-track {
+            background: ${isDarkMode ? '#1e293b' : '#f8f9fa'};
+            border-radius: 10px;
+            margin: 4px 0;
+          }
+          .sidebar-nav-scroll::-webkit-scrollbar-thumb {
+            background: ${isDarkMode ? '#475569' : '#cbd5e1'};
+            border-radius: 10px;
+            transition: background 0.3s ease;
+          }
+          .sidebar-nav-scroll::-webkit-scrollbar-thumb:hover {
+            background: ${isDarkMode ? '#64748b' : '#94a3b8'};
+          }
+          .sidebar-nav-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: ${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f8f9fa'};
+            scroll-behavior: smooth;
+          }
+          
           .avatar-upload-wrapper:hover .camera-overlay {
             opacity: 1 !important;
           }
