@@ -212,7 +212,7 @@ const CandidacyDashboard = () => {
               }}
             >
               <img 
-                src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
+                src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://api.campusballot.tech/uploads/${user.profilePicture}`} 
                 alt={user?.name} 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />

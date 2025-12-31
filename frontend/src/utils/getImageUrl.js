@@ -9,16 +9,16 @@ function getImageUrl(imagePath) {
   
   // If it's a relative path starting with /uploads, construct the full URL
   if (imagePath.startsWith('/uploads/')) {
-    return `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev${imagePath}`;
+    return `https://api.campusballot.tech${imagePath}`;
   }
   
   // If it's just a filename, assume it's in uploads
   if (!imagePath.startsWith('/')) {
-    return `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${imagePath}`;
+    return `https://api.campusballot.tech/uploads/${imagePath}`;
   }
   
   // Default case - prepend the base URL
-  return `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev${imagePath}`;
+  return `https://api.campusballot.tech${imagePath}`;
 }
 
 export default getImageUrl;

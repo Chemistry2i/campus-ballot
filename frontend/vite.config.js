@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173, // Set the default frontend port here
     proxy: {
       '/api': {
-        target: 'https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev',
+        target: 'https://api.campusballot.tech',
         changeOrigin: true,
         secure: false,
       }
