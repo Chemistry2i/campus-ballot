@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Create a candidate (Admin only)
 // @route   POST /api/candidates
@@ -240,6 +241,19 @@ const approveCandidate = asyncHandler(async (req, res) => {
 
     candidate.status = "approved";
     await candidate.save();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'Candidate',
+      entityId: candidate._id.toString(),
+      details: `Approved candidate: ${candidate.name} for ${candidate.position}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     try {
       const io = req.app.get('io');
       if (io) {
@@ -268,6 +282,19 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
 
     candidate.status = "disqualified";
     await candidate.save();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'Candidate',
+      entityId: candidate._id.toString(),
+      details: `Disqualified candidate: ${candidate.name} for ${candidate.position}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     try {
       const io = req.app.get('io');
       if (io) {

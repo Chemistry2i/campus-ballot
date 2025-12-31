@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://www.campusballot.tech/verify/${verificationToken}`;
+//         const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://www.campusballot.tech/reset-password/${token}`;
+//         const resetUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
@@ -299,6 +299,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 const sendSms = require("../utils/sendSms");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 /* -------------------------------------------------------
    Helper: Generate JWT
@@ -475,6 +476,17 @@ const login = asyncHandler(async (req, res) => {
 
     console.log("[LOGIN]:", user.email, "Role:", user.role);
     
+    // Log activity for all users (admin, super_admin, and students)
+    await logActivity({
+      userId: user._id,
+      action: 'login',
+      entityType: 'System',
+      details: `${user.role} logged in: ${user.email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     // Prepare user response
     const userResponse = {
       _id: user._id,
@@ -518,8 +530,22 @@ const login = asyncHandler(async (req, res) => {
 /* -------------------------------------------------------
    @desc   Logout user
 --------------------------------------------------------- */
-const logout = asyncHandler(async (_req, res) => {
+const logout = asyncHandler(async (req, res) => {
   console.log("[LOGOUT]");
+  
+  // Log activity for all users
+  if (req.user) {
+    await logActivity({
+      userId: req.user._id,
+      action: 'logout',
+      entityType: 'System',
+      details: `${req.user.role} logged out: ${req.user.email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+  }
+  
   res.json({ message: "Logout successful" });
 });
 

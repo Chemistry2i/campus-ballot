@@ -4,6 +4,7 @@ const Election = require("../models/Election");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
 const Log = require("../models/Log");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Get system summary for super admin dashboard
 // @route   GET /api/super-admin/reports/system-summary
@@ -125,6 +126,18 @@ const createAdmin = asyncHandler(async (req, res) => {
       profilePicture: image || null
     });
 
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'create',
+      entityType: 'User',
+      entityId: user._id.toString(),
+      details: `Created ${role || 'admin'}: ${email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -152,6 +165,18 @@ const updateAdminStatus = asyncHandler(async (req, res) => {
     user.accountStatus = status;
     await user.save();
 
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'User',
+      entityId: user._id.toString(),
+      details: `Changed admin status to ${status}: ${user.email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+
     res.json({ message: `Admin status updated to ${status}` });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -169,7 +194,22 @@ const deleteAdmin = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
+    const userId = user._id.toString();
+    const userEmail = user.email;
     await user.deleteOne();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'delete',
+      entityType: 'User',
+      entityId: userId,
+      details: `Deleted admin: ${userEmail}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     res.json({ message: "Admin deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -178,12 +218,14 @@ const deleteAdmin = asyncHandler(async (req, res) => {
 
 // @desc    Get admin activities
 // @route   GET /api/super-admin/admin-activities
-// @access  Super Admin only
+// @access  Admin & Super Admin (with role-based filtering)
 const getAdminActivities = asyncHandler(async (req, res) => {
   try {
     const { limit = 50, adminId, action, startDate, endDate } = req.query;
+    const currentUserRole = req.user.role;
+    const currentUserId = req.user._id.toString();
     
-    // Build query for admins only
+    // Build query
     const query = {
       user: { $ne: null }
     };
@@ -210,17 +252,31 @@ const getAdminActivities = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
     
-    // Filter for admin/super_admin actions only
-    const adminLogs = logs.filter(log => 
-      log.user && (log.user.role === 'admin' || log.user.role === 'super_admin')
-    );
+    // Role-based filtering:
+    // - Super Admin: See all logs (admins, super_admins, and students)
+    // - Admin: See only student logs (not their own or other admins' logs)
+    let filteredLogs;
+    
+    if (currentUserRole === 'super_admin') {
+      // Super admin sees all logs
+      filteredLogs = logs.filter(log => log.user);
+    } else if (currentUserRole === 'admin') {
+      // Admin sees only student logs (excluding admins and super_admins)
+      filteredLogs = logs.filter(log => 
+        log.user && log.user.role === 'student'
+      );
+    } else {
+      // Fallback: no logs for other roles
+      filteredLogs = [];
+    }
     
     // Transform to match frontend format
-    const activities = adminLogs.map(log => ({
+    const activities = filteredLogs.map(log => ({
       id: log._id,
       adminId: log.user._id,
       adminName: log.user.name,
       adminEmail: log.user.email,
+      adminRole: log.user.role,
       action: formatAction(log.action, log.entityType),
       target: log.details || log.entityId || 'N/A',
       module: log.entityType,

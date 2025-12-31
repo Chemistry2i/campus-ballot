@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://api.campusballot.tech/api/auth/register",
+      "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/register",
       form
     );
     Swal.fire({
@@ -687,10 +687,6 @@ function Register() {
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">
-                        Prefer not to say
-                      </option>
                     </select>
                     <span
                       className="position-absolute end-0 top-50 translate-middle-y me-3"

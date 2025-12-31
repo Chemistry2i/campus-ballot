@@ -22,7 +22,7 @@ function ResetPassword() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://api.campusballot.tech/api/auth/reset-password/${token}`,
+        `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/reset-password/${token}`,
         { password }
         );
       Swal.fire({

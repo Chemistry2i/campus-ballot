@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Election = require("../models/Election");
 const Candidate = require("../models/Candidate");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Create a new election
 // @route   POST /api/elections
@@ -36,6 +37,18 @@ const createElection = asyncHandler(async (req, res) => {
       eligibility,
       status: computedStatus,
       createdBy: req.user._id,
+    });
+
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'create',
+      entityType: 'Election',
+      entityId: election._id.toString(),
+      details: `Created election: ${title}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
     });
 
     try {
@@ -171,6 +184,19 @@ const updateElection = asyncHandler(async (req, res) => {
     }
 
     const updated = await election.save();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'Election',
+      entityId: updated._id.toString(),
+      details: `Updated election: ${updated.title}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     try {
       const io = req.app.get('io');
       if (io) io.emit('election:updated', { election: updated });
@@ -192,10 +218,25 @@ const deleteElection = asyncHandler(async (req, res) => {
     if (!election) {
       return res.status(404).json({ message: "Election not found" });
     }
+    const electionId = election._id.toString();
+    const electionTitle = election.title;
     await election.deleteOne();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'delete',
+      entityType: 'Election',
+      entityId: electionId,
+      details: `Deleted election: ${electionTitle}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     try {
       const io = req.app.get('io');
-      if (io) io.emit('election:deleted', { id: election._id });
+      if (io) io.emit('election:deleted', { id: electionId });
     } catch (e) {
       console.error('Socket emit error (election deleted):', e.message);
     }

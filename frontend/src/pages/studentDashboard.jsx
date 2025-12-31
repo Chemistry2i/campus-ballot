@@ -19,7 +19,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -2198,7 +2198,7 @@ function StudentDashboard({ user }) {
               })}
             </nav>
             {/* Mobile Sidebar Logout Button */}
-            <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
+            <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
               {/* Sidebar Footer */}
 <div style={{ 
   // marginTop: '1rem', 
@@ -2449,27 +2449,27 @@ function StudentDashboard({ user }) {
                         {/* Election Details Table */}
                         <div className={`card border mb-4`} style={{ borderColor: isDarkMode ? colors.border : '#e9ecef', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderRadius: '4px' }}>
                           <div className="card-body" style={{ padding: window.innerWidth <= 768 ? '0.75rem' : '1rem' }}>
-                            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.9rem' : '1rem' }}>
+                            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.9rem' : '1rem', color: isDarkMode ? colors.text : 'inherit' }}>
                               <FaInfoCircle className="text-primary" size={16} />
                               Election Information
                             </h6>
                             <div className="table-responsive">
                               <table className={`table table-sm mb-0`} style={{ background: isDarkMode ? colors.surface : '#fff', borderRadius: '4px', overflow: 'hidden' }}>
-                                <thead className={`table-light`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                                <thead style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
                                   <tr>
-                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', color: isDarkMode ? '#f9fafb' : 'inherit' }}>
                                       <FaCalendarAlt className="text-primary me-1" size={12} />
                                       Starts
                                     </th>
-                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', color: isDarkMode ? '#f9fafb' : 'inherit' }}>
                                       <FaClock className="text-warning me-1" size={12} />
                                       Ends
                                     </th>
-                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', color: isDarkMode ? '#f9fafb' : 'inherit' }}>
                                       <FaPoll className="text-success me-1" size={12} />
                                       Status
                                     </th>
-                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell' }}>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell', color: isDarkMode ? '#f9fafb' : 'inherit' }}>
                                       <FaUsers className="text-info me-1" size={12} />
                                       Turnout
                                     </th>
@@ -2477,32 +2477,32 @@ function StudentDashboard({ user }) {
                                 </thead>
                                 <tbody>
                                   <tr>
-                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
-                                      <div className="fw-semibold">{new Date(selectedElection.startDate).toLocaleDateString()}</div>
-                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', color: isDarkMode ? '#e5e7eb' : 'inherit' }}>
+                                      <div className="fw-semibold" style={{ color: isDarkMode ? '#f9fafb' : 'inherit' }}>{new Date(selectedElection.startDate).toLocaleDateString()}</div>
+                                      <small style={{ color: isDarkMode ? '#9ca3af' : '#6c757d', fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
                                         {new Date(selectedElection.startDate).toLocaleTimeString()}
                                       </small>
                                     </td>
-                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
-                                      <div className="fw-semibold">{new Date(selectedElection.endDate).toLocaleDateString()}</div>
-                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', color: isDarkMode ? '#e5e7eb' : 'inherit' }}>
+                                      <div className="fw-semibold" style={{ color: isDarkMode ? '#f9fafb' : 'inherit' }}>{new Date(selectedElection.endDate).toLocaleDateString()}</div>
+                                      <small style={{ color: isDarkMode ? '#9ca3af' : '#6c757d', fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
                                         {formatTimeRemaining(selectedElection.endDate)}
                                       </small>
                                     </td>
-                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', color: isDarkMode ? '#e5e7eb' : 'inherit' }}>
                                       <span className={`badge bg-${color}`} style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.75rem' }}>
                                         <StatusIcon size={10} className="me-1" />
                                         {status.charAt(0).toUpperCase() + status.slice(1)}
                                       </span>
                                       <div>
-                                        <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                        <small style={{ color: isDarkMode ? '#9ca3af' : '#6c757d', fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
                                           {status === 'active' ? 'Voting open' : status === 'upcoming' ? 'Not started' : 'Completed'}
                                         </small>
                                       </div>
                                     </td>
-                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell' }}>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell', color: isDarkMode ? '#e5e7eb' : 'inherit' }}>
                                       <div className="fw-semibold text-primary">{selectedElection.totalVotes || 0}</div>
-                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                      <small style={{ color: isDarkMode ? '#9ca3af' : '#6c757d', fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
                                         votes cast
                                       </small>
                                     </td>

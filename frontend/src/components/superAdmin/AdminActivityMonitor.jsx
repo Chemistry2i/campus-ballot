@@ -200,8 +200,8 @@ const AdminActivityMonitor = () => {
               <i className="fa-solid fa-video" style={{ fontSize: '1.8rem' }}></i>
             </div>
             <div>
-              <h2 className="mb-1 fw-bold">Admin Activity Monitor</h2>
-              <p className="mb-0 opacity-90">Real-time tracking of all administrative actions</p>
+              <h2 className="mb-1 fw-bold">Activity Monitor</h2>
+              <p className="mb-0 opacity-90">Real-time tracking of all user actions and administrative activities</p>
             </div>
           </div>
           <div className="d-flex gap-4 mt-3">
@@ -489,7 +489,14 @@ const AdminActivityMonitor = () => {
                           </span>
                         </div>
                         <small className="d-block mt-1" style={{ color: colors.textMuted }}>
-                          by <strong>{activity.adminName || 'Unknown Admin'}</strong> 
+                          by <strong>{activity.adminName || 'Unknown User'}</strong>
+                          <span className={`badge ms-2 ${
+                            activity.adminRole === 'super_admin' ? 'bg-danger' : 
+                            activity.adminRole === 'admin' ? 'bg-warning' : 
+                            'bg-info'
+                          }`} style={{ fontSize: '0.7rem' }}>
+                            {activity.adminRole?.toUpperCase() || 'UNKNOWN'}
+                          </span>
                           {activity.adminEmail && <span> ({activity.adminEmail})</span>}
                         </small>
                         <small className="d-block" style={{ color: colors.textMuted }}>

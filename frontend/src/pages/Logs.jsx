@@ -30,7 +30,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 
 function Logs({ user }) {
   const [logs, setLogs] = useState([]);
@@ -48,7 +48,7 @@ function Logs({ user }) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30);
+  const [refreshInterval, setRefreshInterval] = useState(60);
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState({
     total: 0,
@@ -526,7 +526,7 @@ function Logs({ user }) {
               </div>
               <div className="flex-grow-1 ms-3">
                 <h4 className="fw-bold mb-0">{stats.total}</h4>
-                <p className="text-muted mb-0 small">Total Logs</p>
+                <p className="text-muted mb-0 small">{user?.role === 'super_admin' ? 'Total Logs' : 'Student Activities'}</p>
               </div>
             </div>
           </div>
@@ -541,7 +541,7 @@ function Logs({ user }) {
               </div>
               <div className="flex-grow-1 ms-3">
                 <h4 className="fw-bold mb-0">{stats.error}</h4>
-                <p className="text-muted mb-0 small">Errors</p>
+                <p className="text-muted mb-0 small">{user?.role === 'super_admin' ? 'Errors' : 'Failed Actions'}</p>
               </div>
             </div>
           </div>
@@ -556,7 +556,7 @@ function Logs({ user }) {
               </div>
               <div className="flex-grow-1 ms-3">
                 <h4 className="fw-bold mb-0">{stats.warning}</h4>
-                <p className="text-muted mb-0 small">Warnings</p>
+                <p className="text-muted mb-0 small">{user?.role === 'super_admin' ? 'Warnings' : 'Issues'}</p>
               </div>
             </div>
           </div>
@@ -571,7 +571,7 @@ function Logs({ user }) {
               </div>
               <div className="flex-grow-1 ms-3">
                 <h4 className="fw-bold mb-0">{stats.success}</h4>
-                <p className="text-muted mb-0 small">Success</p>
+                <p className="text-muted mb-0 small">{user?.role === 'super_admin' ? 'Success' : 'Completed'}</p>
               </div>
             </div>
           </div>
@@ -844,7 +844,8 @@ function Logs({ user }) {
                                   <button
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleDelete(log._id)}
-                                    title="Delete Log"
+                                    title={user?.role === 'super_admin' ? 'Delete Log' : 'Only Super Admin can delete'}
+                                    disabled={user?.role !== 'super_admin'}
                                   >
                                     <FontAwesomeIcon icon={faTrash} />
                                   </button>
@@ -881,6 +882,8 @@ function Logs({ user }) {
                               <button
                                 className="btn btn-sm btn-outline-danger"
                                 onClick={() => handleDelete(log._id)}
+                                title={user?.role === 'super_admin' ? 'Delete Log' : 'Only Super Admin can delete'}
+                                disabled={user?.role !== 'super_admin'}
                               >
                                 <FontAwesomeIcon icon={faTrash} />
                               </button>
@@ -1220,17 +1223,19 @@ function Logs({ user }) {
                 >
                   Close
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => {
-                    setShowDetailsModal(false);
-                    handleDelete(selectedLog._id);
-                  }}
-                >
-                  <FontAwesomeIcon icon={faTrash} className="me-2" />
-                  Delete Log
-                </button>
+                {user?.role === 'super_admin' && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleDelete(selectedLog._id);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="me-2" />
+                    Delete Log
+                  </button>
+                )}
               </div>
             </div>
           </div>

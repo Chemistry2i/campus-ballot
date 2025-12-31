@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/User");
 const fs = require('fs');
 const path = require('path');
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Get all users (admin) with pagination and search
 // @route   GET /api/users
@@ -95,6 +96,21 @@ const updateUserById = asyncHandler(async (req, res) => {
     }
     Object.assign(user, req.body);
     await user.save();
+    
+    // Log activity if admin updated user
+    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+      await logActivity({
+        userId: req.user._id,
+        action: 'update',
+        entityType: 'User',
+        entityId: user._id.toString(),
+        details: `Updated user: ${user.email}`,
+        status: 'success',
+        ipAddress: getIpAddress(req),
+        userAgent: getUserAgent(req)
+      });
+    }
+    
     console.log({ message: "User updated by admin" });
     try {
       const io = req.app.get('io');
@@ -200,11 +216,26 @@ const deleteUserById = asyncHandler(async (req, res) => {
       console.log({ message: "User not found" });
       return res.status(404).json({ message: "User not found" });
     }
+    const userId = user._id.toString();
+    const userEmail = user.email;
     await user.deleteOne();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'delete',
+      entityType: 'User',
+      entityId: userId,
+      details: `Deleted user: ${userEmail}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     console.log({ message: "User deleted by admin" });
     try {
       const io = req.app.get('io');
-      if (io) io.emit('user:deleted', { id: user._id });
+      if (io) io.emit('user:deleted', { id: userId });
     } catch (e) {
       console.error('Socket emit error (user deleted):', e.message);
     }
@@ -227,6 +258,19 @@ const suspendUser = asyncHandler(async (req, res) => {
     }
     user.accountStatus = "suspended";
     await user.save();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'User',
+      entityId: user._id.toString(),
+      details: `Suspended user: ${user.email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     console.log({ message: "User suspended" });
     try {
       const io = req.app.get('io');
@@ -253,6 +297,19 @@ const activateUser = asyncHandler(async (req, res) => {
     }
     user.accountStatus = "active";
     await user.save();
+    
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'User',
+      entityId: user._id.toString(),
+      details: `Activated user: ${user.email}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+    
     console.log({ message: "User activated" });
     try {
       const io = req.app.get('io');

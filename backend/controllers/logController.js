@@ -3,10 +3,11 @@ const Log = require("../models/Log");
 
 // @desc    Get all logs
 // @route   GET /api/logs
-// @access  Admin only
+// @access  Admin & Super Admin (with role-based filtering)
 const getAllLogs = asyncHandler(async (req, res) => {
   try {
     const { page = 1, limit = 50, level, date, search } = req.query;
+    const currentUserRole = req.user.role;
     
     const query = {};
     
@@ -42,18 +43,36 @@ const getAllLogs = asyncHandler(async (req, res) => {
     }
     
     const logs = await Log.find(query)
-      .populate('user', 'name email')
+      .populate('user', 'name email role')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
     
+    // Role-based filtering:
+    // - Super Admin: See all logs
+    // - Admin: See only student logs (not their own or other admins' logs)
+    let filteredLogs;
+    
+    if (currentUserRole === 'super_admin') {
+      // Super admin sees all logs
+      filteredLogs = logs;
+    } else if (currentUserRole === 'admin') {
+      // Admin sees only student logs
+      filteredLogs = logs.filter(log => 
+        log.user && log.user.role === 'student'
+      );
+    } else {
+      // Fallback: no logs for other roles
+      filteredLogs = [];
+    }
+    
     const total = await Log.countDocuments(query);
     
     res.json({
-      logs,
-      totalPages: Math.ceil(total / limit),
+      logs: filteredLogs,
+      totalPages: Math.ceil(filteredLogs.length / limit),
       currentPage: page,
-      total
+      total: filteredLogs.length
     });
   } catch (error) {
     res.status(500).json({ message: 'Failed to get logs', error: error.message });
@@ -108,10 +127,11 @@ const deleteLog = asyncHandler(async (req, res) => {
 
 // @desc    Search logs
 // @route   GET /api/logs/search
-// @access  Admin only
+// @access  Admin & Super Admin (with role-based filtering)
 const searchLogs = asyncHandler(async (req, res) => {
   try {
     const { q } = req.query;
+    const currentUserRole = req.user.role;
     
     if (!q) {
       return res.status(400).json({ message: 'Search query is required' });
@@ -125,11 +145,26 @@ const searchLogs = asyncHandler(async (req, res) => {
         { ipAddress: { $regex: q, $options: 'i' } }
       ]
     })
-    .populate('user', 'name email')
+    .populate('user', 'name email role')
     .sort({ createdAt: -1 })
     .limit(100);
     
-    res.json(logs);
+    // Role-based filtering:
+    // - Super Admin: See all logs
+    // - Admin: See only student logs
+    let filteredLogs;
+    
+    if (currentUserRole === 'super_admin') {
+      filteredLogs = logs;
+    } else if (currentUserRole === 'admin') {
+      filteredLogs = logs.filter(log => 
+        log.user && log.user.role === 'student'
+      );
+    } else {
+      filteredLogs = [];
+    }
+    
+    res.json(filteredLogs);
   } catch (error) {
     res.status(500).json({ message: 'Failed to search logs', error: error.message });
   }

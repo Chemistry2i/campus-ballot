@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Cast a vote
 // @route   POST /api/votes
@@ -63,6 +64,20 @@ const castVote = asyncHandler(async (req, res) => {
       election: electionId,
       position,
       candidate: abstain ? undefined : candidateId
+    });
+
+    // Log student voting activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'vote',
+      entityType: 'Vote',
+      entityId: vote._id.toString(),
+      details: abstain 
+        ? `Abstained from voting for ${position} in ${election.title}`
+        : `Voted for ${candidate?.name || 'candidate'} for ${position} in ${election.title}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
     });
 
     // Optionally increment candidate's vote count
