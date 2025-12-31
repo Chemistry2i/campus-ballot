@@ -19,7 +19,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -2360,8 +2360,31 @@ function StudentDashboard({ user }) {
 
       {/* Enhanced Election Details Modal */}
       {selectedElection && showElectionModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, padding: '1rem' }}>
-          <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ margin: '1rem auto' }}>
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, padding: window.innerWidth <= 768 ? '0.25rem' : '1rem' }}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ margin: window.innerWidth <= 768 ? '0.25rem auto' : '1rem auto', maxWidth: window.innerWidth <= 768 ? 'calc(100% - 0.5rem)' : undefined }}>
+            <style>
+              {`
+                .modal-dialog-scrollable .modal-body::-webkit-scrollbar {
+                  width: 6px;
+                }
+                .modal-dialog-scrollable .modal-body::-webkit-scrollbar-track {
+                  background: ${isDarkMode ? colors.surface : '#f1f1f1'};
+                  border-radius: 10px;
+                }
+                .modal-dialog-scrollable .modal-body::-webkit-scrollbar-thumb {
+                  background: ${isDarkMode ? colors.border : '#888'};
+                  border-radius: 10px;
+                }
+                .modal-dialog-scrollable .modal-body::-webkit-scrollbar-thumb:hover {
+                  background: ${isDarkMode ? colors.textSecondary : '#555'};
+                }
+                /* Firefox */
+                .modal-dialog-scrollable .modal-body {
+                  scrollbar-width: thin;
+                  scrollbar-color: ${isDarkMode ? colors.border : '#888'} ${isDarkMode ? colors.surface : '#f1f1f1'};
+                }
+              `}
+            </style>
             <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : 'inherit', borderRadius: '4px' }}>
               <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
                 <div className="d-flex align-items-center gap-3">
@@ -2446,7 +2469,7 @@ function StudentDashboard({ user }) {
                                       <FaPoll className="text-success me-1" size={12} />
                                       Status
                                     </th>
-                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell' }}>
                                       <FaUsers className="text-info me-1" size={12} />
                                       Turnout
                                     </th>
@@ -2477,7 +2500,7 @@ function StudentDashboard({ user }) {
                                         </small>
                                       </div>
                                     </td>
-                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem', display: window.innerWidth <= 768 ? 'none' : 'table-cell' }}>
                                       <div className="fw-semibold text-primary">{selectedElection.totalVotes || 0}</div>
                                       <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
                                         votes cast
@@ -2874,12 +2897,12 @@ function StudentDashboard({ user }) {
                   );
                 })()}
               </div>
-              <div className={`modal-footer border-top d-flex justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+              <div className={`modal-footer border-top d-flex justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: window.innerWidth <= 768 ? '0.5rem 0.75rem' : '1rem' }}>
                 <div>
                   {selectedElection && getElectionStatus(selectedElection).status === 'active' && 
                    !myVotes.some((v) => v.election === selectedElection._id) && (
-                    <small className="text-success d-flex align-items-center gap-1">
-                      <FaUnlock size={12} />
+                    <small className="text-success d-flex align-items-center gap-1" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.875rem' }}>
+                      <FaUnlock size={window.innerWidth <= 768 ? 10 : 12} />
                       Voting is currently open
                     </small>
                   )}
@@ -2887,6 +2910,7 @@ function StudentDashboard({ user }) {
                 <div className="d-flex gap-2">
                   <button 
                     className="btn btn-secondary"
+                    style={{ padding: window.innerWidth <= 768 ? '0.35rem 0.75rem' : undefined, fontSize: window.innerWidth <= 768 ? '0.8rem' : undefined }}
                     onClick={() => {
                       setShowElectionModal(false);
                       setSelectedElection(null);
@@ -2900,12 +2924,13 @@ function StudentDashboard({ user }) {
                    !myVotes.some((v) => v.election === selectedElection._id) && (
                     <button 
                       className="btn btn-primary d-flex align-items-center gap-2"
+                      style={{ padding: window.innerWidth <= 768 ? '0.35rem 0.75rem' : undefined, fontSize: window.innerWidth <= 768 ? '0.8rem' : undefined }}
                       onClick={() => {
                         setShowElectionModal(false);
                         setActiveView('elections');
                       }}
                     >
-                      <FaVoteYea />
+                      <FaVoteYea size={window.innerWidth <= 768 ? 12 : undefined} />
                       Go to Elections Page
                     </button>
                   )}
