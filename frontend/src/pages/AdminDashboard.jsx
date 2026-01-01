@@ -28,6 +28,7 @@ import Notifications from "../components/admin/Notifications"; // Importing Noti
 import AdminSettings from "../components/admin/AdminSettings";
 import Reports from "../components/admin/Reports";
 import Results from "../components/admin/Results";
+import Help from "../components/admin/Help";
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/admin/ThemeToggle';
 import '../styles/darkmode.css';
@@ -602,6 +603,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
             <Route path="settings" element={<AdminSettings user={user} />} />
             <Route path="reports" element={<Reports user={user} />} />
             <Route path="results" element={<Results user={user} />} />
+            <Route path="help" element={<Help />} />
             {/* Add more admin routes here */}
           </Routes>
         </div>
