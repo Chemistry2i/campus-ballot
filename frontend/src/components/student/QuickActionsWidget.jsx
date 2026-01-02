@@ -86,6 +86,19 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
 
             <div className="d-grid gap-2">
               <button
+                className="btn btn-sm btn-outline-success text-start"
+                onClick={() => {
+                  onNavigate('apply');
+                  setIsOpen(false);
+                }}
+                style={{
+                  borderColor: isDarkMode ? colors.border : '#dee2e6',
+                  color: isDarkMode ? colors.text : '#16a34a'
+                }}
+              >
+                <FaBolt className="me-2" /> Apply as Candidate
+              </button>
+              <button
                 className="btn btn-sm btn-outline-secondary text-start"
                 onClick={() => {
                   onNavigate('elections');

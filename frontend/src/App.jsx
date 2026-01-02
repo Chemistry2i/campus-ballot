@@ -22,6 +22,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/darkmode.css';
 import SimpleCandidateTest from './components/SimpleCandidateTest';
 import TestingRoutes from './components/TestingRoutes';
+import CandidateApplication from './pages/CandidateApplication';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -180,6 +181,18 @@ function App() {
             currentUser ? (
               <ThemeProvider>
                 <TestingRoutes user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/candidate-application"
+          element={
+            currentUser ? (
+              <ThemeProvider>
+                <CandidateApplication user={currentUser} />
               </ThemeProvider>
             ) : (
               <Navigate to="/login" replace />

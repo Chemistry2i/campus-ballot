@@ -31,6 +31,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const metaRoutes = require('./routes/metaRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const superAdminRoutes = require('./routes/superAdminRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 
 
 // Create Express App
@@ -48,8 +49,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://www.campusballot.tech",           // local dev
-    "https://www.campusballot.tech",
+    "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",           // local dev
+    "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
     CORS_ORIGIN   // deployed frontend
   ],
   credentials: true
@@ -98,6 +99,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/meta', metaRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/applications', applicationRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 
@@ -122,8 +124,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://www.campusballot.tech",
-      "https://www.campusballot.tech",
+      "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
+      "https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],

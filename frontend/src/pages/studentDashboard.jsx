@@ -1,6 +1,7 @@
 import "./swal-zindex-override.css";
 import "../styles/animations.css";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useTheme } from '../contexts/ThemeContext';
@@ -19,7 +20,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -69,6 +70,7 @@ import getImageUrl from '../utils/getImageUrl';
 import ElectionCard from '../components/student/ElectionCard';
 
 function StudentDashboard({ user }) {
+  const navigate = useNavigate();
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const { toasts, removeToast, success, error, info, warning } = useToast();
   const [elections, setElections] = useState([]);
@@ -3508,7 +3510,17 @@ function StudentDashboard({ user }) {
       {/* Quick Actions Widget */}
       <QuickActionsWidget 
         activeElections={elections.filter(e => getElectionStatus(e).status === 'active')}
-        onNavigate={setActiveView}
+        onNavigate={(action) => {
+          if (action === 'apply') {
+            navigate('/candidate-application');
+          } else if (action === 'elections') {
+            setActiveView('elections');
+          } else if (action === 'history') {
+            setActiveView('history');
+          } else {
+            setActiveView(action);
+          }
+        }}
         onVote={(election) => {
           setSelectedElection(election);
           setActiveView('elections');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -24,8 +24,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [logCount, setLogCount] = useState(0);
-  const [profileImage, setProfileImage] = useState(null);
-  const fileInputRef = useRef(null);
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
@@ -39,43 +37,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
       }
     };
     fetchLogCount();
-
-    // Load profile image from localStorage
-    const savedImage = localStorage.getItem('superAdminProfileImage');
-    if (savedImage) {
-      setProfileImage(savedImage);
-    }
   }, []);
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'SA';
-
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result;
-        setProfileImage(base64String);
-        localStorage.setItem('superAdminProfileImage', base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Trigger file upload
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Accessibility: keyboard navigation
-  const handleKeyDown = (e, idx) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      document.querySelectorAll('.sidebar-nav-link')[idx].click();
-    }
-  };
 
   return (
     <>
@@ -118,14 +84,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         aria-label="Super Admin Sidebar"
       >
         <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative', flexShrink: 0 }}>
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            style={{ display: 'none' }}
-          />
           {/* Avatar/Profile Dropdown */}
           <div
             className="avatar bg-primary text-white mx-auto mb-2 avatar-upload-wrapper"
@@ -142,19 +100,14 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               cursor: 'pointer',
               position: 'relative',
               overflow: 'hidden',
-              backgroundImage: profileImage ? `url(${profileImage})` : 'none',
+              backgroundImage: user?.profilePicture ? `url(${user.profilePicture})` : (user?.avatarUrl ? `url(${user.avatarUrl})` : 'none'),
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
             tabIndex={0}
-            aria-label="Click to upload profile photo"
-            onClick={triggerFileUpload}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setShowDropdown(!showDropdown);
-            }}
+            aria-label="Profile photo"
           >
-            {!profileImage && initials}
+            {!(user?.profilePicture || user?.avatarUrl) && initials}
             {/* Camera overlay on hover */}
             <div
               className="camera-overlay"
@@ -199,13 +152,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
                   <i className="fa-solid fa-user me-2"></i> Profile
                 </div>
-                <div 
-                  className="dropdown-item px-3 py-2" 
-                  style={{ cursor: 'pointer' }}
-                  onClick={triggerFileUpload}
-                >
-                  <i className="fa-solid fa-camera me-2"></i> Change Photo
-                </div>
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
                   <i className="fa-solid fa-gear me-2"></i> Settings
                 </div>
@@ -217,17 +163,12 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           </div>
           {!collapsed && (
             <>
-              {/* Logo/Brand */}
-              {/* <span className="fw-bold" style={{ fontSize: '1.45rem', color: '#2563eb', letterSpacing: '-1px' }}>
-                <i className="fa-solid fa-graduation-cap me-2"></i>Super Admin
-              </span> */}
               <div className="text-muted  mb-2" style={{ fontWeight: 500, fontSize: '1.0rem' }}>
                 Welcome, {user?.name || 'Super Admin'}
               </div>
               <div className="mt-2 mb-1">
                 <span className="badge bg-danger" style={{ fontSize: '0.8rem', fontWeight: 600, borderRadius: '50px' }}>super_admin</span>
               </div>
-              
             </>
           )}
           {/* Collapse/Expand Button */}
@@ -241,7 +182,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               zIndex: 101,
               transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)'
             }}
-            onClick={() => setCollapsed(!collapsed)} // This line is correct
+            onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
@@ -434,26 +375,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           }
         `}</style>
       </aside>
-      {/* Floating button to open sidebar when collapsed on mobile */}
-      {isMobile && collapsed && (
-        <button
-          className="btn btn-primary"
-          style={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 102,
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.15)'
-          }}
-          onClick={() => setCollapsed(false)}
-          aria-label="Open sidebar"
-        >
-          <i className="fa-solid fa-bars"></i>
-        </button>
-      )}
     </>
   );
 }
