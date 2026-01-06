@@ -17,6 +17,7 @@ import ShareButton from '../components/student/ShareButton';
 import ReminderSystem from '../components/student/ReminderSystem';
 import CandidateComparison from '../components/student/CandidateComparison';
 import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
+import RoleSwitcher from '../components/common/RoleSwitcher';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
@@ -1589,7 +1590,18 @@ function StudentDashboard({ user }) {
           </span>
           
           {/* User Actions */}
-          <div className="d-flex align-items-center gap-2">
+          <div
+            className="d-flex align-items-center gap-2"
+            style={{
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start',
+              rowGap: '0.35rem',
+              maxWidth: '75vw'
+            }}
+          >
+            {/* Role Switcher (only shows for student-candidates) */}
+            <RoleSwitcher user={user} isDarkMode={isDarkMode} colors={colors} />
+
             {/* Theme Toggle */}
             <button
               className="btn btn-sm"

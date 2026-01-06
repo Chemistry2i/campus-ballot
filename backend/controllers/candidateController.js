@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
+const User = require("../models/User");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Create a candidate (Admin only)
@@ -239,8 +240,37 @@ const approveCandidate = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
+    console.log(`[CANDIDATE APPROVAL] Starting approval for candidate: ${candidate.name}`);
+    console.log(`[CANDIDATE APPROVAL] Candidate user ID: ${candidate.user}`);
+
     candidate.status = "approved";
     await candidate.save();
+
+    // Add 'candidate' to the user's additionalRoles if not already present
+    // This allows the student to access both Student and Candidate dashboards
+    if (candidate.user) {
+      try {
+        console.log(`[CANDIDATE APPROVAL] Updating user ${candidate.user} with candidate role...`);
+        
+        const updatedUser = await User.findByIdAndUpdate(
+          candidate.user,
+          { $addToSet: { additionalRoles: 'candidate' } },
+          { new: true }
+        );
+        
+        if (updatedUser) {
+          console.log(`[CANDIDATE APPROVAL] ✅ SUCCESS! User updated: ${updatedUser.name} (${updatedUser.email})`);
+          console.log(`[CANDIDATE APPROVAL] Primary role: ${updatedUser.role}`);
+          console.log(`[CANDIDATE APPROVAL] Additional roles: ${JSON.stringify(updatedUser.additionalRoles)}`);
+        } else {
+          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidate.user}`);
+        }
+      } catch (userUpdateError) {
+        console.error(`[CANDIDATE APPROVAL] ❌ ERROR updating user:`, userUpdateError);
+      }
+    } else {
+      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} has no user field linked!`);
+    }
     
     // Log activity
     await logActivity({
@@ -264,6 +294,7 @@ const approveCandidate = asyncHandler(async (req, res) => {
       console.error('Socket emit error (candidate approved):', e.message);
     }
     res.json({ message: "Candidate approved" });
+    console.error(`[CANDIDATE APPROVAL] ❌ FATAL ERROR:`, error);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

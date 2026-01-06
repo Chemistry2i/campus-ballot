@@ -19,6 +19,7 @@ import {
 // Import candidate components  
 import Loader from '../components/common/Loader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import RoleSwitcher from '../components/common/RoleSwitcher';
 
 // Lazy load components for better performance
 const CandidacyDashboard = React.lazy(() => import('../components/candidacy/CandidacyDashboard'));
@@ -355,34 +356,49 @@ const CandidateDashboard = ({ user, onLogout }) => {
           style={{
             background: isDarkMode ? colors.surface : '#fff',
             borderBottom: `1px solid ${colors.border}`,
-            padding: '1rem 1.5rem',
+            padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            width: '100%'
+            width: '100%',
+            gap: isMobile ? '0.5rem' : '1rem',
+            flexWrap: 'wrap'
           }}
         >
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center" style={{ gap: isMobile ? '0.5rem' : '1rem' }}>
             <button
               className="btn btn-sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{ color: colors.text }}
+              style={{ 
+                color: colors.text,
+                padding: isMobile ? '0.4rem' : '0.5rem'
+              }}
             >
-              <FaBars size={20} />
+              <FaBars size={isMobile ? 18 : 20} />
             </button>
-            <h5 className="mb-0 d-none d-md-block" style={{ color: colors.text }}>
+            <h5 className="mb-0 d-none d-md-block" style={{ color: colors.text, fontSize: isMobile ? '1rem' : '1.25rem' }}>
               Campaign Management
             </h5>
+            <h6 className="mb-0 d-md-none" style={{ color: colors.text }}>
+              Campaign
+            </h6>
           </div>
           
-          <div className="d-flex align-items-center gap-3">
-            {/* Welcome message */}
-            <span style={{ color: colors.text, fontSize: '0.9rem' }}>
+          <div className="d-flex align-items-center" style={{ gap: isMobile ? '0.5rem' : '0.75rem', flexWrap: 'wrap' }}>
+            {/* Welcome message - hide on very small screens */}
+            <span className="d-none d-sm-inline" style={{ 
+              color: colors.text, 
+              fontSize: isMobile ? '0.8rem' : '0.9rem',
+              whiteSpace: 'nowrap'
+            }}>
               Welcome, {user?.name?.split(' ')[0] || 'Candidate'}!
             </span>
+
+            {/* Role Switcher (only shows for student-candidates) */}
+            <RoleSwitcher user={user} isDarkMode={isDarkMode} colors={colors} />
             
             {/* Dark mode toggle */}
             <button
@@ -392,14 +408,15 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
                 color: isDarkMode ? '#f59e0b' : '#3b82f6',
                 border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                borderRadius: '8px',
-                padding: '0.5rem 0.75rem',
+                borderRadius: isMobile ? '6px' : '8px',
+                padding: isMobile ? '0.4rem 0.6rem' : '0.5rem 0.75rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.875rem',
+                gap: isMobile ? '0.4rem' : '0.5rem',
+                fontSize: isMobile ? '0.75rem' : '0.875rem',
                 fontWeight: '500',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                minHeight: '36px'
               }}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               onMouseEnter={(e) => {
@@ -409,7 +426,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)';
               }}
             >
-              {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
+              {isDarkMode ? <FaSun size={isMobile ? 12 : 14} /> : <FaMoon size={isMobile ? 12 : 14} />}
               <span className="d-none d-sm-inline">
                 {isDarkMode ? 'Light' : 'Dark'}
               </span>
@@ -418,8 +435,8 @@ const CandidateDashboard = ({ user, onLogout }) => {
             {/* User avatar */}
             <div
               style={{
-                width: '32px',
-                height: '32px',
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
                 borderRadius: '50%',
                 background: user?.profilePicture ? 'transparent' : '#3b82f6',
                 display: 'flex',
@@ -427,8 +444,9 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 justifyContent: 'center',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '0.875rem',
-                overflow: 'hidden'
+                fontSize: isMobile ? '0.75rem' : '0.875rem',
+                overflow: 'hidden',
+                flexShrink: 0
               }}
             >
               {user?.profilePicture ? (

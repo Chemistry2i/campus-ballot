@@ -33,8 +33,17 @@ function ProtectedRoute({ user, requiredRole, children }) {
   // Get all user roles (primary + additional)
   const userRoles = [user.role, ...(user.additionalRoles || [])];
   
+  // Special case: Students with candidate role can access both dashboards
+  // This enables the role switching functionality
+  const isStudentCandidate = user.role === 'student' && user.additionalRoles?.includes('candidate');
+  
   // If a specific role is required, check if user has it
   if (requiredRole && !userRoles.includes(requiredRole)) {
+    // Student-candidates can access both student and candidate dashboards
+    if (isStudentCandidate && (requiredRole === 'student' || requiredRole === 'candidate')) {
+      return children; // Allow access
+    }
+    
     // Redirect to appropriate dashboard based on user's primary role
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;

@@ -145,12 +145,15 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import useSocket from '../hooks/useSocket';
 import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import RoleSelectionModal from '../components/common/RoleSelectionModal';
 
 function Login({ setCurrentUser }) {
   const { reconnectWithToken } = useSocket();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -175,6 +178,16 @@ function Login({ setCurrentUser }) {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  // Handle role selection from modal
+  const handleRoleSelection = (selectedRole) => {
+    setShowRoleModal(false);
+    if (selectedRole === 'candidate') {
+      navigate('/candidate');
+    } else {
+      navigate('/student-dashboard');
+    }
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -198,23 +211,48 @@ function Login({ setCurrentUser }) {
         console.warn('Socket reconnect failed:', e.message);
       }
 
-      // Show success and redirect based on role
-      Swal.fire({
-        title: "Success",
-        text: res.data.message + " Redirecting to your dashboard...",
-        icon: "success",
-        timer: 2500,
-        showConfirmButton: false,
-        timerProgressBar: true,
-      }).then(() => {
-        if (res.data.user.role === "admin") {
-          navigate("/admin");
-        } else if (res.data.user.role === "student") {
-          navigate("/student-dashboard");
-        } else {
-          navigate("/"); // fallback for other roles
-        }
-      });
+      const user = res.data.user;
+      
+      // Check if user is a student with candidate role (show role selection modal)
+      const isStudentCandidate = user.role === 'student' && 
+                                  user.additionalRoles?.includes('candidate');
+
+      if (isStudentCandidate) {
+        // Show role selection modal instead of immediate redirect
+        setLoggedInUser(user);
+        Swal.fire({
+          title: "Success",
+          text: "Login successful!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        }).then(() => {
+          setShowRoleModal(true);
+        });
+      } else {
+        // Normal flow for other users
+        Swal.fire({
+          title: "Success",
+          text: res.data.message + " Redirecting to your dashboard...",
+          icon: "success",
+          timer: 2500,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        }).then(() => {
+          if (user.role === "admin") {
+            navigate("/admin");
+          } else if (user.role === "super_admin") {
+            navigate("/super-admin/system-health");
+          } else if (user.role === "student") {
+            navigate("/student-dashboard");
+          } else if (user.role === "candidate") {
+            navigate("/candidate");
+          } else {
+            navigate("/"); // fallback for other roles
+          }
+        });
+      }
     } catch (err) {
       Swal.fire(
         "Login Failed",
@@ -299,6 +337,14 @@ function Login({ setCurrentUser }) {
           </Link>
         </div>
       </div>
+
+      {/* Role Selection Modal for Student-Candidates */}
+      {showRoleModal && loggedInUser && (
+        <RoleSelectionModal 
+          user={loggedInUser}
+          onSelectRole={handleRoleSelection}
+        />
+      )}
     </div>
   );
 }
