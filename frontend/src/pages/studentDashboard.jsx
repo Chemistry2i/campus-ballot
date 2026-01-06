@@ -1584,9 +1584,9 @@ function StudentDashboard({ user }) {
             >
               <FaBars />
             </button>
-            <FaUserGraduate size={28} class="text-white" />
-            <span className="fw-bold fs-4 d-none d-md-inline text-white">Student Portal</span>
-            <span className="fw-bold fs-5 d-md-none text-white">Portal</span>
+            <FaUserGraduate size={22} className="text-white" />
+            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Student Portal</span>
+            <span className="fw-bold d-md-none text-white" style={{ fontSize: '1rem' }}>Portal</span>
           </span>
           
           {/* User Actions */}
