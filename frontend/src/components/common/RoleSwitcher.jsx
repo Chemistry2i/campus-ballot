@@ -46,17 +46,20 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     gap: window.innerWidth < 768 ? '6px' : '8px',
     padding: window.innerWidth < 768 ? '6px 12px' : '8px 16px',
     borderRadius: window.innerWidth < 768 ? '6px' : '8px',
-    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+    border: `1.5px solid ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
     background: isDarkMode 
       ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))' 
-      : 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))',
+      : '#ffffff',
     color: colors?.text || (isDarkMode ? '#fff' : '#1f2937'),
     cursor: 'pointer',
     fontSize: window.innerWidth < 768 ? '12px' : '14px',
-    fontWeight: '500',
+    fontWeight: '600',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
     minHeight: '36px',
+    boxShadow: isDarkMode 
+      ? 'none'
+      : '0 2px 8px rgba(0, 0, 0, 0.1)',
   };
 
   const menuStyle = {
@@ -66,12 +69,12 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     marginTop: '8px',
     minWidth: window.innerWidth < 768 ? '220px' : '200px',
     maxWidth: window.innerWidth < 400 ? '280px' : 'none',
-    borderRadius: window.innerWidth < 768 ? '10px' : '12px',
-    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+    borderRadius: window.innerWidth < 768 ? '5px' : '10px',
+    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'}`,
     background: isDarkMode ? '#1f2937' : '#ffffff',
     boxShadow: isDarkMode 
       ? '0 10px 40px rgba(0,0,0,0.5)' 
-      : '0 10px 40px rgba(0,0,0,0.15)',
+      : '0 10px 40px rgba(0,0,0,0.2)',
     zIndex: 1000,
     overflow: 'hidden',
     animation: 'fadeIn 0.2s ease',
@@ -84,10 +87,10 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     padding: window.innerWidth < 768 ? '10px 14px' : '12px 16px',
     cursor: isActive ? 'default' : 'pointer',
     background: isActive 
-      ? (isDarkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)')
+      ? (isDarkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.12)')
       : 'transparent',
     color: isActive 
-      ? '#6366f1' 
+      ? (isDarkMode ? '#818cf8' : '#4f46e5') 
       : (colors?.text || (isDarkMode ? '#e5e7eb' : '#374151')),
     borderLeft: isActive ? '3px solid #6366f1' : '3px solid transparent',
     transition: 'all 0.2s ease',
@@ -102,9 +105,11 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     alignItems: 'center',
     justifyContent: 'center',
     background: roleType === 'student' 
-      ? (isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)')
-      : (isDarkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)'),
-    color: roleType === 'student' ? '#10b981' : '#f59e0b',
+      ? (isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.15)')
+      : (isDarkMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.15)'),
+    color: roleType === 'student' 
+      ? (isDarkMode ? '#10b981' : '#059669')
+      : (isDarkMode ? '#f59e0b' : '#d97706'),
     fontSize: window.innerWidth < 768 ? '14px' : '16px',
   });
 
@@ -118,10 +123,13 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
           }
           .role-switcher-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            box-shadow: ${isDarkMode 
+              ? '0 4px 12px rgba(99, 102, 241, 0.3)' 
+              : '0 4px 16px rgba(99, 102, 241, 0.25)'};
+            border-color: ${isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(99, 102, 241, 0.5)'};
           }
           .role-menu-item:hover {
-            background: ${isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)'} !important;
+            background: ${isDarkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.08)'} !important;
           }
         `}
       </style>
@@ -163,13 +171,15 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
           <div style={menuStyle}>
             <div style={{ 
               padding: window.innerWidth < 768 ? '10px 14px' : '12px 16px', 
-              borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` 
+              borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
+              background: isDarkMode ? 'transparent' : 'rgba(99, 102, 241, 0.02)'
             }}>
               <div style={{ 
                 fontSize: window.innerWidth < 768 ? '11px' : '12px', 
                 color: isDarkMode ? '#9ca3af' : '#6b7280', 
                 textTransform: 'uppercase', 
-                letterSpacing: '0.5px' 
+                letterSpacing: '0.5px',
+                fontWeight: '600'
               }}>
                 Switch View
               </div>

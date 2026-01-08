@@ -28,7 +28,7 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
 
   const modalStyle = {
     background: 'linear-gradient(145deg, #ffffff, #f8fafc)',
-    borderRadius: '24px',
+    borderRadius: '10px',
     padding: window.innerWidth < 768 ? '24px 20px' : '40px',
     maxWidth: '480px',
     width: window.innerWidth < 768 ? '95%' : '90%',
@@ -67,7 +67,7 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
   const cardStyle = (type) => ({
     flex: 1,
     padding: window.innerWidth < 768 ? '20px 16px' : '24px 20px',
-    borderRadius: window.innerWidth < 768 ? '12px' : '16px',
+    borderRadius: '10px',
     border: '2px solid transparent',
     background: type === 'student' 
       ? 'linear-gradient(145deg, #ecfdf5, #d1fae5)' 
@@ -81,7 +81,7 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
   const iconContainerStyle = (type) => ({
     width: window.innerWidth < 768 ? '56px' : '64px',
     height: window.innerWidth < 768 ? '56px' : '64px',
-    borderRadius: window.innerWidth < 768 ? '12px' : '16px',
+    borderRadius: '10px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -113,7 +113,7 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
     color: '#9ca3af',
     padding: window.innerWidth < 768 ? '12px' : '16px',
     background: '#f9fafb',
-    borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+    borderRadius: '8px',
     border: '1px dashed #e5e7eb',
   };
 
