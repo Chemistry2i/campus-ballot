@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
 import {
@@ -27,103 +27,80 @@ import {
   FaCalendar,
   FaChartBar,
   FaChartPie,
-  FaDownload
+  FaDownload,
+  FaArrowLeft
 } from 'react-icons/fa';
 import Loader from '../common/Loader';
 
 const ElectionStats = () => {
-  const { electionId } = useParams();
+  const { id: electionId } = useParams();
   const { isDarkMode, colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [error, setError] = useState(null);
+  const [elections, setElections] = useState([]);
   const [timeRange, setTimeRange] = useState('all'); // all, week, day
 
-  const fetchElectionStats = useCallback(async () => {
+  // Fetch list of elections if no electionId provided
+  const fetchElections = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/candidate/election/${electionId}/stats?range=${timeRange}`, {
+      const response = await axios.get('/api/candidates/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStats(response.data);
-      setLoading(false);
+      if (response.data?.elections) {
+        setElections(response.data.elections);
+      }
+      setError(null);
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      // Fallback dummy data
-      setStats({
-        election: {
-          title: 'Student Council President 2025',
-          position: 'President',
-          startDate: '2025-01-15',
-          endDate: '2025-01-20',
-          status: 'active'
-        },
-        candidate: {
-          name: 'John Kamau',
-          currentVotes: 245,
-          votePercentage: 32.5,
-          ranking: 2,
-          totalCandidates: 5
-        },
-        votesTrend: [
-          { date: '2025-01-15', votes: 45, time: 'Day 1' },
-          { date: '2025-01-16', votes: 87, time: 'Day 2' },
-          { date: '2025-01-17', votes: 156, time: 'Day 3' },
-          { date: '2025-01-18', votes: 203, time: 'Day 4' },
-          { date: '2025-01-19', votes: 245, time: 'Day 5' }
-        ],
-        departmentBreakdown: [
-          { department: 'Engineering', votes: 78, percentage: 31.8 },
-          { department: 'Business', votes: 56, percentage: 22.9 },
-          { department: 'Sciences', votes: 45, percentage: 18.4 },
-          { department: 'Arts', votes: 38, percentage: 15.5 },
-          { department: 'Medicine', votes: 28, percentage: 11.4 }
-        ],
-        yearBreakdown: [
-          { year: 'First Year', votes: 89, color: '#3b82f6' },
-          { year: 'Second Year', votes: 67, color: '#10b981' },
-          { year: 'Third Year', votes: 54, color: '#f59e0b' },
-          { year: 'Fourth Year', votes: 35, color: '#8b5cf6' }
-        ],
-        hourlyDistribution: [
-          { hour: '6-9 AM', votes: 23 },
-          { hour: '9-12 PM', votes: 45 },
-          { hour: '12-3 PM', votes: 67 },
-          { hour: '3-6 PM', votes: 78 },
-          { hour: '6-9 PM', votes: 32 }
-        ],
-        competitorComparison: [
-          { name: 'You', votes: 245, percentage: 32.5 },
-          { name: 'Candidate A', votes: 198, percentage: 26.3 },
-          { name: 'Candidate B', votes: 156, percentage: 20.7 },
-          { name: 'Candidate C', votes: 102, percentage: 13.5 },
-          { name: 'Candidate D', votes: 52, percentage: 6.9 }
-        ],
-        engagement: {
-          totalVoters: 753,
-          turnoutRate: 65.3,
-          profileViews: 1247,
-          materialDownloads: 89
-        }
-      });
+      console.error('Error fetching elections:', error);
+      setError('Failed to fetch elections');
+    } finally {
       setLoading(false);
     }
-  }, [electionId, timeRange]);
+  }, []);
+
+  const fetchElectionStats = useCallback(async () => {
+    // If no electionId or electionId is 'undefined' string, fetch elections list instead
+    if (!electionId || electionId === 'undefined') {
+      fetchElections();
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/candidates/election/${electionId}/stats?range=${timeRange}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      setError(error.response?.data?.message || 'Failed to load statistics');
+      setStats(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [electionId, timeRange, fetchElections]);
 
   useEffect(() => {
     fetchElectionStats();
   }, [fetchElectionStats]);
 
   const exportReport = () => {
+    if (!stats) return;
     // Generate CSV report
     const csvContent = `Election Statistics Report
-Election: ${stats.election.title}
-Candidate: ${stats.candidate.name}
-Total Votes: ${stats.candidate.currentVotes}
-Vote Percentage: ${stats.candidate.votePercentage}%
-Ranking: #${stats.candidate.ranking}
+Election: ${stats.election?.title || 'N/A'}
+Candidate: ${stats.candidate?.name || 'N/A'}
+Total Votes: ${stats.candidate?.currentVotes || 0}
+Vote Percentage: ${stats.candidate?.votePercentage || 0}%
+Ranking: #${stats.candidate?.ranking || 'N/A'}
 
 Department Breakdown:
-${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}%`).join('\n')}
+${(stats.departmentBreakdown || []).map(d => `${d.department},${d.votes},${d.percentage}%`).join('\n')}
 `;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -144,6 +121,133 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
     );
   }
 
+  // If no electionId or 'undefined', show election selection
+  if (!electionId || electionId === 'undefined') {
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%' }}>
+        <div className="mb-4">
+          <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
+            <FaChartLine className="me-2" style={{ color: '#3b82f6' }} />
+            Election Statistics
+          </h4>
+          <p className="text-muted mb-0">Select an election to view detailed statistics</p>
+        </div>
+
+        {error ? (
+          <div
+            className="card text-center p-5"
+            style={{
+              background: isDarkMode ? colors.surface : '#fff',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px'
+            }}
+          >
+            <FaChartBar size={48} style={{ color: '#ef4444', marginBottom: '1rem' }} />
+            <h5 style={{ color: colors.text }}>Error Loading Elections</h5>
+            <p style={{ color: colors.textSecondary }}>{error}</p>
+            <button onClick={fetchElections} className="btn btn-primary">
+              Try Again
+            </button>
+          </div>
+        ) : elections.length === 0 ? (
+          <div
+            className="card text-center p-5"
+            style={{
+              background: isDarkMode ? colors.surface : '#fff',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px'
+            }}
+          >
+            <FaChartBar size={48} style={{ color: colors.textSecondary, marginBottom: '1rem' }} />
+            <h5 style={{ color: colors.text }}>No Elections Found</h5>
+            <p style={{ color: colors.textSecondary }}>
+              You're not participating in any elections yet.
+            </p>
+            <Link to="/candidate" className="btn btn-primary">
+              Back to Dashboard
+            </Link>
+          </div>
+        ) : (
+          <div className="row g-3">
+            {elections.map((election) => (
+              <div key={election._id || election.electionId} className="col-12 col-md-6 col-lg-4">
+                <Link
+                  to={`/candidate/stats/${election.electionId || election._id}`}
+                  className="text-decoration-none"
+                >
+                  <div
+                    className="card h-100"
+                    style={{
+                      background: isDarkMode ? colors.surface : '#fff',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '12px',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div className="card-body p-4">
+                      <h5 className="fw-bold mb-2" style={{ color: colors.text }}>
+                        {election.title}
+                      </h5>
+                      <p className="mb-2" style={{ color: colors.textSecondary }}>
+                        Position: <span className="badge bg-secondary">{election.position}</span>
+                      </p>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span style={{ color: '#3b82f6', fontWeight: '600' }}>
+                          {election.currentVotes} votes
+                        </span>
+                        <span className="badge bg-primary">#{election.ranking || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // If stats failed to load or error occurred
+  if (!stats || error) {
+    return (
+      <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%' }}>
+        <div
+          className="card text-center p-5"
+          style={{
+            background: isDarkMode ? colors.surface : '#fff',
+            border: `1px solid ${colors.border}`,
+            borderRadius: '12px'
+          }}
+        >
+          <FaChartBar size={48} style={{ color: '#ef4444', marginBottom: '1rem' }} />
+          <h5 style={{ color: colors.text }}>Unable to Load Statistics</h5>
+          <p style={{ color: colors.textSecondary }}>
+            {error || 'Could not fetch statistics for this election.'}
+          </p>
+          <div className="d-flex gap-2 justify-content-center">
+            <button onClick={fetchElectionStats} className="btn btn-outline-primary">
+              Try Again
+            </button>
+            <Link to="/candidate/stats" className="btn btn-primary">
+              <FaArrowLeft className="me-2" />
+              Select Another Election
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 
   return (
@@ -152,11 +256,14 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
       <div className="mb-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
           <div className="flex-grow-1">
+            <Link to="/candidate/stats" className="btn btn-sm btn-outline-secondary mb-2">
+              <FaArrowLeft className="me-1" /> Back to Elections
+            </Link>
             <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
               <FaChartLine className="me-2" style={{ color: '#3b82f6' }} />
               Election Statistics
             </h4>
-            <p className="text-muted mb-0">{stats.election.title}</p>
+            <p className="text-muted mb-0">{stats.election?.title || 'Election'}</p>
           </div>
           <div className="d-flex gap-2">
             <select
@@ -219,7 +326,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                 </div>
                 <div>
                   <h3 className="fw-bold mb-0" style={{ color: '#3b82f6' }}>
-                    {stats.candidate.currentVotes}
+                    {stats.candidate?.currentVotes || 0}
                   </h3>
                   <p className="mb-0 small" style={{ color: colors.textSecondary }}>Total Votes</p>
                 </div>
@@ -254,7 +361,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                 </div>
                 <div>
                   <h3 className="fw-bold mb-0" style={{ color: '#10b981' }}>
-                    {stats.candidate.votePercentage}%
+                    {stats.candidate?.votePercentage || 0}%
                   </h3>
                   <p className="mb-0 small" style={{ color: colors.textSecondary }}>Vote Share</p>
                 </div>
@@ -289,7 +396,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                 </div>
                 <div>
                   <h3 className="fw-bold mb-0" style={{ color: '#f59e0b' }}>
-                    #{stats.candidate.ranking}
+                    #{stats.candidate?.ranking || 'N/A'}
                   </h3>
                   <p className="mb-0 small" style={{ color: colors.textSecondary }}>Current Ranking</p>
                 </div>
@@ -324,9 +431,9 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                 </div>
                 <div>
                   <h3 className="fw-bold mb-0" style={{ color: '#8b5cf6' }}>
-                    {stats.engagement.turnoutRate}%
+                    {stats.candidate?.totalCandidates || 0}
                   </h3>
-                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Turnout Rate</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Competitors</p>
                 </div>
               </div>
             </div>
@@ -354,7 +461,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={stats.votesTrend}>
+                <AreaChart data={stats.votesTrend || []}>
                   <defs>
                     <linearGradient id="colorVotes" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
@@ -405,7 +512,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={stats.yearBreakdown}
+                    data={stats.yearBreakdown || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -414,8 +521,8 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                     fill="#8884d8"
                     dataKey="votes"
                   >
-                    {stats.yearBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {(stats.yearBreakdown || []).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -452,7 +559,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.departmentBreakdown}>
+                <BarChart data={stats.departmentBreakdown || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
                   <XAxis dataKey="department" stroke={colors.text} angle={-45} textAnchor="end" height={80} />
                   <YAxis stroke={colors.text} />
@@ -500,18 +607,18 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.competitorComparison.map((competitor, index) => (
-                      <tr key={index} className={competitor.name === 'You' ? 'table-primary' : ''} style={{ background: competitor.name === 'You' ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}>
+                    {(stats.competitionData || []).map((competitor, index) => (
+                      <tr key={index} style={{ background: index === (stats.candidate?.ranking - 1) ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}>
                         <td style={{ color: colors.text }}>
                           <span className={`badge ${index === 0 ? 'bg-warning' : index === 1 ? 'bg-secondary' : 'bg-info'}`}>
                             #{index + 1}
                           </span>
                         </td>
-                        <td style={{ fontWeight: competitor.name === 'You' ? 'bold' : 'normal' }}>
-                          {competitor.name}
+                        <td style={{ fontWeight: index === (stats.candidate?.ranking - 1) ? 'bold' : 'normal', color: colors.text }}>
+                          {competitor.name} {index === (stats.candidate?.ranking - 1) && <span className="badge bg-primary ms-1">You</span>}
                         </td>
-                        <td>{competitor.votes}</td>
-                        <td>{competitor.percentage}%</td>
+                        <td style={{ color: colors.text }}>{competitor.votes}</td>
+                        <td style={{ color: colors.text }}>{competitor.percentage}%</td>
                         <td>
                           <div className="progress" style={{ height: '20px' }}>
                             <div
@@ -519,7 +626,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                               role="progressbar"
                               style={{ 
                                 width: `${competitor.percentage}%`,
-                                background: competitor.name === 'You' ? '#3b82f6' : '#6b7280'
+                                background: index === (stats.candidate?.ranking - 1) ? '#3b82f6' : '#6b7280'
                               }}
                               aria-valuenow={competitor.percentage}
                               aria-valuemin="0"
@@ -537,44 +644,46 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
         </div>
       </div>
 
-      {/* Hourly Distribution */}
-      <div className="row g-4">
-        <div className="col-12">
-          <div
-            className="card"
-            style={{
-              background: isDarkMode ? colors.surface : '#fff',
-              border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
-            }}
-          >
-            <div className="card-header" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
-              <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
-                <FaCalendar className="me-2" />
-                Hourly Voting Distribution
-              </h5>
-            </div>
-            <div className="card-body">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={stats.hourlyDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-                  <XAxis dataKey="hour" stroke={colors.text} />
-                  <YAxis stroke={colors.text} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      background: colors.surface, 
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: '8px',
-                      color: colors.text
-                    }}
-                  />
-                  <Bar dataKey="votes" fill="#f59e0b" />
-                </BarChart>
-              </ResponsiveContainer>
+      {/* Hourly Distribution - only show if data available */}
+      {stats.hourlyDistribution && stats.hourlyDistribution.length > 0 && (
+        <div className="row g-4">
+          <div className="col-12">
+            <div
+              className="card"
+              style={{
+                background: isDarkMode ? colors.surface : '#fff',
+                border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                borderRadius: '12px'
+              }}
+            >
+              <div className="card-header" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
+                  <FaCalendar className="me-2" />
+                  Hourly Voting Distribution
+                </h5>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={stats.hourlyDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
+                    <XAxis dataKey="hour" stroke={colors.text} />
+                    <YAxis stroke={colors.text} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: colors.surface, 
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: '8px',
+                        color: colors.text
+                      }}
+                    />
+                    <Bar dataKey="votes" fill="#f59e0b" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

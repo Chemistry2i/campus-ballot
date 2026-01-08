@@ -25,6 +25,8 @@ const CandidacyDashboard = () => {
     stats: {
       totalElections: 0,
       activeElections: 0,
+      upcomingElections: 0,
+      completedElections: 0,
       wonElections: 0,
       totalVotes: 0,
       pendingTasks: 0,
@@ -35,6 +37,7 @@ const CandidacyDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchUserData();
+    fetchAgentStats();
   }, []);
 
   const fetchUserData = async () => {
@@ -49,51 +52,40 @@ const CandidacyDashboard = () => {
     }
   };
 
+  const fetchAgentStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/candidates/agents/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data) {
+        setDashboardData(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            activeAgents: response.data.activeAgents || 0
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching agent stats:', error);
+    }
+  };
+
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidate/dashboard', {
+      const response = await axios.get('/api/candidates/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDashboardData(response.data);
-      setLoading(false);
+      
+      if (response.data) {
+        setDashboardData(response.data);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Fallback to dummy data
-      setDashboardData({
-        elections: [
-          {
-            _id: '1',
-            title: 'Student Council President 2025',
-            status: 'active',
-            startDate: '2025-01-15',
-            endDate: '2025-01-20',
-            currentVotes: 245,
-            totalVoters: 500,
-            position: 'President',
-            ranking: 2
-          },
-          {
-            _id: '2',
-            title: 'Faculty Representative',
-            status: 'upcoming',
-            startDate: '2025-02-01',
-            endDate: '2025-02-05',
-            currentVotes: 0,
-            totalVoters: 300,
-            position: 'Representative',
-            ranking: null
-          }
-        ],
-        stats: {
-          totalElections: 5,
-          activeElections: 1,
-          wonElections: 2,
-          totalVotes: 892,
-          pendingTasks: 4,
-          activeAgents: 3
-        }
-      });
+    } finally {
       setLoading(false);
     }
   };
@@ -112,6 +104,13 @@ const CandidacyDashboard = () => {
       icon: FaBullhorn,
       color: '#10b981',
       bgColor: 'rgba(16, 185, 129, 0.1)'
+    },
+    {
+      title: 'Upcoming',
+      value: dashboardData.stats.upcomingElections,
+      icon: FaCalendar,
+      color: '#3b82f6',
+      bgColor: 'rgba(59, 130, 246, 0.1)'
     },
     {
       title: 'Elections Won',
@@ -133,18 +132,12 @@ const CandidacyDashboard = () => {
       icon: FaUserFriends,
       color: '#06b6d4',
       bgColor: 'rgba(6, 182, 212, 0.1)'
-    },
-    {
-      title: 'Pending Tasks',
-      value: dashboardData.stats.pendingTasks,
-      icon: FaTasks,
-      color: '#ef4444',
-      bgColor: 'rgba(239, 68, 68, 0.1)'
     }
   ];
 
   const getStatusBadge = (status) => {
     const statusConfig = {
+      ongoing: { text: 'Ongoing', color: '#10b981', icon: FaHourglassHalf },
       active: { text: 'Active', color: '#10b981', icon: FaHourglassHalf },
       upcoming: { text: 'Upcoming', color: '#3b82f6', icon: FaCalendar },
       completed: { text: 'Completed', color: '#6b7280', icon: FaCheckCircle },
@@ -190,7 +183,7 @@ const CandidacyDashboard = () => {
         className="mb-2"
         style={{
           background: `linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)`,
-          borderRadius: '12px',
+          borderRadius: '5px',
           color: '#fff',
           padding: '1.5rem 1rem',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
@@ -453,7 +446,9 @@ const CandidacyDashboard = () => {
                           <td style={{ borderColor: colors.border }}>{getStatusBadge(election.status)}</td>
                           <td style={{ color: colors.text, borderColor: colors.border }}>
                             <div className="fw-semibold">{election.currentVotes}</div>
-                            <small style={{ color: colors.textSecondary }}>of {election.totalVoters}</small>
+                            <small style={{ color: colors.textSecondary }}>
+                              {election.votePercentage}% of position votes
+                            </small>
                           </td>
                           <td style={{ color: colors.text, borderColor: colors.border }}>
                             {election.ranking ? (

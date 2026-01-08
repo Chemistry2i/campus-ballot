@@ -14,6 +14,8 @@ const {
   approveCandidate,
   disqualifyCandidate,
   getMyCandidacy,
+    getCandidateDashboard,
+    getCandidateElectionStats,
   getCandidatesByElectionAndPosition,
   searchCandidates,
   withdrawMyCandidacy
@@ -35,6 +37,12 @@ router.post(
 
 // Get all candidates (admin or student)
 router.get('/', protect, getAllCandidates);
+// Candidate: Get dashboard with stats (must come before /me/candidacy)
+router.get('/dashboard', protect, getCandidateDashboard);
+// Candidate: Get detailed stats for a specific election
+router.get('/election/:electionId/stats', protect, getCandidateElectionStats);
+
+
 
 // Candidate: Get my own candidacy info (must come before /:id!)
 router.get('/me/candidacy', protect, getMyCandidacy);

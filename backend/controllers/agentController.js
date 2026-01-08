@@ -1,0 +1,426 @@
+const asyncHandler = require("express-async-handler");
+const Agent = require("../models/Agent");
+const User = require("../models/User");
+const Candidate = require("../models/Candidate");
+const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
+
+// @desc    Get all agents for the current candidate
+// @route   GET /api/candidates/agents
+// @access  Protected (Candidate only)
+const getMyAgents = asyncHandler(async (req, res) => {
+  try {
+    console.log('[getMyAgents] User:', req.user?._id);
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Find the candidate record for this user
+    const candidacy = await Candidate.findOne({ user: req.user._id, status: 'approved' });
+    
+    console.log('[getMyAgents] Candidacy:', candidacy ? 'Found' : 'Not found');
+    
+    if (!candidacy) {
+      return res.json([]);
+    }
+
+    const agents = await Agent.find({ 
+      candidate: req.user._id,
+      election: candidacy.election,
+      status: { $ne: 'removed' }
+    })
+      .populate('user', 'name email phone profilePicture studentId faculty course yearOfStudy')
+      .populate('election', 'title')
+      .sort({ createdAt: -1 });
+
+    console.log('[getMyAgents] Agents found:', agents.length);
+
+    // Transform agents to include user info at top level
+    const formattedAgents = agents.map(agent => ({
+      _id: agent._id,
+      name: agent.user?.name || 'Unknown',
+      email: agent.user?.email || '',
+      phone: agent.user?.phone || '',
+      profilePicture: agent.user?.profilePicture || null,
+      studentId: agent.user?.studentId || '',
+      faculty: agent.user?.faculty || '',
+      course: agent.user?.course || '',
+      yearOfStudy: agent.user?.yearOfStudy || '',
+      userId: agent.user?._id,
+      role: agent.agentRole,
+      status: agent.status,
+      permissions: agent.permissions,
+      tasksCompleted: agent.tasksCompleted,
+      tasksActive: agent.tasksActive,
+      notes: agent.notes,
+      joinedDate: agent.createdAt,
+      election: agent.election?.title || ''
+    }));
+
+    res.json(formattedAgents);
+  } catch (error) {
+    console.error('[getMyAgents] Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Search students to add as agents
+// @route   GET /api/candidates/agents/search-students
+// @access  Protected (Candidate only)
+const searchStudentsForAgent = asyncHandler(async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    console.log('[Agent Search] Query:', q, 'User:', req.user?._id);
+    
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+
+    // Find the candidate record for this user (any status for now, just need election context)
+    const candidacy = await Candidate.findOne({ user: req.user._id });
+    
+    console.log('[Agent Search] Candidacy found:', candidacy ? 'Yes' : 'No');
+    
+    let excludeUserIds = [req.user._id]; // Always exclude the candidate themselves
+    
+    // If has approved candidacy, also exclude existing agents
+    if (candidacy && candidacy.status === 'approved') {
+      const existingAgents = await Agent.find({ 
+        candidate: req.user._id, 
+        election: candidacy.election,
+        status: { $ne: 'removed' }
+      }).select('user');
+      
+      excludeUserIds = [...excludeUserIds, ...existingAgents.map(a => a.user)];
+    }
+
+    // Search for verified students by student ID or email only
+    const students = await User.find({
+      _id: { $nin: excludeUserIds },
+      role: 'student',
+      accountStatus: 'active',
+      isVerified: true,
+      $or: [
+        { studentId: { $regex: `^${q}`, $options: 'i' } }, // Starts with for student ID
+        { email: { $regex: `^${q}`, $options: 'i' } }      // Starts with for email
+      ]
+    })
+      .select('name email studentId faculty course yearOfStudy profilePicture phone isVerified')
+      .limit(10);
+
+    console.log('[Agent Search] Found verified students:', students.length);
+    res.json(students);
+  } catch (error) {
+    console.error('Error searching students:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Add a new agent
+// @route   POST /api/candidates/agents
+// @access  Protected (Candidate only)
+const addAgent = asyncHandler(async (req, res) => {
+  try {
+    const { userId, agentRole, permissions, notes } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Find the candidate record for this user
+    const candidacy = await Candidate.findOne({ user: req.user._id, status: 'approved' });
+    
+    if (!candidacy) {
+      return res.status(403).json({ message: "You must be an approved candidate to add agents" });
+    }
+
+    // Check if user exists and is a student
+    const student = await User.findById(userId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    if (student.role !== 'student') {
+      return res.status(400).json({ message: "Only students can be added as agents" });
+    }
+
+    // Check if this user is already an agent for this election
+    const existingAgent = await Agent.findOne({
+      user: userId,
+      election: candidacy.election,
+      status: { $ne: 'removed' }
+    });
+
+    if (existingAgent) {
+      return res.status(400).json({ message: "This student is already an agent for another candidate in this election" });
+    }
+
+    // Create the agent record
+    const agent = await Agent.create({
+      user: userId,
+      candidate: req.user._id,
+      election: candidacy.election,
+      agentRole: agentRole || 'agent',
+      permissions: permissions || {
+        updateMaterials: false,
+        postUpdates: false,
+        respondToQuestions: false,
+        viewStatistics: false,
+        manageTasks: false
+      },
+      notes: notes || ''
+    });
+
+    // Add 'agent' to the student's additionalRoles
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { additionalRoles: 'agent' },
+      $set: {
+        'agentInfo.assignedCandidateId': req.user._id,
+        'agentInfo.permissions': Object.keys(permissions || {}).filter(key => permissions[key])
+      }
+    });
+
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'create',
+      entityType: 'Agent',
+      entityId: agent._id.toString(),
+      description: `Added ${student.name} as ${agentRole || 'agent'} for campaign`,
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+
+    // Populate and return the agent
+    const populatedAgent = await Agent.findById(agent._id)
+      .populate('user', 'name email phone profilePicture studentId faculty course yearOfStudy');
+
+    res.status(201).json({
+      message: "Agent added successfully",
+      agent: {
+        _id: populatedAgent._id,
+        name: populatedAgent.user?.name,
+        email: populatedAgent.user?.email,
+        phone: populatedAgent.user?.phone,
+        profilePicture: populatedAgent.user?.profilePicture,
+        studentId: populatedAgent.user?.studentId,
+        faculty: populatedAgent.user?.faculty,
+        userId: populatedAgent.user?._id,
+        role: populatedAgent.agentRole,
+        status: populatedAgent.status,
+        permissions: populatedAgent.permissions,
+        joinedDate: populatedAgent.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error adding agent:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update an agent
+// @route   PUT /api/candidates/agents/:id
+// @access  Protected (Candidate only)
+const updateAgent = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { agentRole, permissions, notes } = req.body;
+
+    const agent = await Agent.findById(id);
+    
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    // Verify the agent belongs to this candidate
+    if (agent.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only update your own agents" });
+    }
+
+    // Update agent
+    agent.agentRole = agentRole || agent.agentRole;
+    agent.permissions = permissions || agent.permissions;
+    agent.notes = notes !== undefined ? notes : agent.notes;
+    await agent.save();
+
+    // Update user's agentInfo permissions
+    await User.findByIdAndUpdate(agent.user, {
+      $set: {
+        'agentInfo.permissions': Object.keys(agent.permissions).filter(key => agent.permissions[key])
+      }
+    });
+
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'update',
+      entityType: 'Agent',
+      entityId: agent._id.toString(),
+      description: `Updated agent role to ${agentRole}`,
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+
+    res.json({ message: "Agent updated successfully", agent });
+  } catch (error) {
+    console.error('Error updating agent:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Update agent status (activate/deactivate)
+// @route   PATCH /api/candidates/agents/:id/status
+// @access  Protected (Candidate only)
+const updateAgentStatus = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const agent = await Agent.findById(id);
+    
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    // Verify the agent belongs to this candidate
+    if (agent.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only update your own agents" });
+    }
+
+    agent.status = status;
+    await agent.save();
+
+    res.json({ message: "Agent status updated successfully", agent });
+  } catch (error) {
+    console.error('Error updating agent status:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Remove an agent
+// @route   DELETE /api/candidates/agents/:id
+// @access  Protected (Candidate only)
+const removeAgent = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const agent = await Agent.findById(id).populate('user', 'name');
+    
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    // Verify the agent belongs to this candidate
+    if (agent.candidate.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only remove your own agents" });
+    }
+
+    // Mark as removed instead of deleting (soft delete)
+    agent.status = 'removed';
+    await agent.save();
+
+    // Check if user has any other active agent assignments
+    const otherAssignments = await Agent.find({
+      user: agent.user._id,
+      status: 'active',
+      _id: { $ne: agent._id }
+    });
+
+    // If no other agent assignments, remove 'agent' from additionalRoles
+    if (otherAssignments.length === 0) {
+      await User.findByIdAndUpdate(agent.user._id, {
+        $pull: { additionalRoles: 'agent' },
+        $unset: { agentInfo: '' }
+      });
+    }
+
+    // Log activity
+    await logActivity({
+      userId: req.user._id,
+      action: 'delete',
+      entityType: 'Agent',
+      entityId: agent._id.toString(),
+      description: `Removed ${agent.user?.name} from campaign team`,
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    });
+
+    res.json({ message: "Agent removed successfully" });
+  } catch (error) {
+    console.error('Error removing agent:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get agent statistics
+// @route   GET /api/candidates/agents/stats
+// @access  Protected (Candidate only)
+const getAgentStats = asyncHandler(async (req, res) => {
+  try {
+    const candidacy = await Candidate.findOne({ user: req.user._id, status: 'approved' });
+    
+    if (!candidacy) {
+      return res.json({
+        totalAgents: 0,
+        activeAgents: 0,
+        coordinators: 0,
+        seniorAgents: 0,
+        agents: 0
+      });
+    }
+
+    const stats = await Agent.aggregate([
+      { 
+        $match: { 
+          candidate: req.user._id, 
+          election: candidacy.election,
+          status: { $ne: 'removed' }
+        } 
+      },
+      {
+        $group: {
+          _id: null,
+          totalAgents: { $sum: 1 },
+          activeAgents: { 
+            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
+          },
+          coordinators: {
+            $sum: { $cond: [{ $eq: ['$agentRole', 'coordinator'] }, 1, 0] }
+          },
+          seniorAgents: {
+            $sum: { $cond: [{ $eq: ['$agentRole', 'senior-agent'] }, 1, 0] }
+          },
+          agents: {
+            $sum: { $cond: [{ $eq: ['$agentRole', 'agent'] }, 1, 0] }
+          },
+          totalTasksCompleted: { $sum: '$tasksCompleted' },
+          totalTasksActive: { $sum: '$tasksActive' }
+        }
+      }
+    ]);
+
+    res.json(stats[0] || {
+      totalAgents: 0,
+      activeAgents: 0,
+      coordinators: 0,
+      seniorAgents: 0,
+      agents: 0,
+      totalTasksCompleted: 0,
+      totalTasksActive: 0
+    });
+  } catch (error) {
+    console.error('Error fetching agent stats:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = {
+  getMyAgents,
+  searchStudentsForAgent,
+  addAgent,
+  updateAgent,
+  updateAgentStatus,
+  removeAgent,
+  getAgentStats
+};

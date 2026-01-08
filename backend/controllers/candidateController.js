@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
 const User = require("../models/User");
+const Agent = require("../models/Agent");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Create a candidate (Admin only)
@@ -359,6 +360,294 @@ const getMyCandidacy = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get candidate dashboard with election stats
+// @route   GET /api/candidates/dashboard
+// @access  Protected (Candidate only)
+const getCandidateDashboard = asyncHandler(async (req, res) => {
+  try {
+    const Vote = require("../models/Vote");
+
+    // Find all candidacies for this user
+    const candidacies = await Candidate.find({ user: req.user._id })
+      .populate("election", "title status startDate endDate positions voters candidates")
+      .sort({ createdAt: -1 });
+
+    if (!candidacies || candidacies.length === 0) {
+      return res.json({
+        elections: [],
+        stats: {
+          totalElections: 0,
+          activeElections: 0,
+          upcomingElections: 0,
+          completedElections: 0,
+          wonElections: 0,
+          totalVotes: 0,
+          pendingTasks: 0,
+          activeAgents: 0
+        }
+      });
+    }
+
+    const now = new Date();
+
+    const electionsWithStats = await Promise.all(
+      candidacies.map(async (candidacy) => {
+        // Skip if election was deleted
+        if (!candidacy.election) return null;
+
+        // Calculate real-time status based on dates
+        const startDate = new Date(candidacy.election.startDate);
+        const endDate = new Date(candidacy.election.endDate);
+        
+        let computedStatus;
+        if (now < startDate) {
+          computedStatus = 'upcoming';
+        } else if (now >= startDate && now <= endDate) {
+          computedStatus = 'ongoing';
+        } else {
+          computedStatus = 'completed';
+        }
+
+        // Count votes for this candidate (both valid and all)
+        const voteCount = await Vote.countDocuments({
+          candidate: candidacy._id
+        });
+
+        // Get total votes cast in this election for this position
+        const totalPositionVotes = await Vote.countDocuments({
+          election: candidacy.election._id,
+          position: candidacy.position
+        });
+
+        // Get competing candidates for ranking
+        const competingCandidates = await Candidate.find({
+          election: candidacy.election._id,
+          position: candidacy.position,
+          status: 'approved'
+        });
+
+        const candidateVotes = await Promise.all(
+          competingCandidates.map(async (c) => {
+            const votes = await Vote.countDocuments({
+              candidate: c._id
+            });
+            return { candidateId: c._id.toString(), votes };
+          })
+        );
+
+        candidateVotes.sort((a, b) => b.votes - a.votes);
+        const ranking = candidateVotes.findIndex(cv => cv.candidateId === candidacy._id.toString()) + 1;
+        
+        // Only mark as winner if election is completed and candidate is ranked #1
+        const isWinner = computedStatus === 'completed' && ranking === 1 && voteCount > 0;
+
+        // Calculate vote percentage
+        const votePercentage = totalPositionVotes > 0 
+          ? Math.round((voteCount / totalPositionVotes) * 100) 
+          : 0;
+
+        return {
+          _id: candidacy._id,
+          candidateId: candidacy._id,
+          electionId: candidacy.election._id,
+          title: candidacy.election.title,
+          position: candidacy.position,
+          status: computedStatus,
+          dbStatus: candidacy.election.status, // Keep original for reference
+          startDate: candidacy.election.startDate,
+          endDate: candidacy.election.endDate,
+          currentVotes: voteCount,
+          totalPositionVotes,
+          votePercentage,
+          totalVoters: candidacy.election.voters ? candidacy.election.voters.length : 0,
+          totalCandidates: competingCandidates.length,
+          ranking: ranking || 'N/A',
+          isWinner,
+          candidateStatus: candidacy.status,
+          photo: candidacy.photo,
+          symbol: candidacy.symbol
+        };
+      })
+    );
+
+    // Filter out null entries (deleted elections)
+    const validElections = electionsWithStats.filter(e => e !== null);
+
+    const totalVotes = validElections.reduce((sum, e) => sum + e.currentVotes, 0);
+    const activeElections = validElections.filter(e => e.status === 'ongoing').length;
+    const upcomingElections = validElections.filter(e => e.status === 'upcoming').length;
+    const completedElections = validElections.filter(e => e.status === 'completed').length;
+    const wonElections = validElections.filter(e => e.isWinner).length;
+
+    // Get active agents count for this candidate
+    // Agent.candidate stores the User ID (the candidate's user ID)
+    const activeAgentsCount = await Agent.countDocuments({
+      candidate: req.user._id,
+      status: 'active'
+    });
+
+    // Debug log
+    console.log('[Dashboard] User ID:', req.user._id, 'Active Agents:', activeAgentsCount);
+
+    res.json({
+      elections: validElections,
+      stats: {
+        totalElections: validElections.length,
+        activeElections,
+        upcomingElections,
+        completedElections,
+        wonElections,
+        totalVotes,
+        pendingTasks: 0,
+        activeAgents: activeAgentsCount
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching candidate dashboard:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get detailed election stats for a candidate
+// @route   GET /api/candidates/election/:electionId/stats
+// @access  Protected (Candidate only)
+const getCandidateElectionStats = asyncHandler(async (req, res) => {
+  try {
+    const { electionId } = req.params;
+    const Vote = require("../models/Vote");
+
+    const candidacy = await Candidate.findOne({
+      user: req.user._id,
+      election: electionId
+    }).populate("election", "title status startDate endDate positions voters");
+
+    if (!candidacy) {
+      return res.status(404).json({ message: "You are not a candidate in this election" });
+    }
+
+    const voteCount = await Vote.countDocuments({
+      candidate: candidacy._id,
+      status: 'valid'
+    });
+
+    const allPositionVotes = await Vote.find({
+      election: electionId,
+      position: candidacy.position,
+      status: 'valid'
+    }).populate('user', 'department yearOfStudy').populate('candidate');
+
+    const totalPositionVotes = allPositionVotes.length;
+    const votePercentage = totalPositionVotes > 0 ? ((voteCount / totalPositionVotes) * 100).toFixed(1) : 0;
+
+    const competingCandidates = await Candidate.find({
+      election: electionId,
+      position: candidacy.position,
+      status: 'approved'
+    });
+
+    const candidateVotes = await Promise.all(
+      competingCandidates.map(async (c) => {
+        const votes = await Vote.countDocuments({
+          candidate: c._id,
+          status: 'valid'
+        });
+        return {
+          candidateId: c._id.toString(),
+          name: c.name,
+          votes
+        };
+      })
+    );
+
+    candidateVotes.sort((a, b) => b.votes - a.votes);
+    const ranking = candidateVotes.findIndex(cv => cv.candidateId === candidacy._id.toString()) + 1;
+
+    const myVoteRecords = await Vote.find({
+      candidate: candidacy._id,
+      status: 'valid'
+    }).sort({ createdAt: 1 });
+
+    const votesByDate = {};
+    myVoteRecords.forEach(vote => {
+      const date = new Date(vote.createdAt).toISOString().split('T')[0];
+      votesByDate[date] = (votesByDate[date] || 0) + 1;
+    });
+
+    let cumulative = 0;
+    const votesTrend = Object.keys(votesByDate).map(date => {
+      cumulative += votesByDate[date];
+      return {
+        date,
+        votes: cumulative,
+        time: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      };
+    });
+
+    const myVotes = await Vote.find({
+      candidate: candidacy._id,
+      status: 'valid'
+    }).populate('user', 'department yearOfStudy');
+
+    const departmentBreakdown = {};
+    const yearBreakdown = {};
+
+    myVotes.forEach(vote => {
+      const dept = vote.user?.department || 'Unknown';
+      const year = vote.user?.yearOfStudy || 'Unknown';
+      departmentBreakdown[dept] = (departmentBreakdown[dept] || 0) + 1;
+      yearBreakdown[year] = (yearBreakdown[year] || 0) + 1;
+    });
+
+    const departmentStats = Object.entries(departmentBreakdown).map(([department, votes]) => ({
+      department,
+      votes,
+      percentage: voteCount > 0 ? ((votes / voteCount) * 100).toFixed(1) : 0
+    })).sort((a, b) => b.votes - a.votes);
+
+    const yearStats = Object.entries(yearBreakdown).map(([year, votes]) => ({
+      year,
+      votes,
+      percentage: voteCount > 0 ? ((votes / voteCount) * 100).toFixed(1) : 0
+    })).sort((a, b) => {
+      const order = { '1': 1, '2': 2, '3': 3, '4': 4, 'Unknown': 5 };
+      return (order[a.year] || 5) - (order[b.year] || 5);
+    });
+
+    const competitionData = candidateVotes.map(cv => ({
+      name: cv.name,
+      votes: cv.votes,
+      percentage: totalPositionVotes > 0 ? ((cv.votes / totalPositionVotes) * 100).toFixed(1) : 0
+    }));
+
+    res.json({
+      election: {
+        id: candidacy.election._id,
+        title: candidacy.election.title,
+        position: candidacy.position,
+        startDate: candidacy.election.startDate,
+        endDate: candidacy.election.endDate,
+        status: candidacy.election.status,
+        totalVoters: candidacy.election.voters ? candidacy.election.voters.length : 0
+      },
+      candidate: {
+        name: candidacy.name,
+        photo: candidacy.photo,
+        symbol: candidacy.symbol,
+        currentVotes: voteCount,
+        votePercentage: parseFloat(votePercentage),
+        ranking,
+        totalCandidates: competingCandidates.length
+      },
+      votesTrend,
+      departmentBreakdown: departmentStats,
+      yearBreakdown: yearStats,
+      competitionData
+    });
+  } catch (error) {
+    console.error('Error fetching election stats:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 // @desc    Get candidates by election and position
 // @route   GET /api/candidates/election/:electionId/position/:position
 // @access  Protected
@@ -430,6 +719,8 @@ module.exports = {
   approveCandidate,
   disqualifyCandidate,
   getMyCandidacy,
+  getCandidateDashboard,
+  getCandidateElectionStats,
   getCandidatesByElectionAndPosition,
   searchCandidates,
   withdrawMyCandidacy,

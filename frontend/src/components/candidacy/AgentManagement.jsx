@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -14,7 +14,9 @@ import {
   FaTimesCircle,
   FaSearch,
   FaCrown,
-  FaUserShield
+  FaUserShield,
+  FaIdCard,
+  FaGraduationCap
 } from 'react-icons/fa';
 import Loader from '../common/Loader';
 
@@ -25,11 +27,19 @@ const AgentManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentResults, setStudentResults] = useState([]);
+  const [searchingStudents, setSearchingStudents] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [stats, setStats] = useState({
+    totalAgents: 0,
+    activeAgents: 0,
+    totalTasksActive: 0
+  });
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    userId: '',
     role: 'agent', // agent, senior-agent, coordinator
+    notes: '',
     permissions: {
       updateMaterials: false,
       postUpdates: false,
@@ -41,77 +51,74 @@ const AgentManagement = () => {
 
   useEffect(() => {
     fetchAgents();
+    fetchStats();
   }, []);
+
+  // Debounced student search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (studentSearch.length >= 2) {
+        searchStudents(studentSearch);
+      } else {
+        setStudentResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [studentSearch]);
 
   const fetchAgents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidate/agents', {
+      const response = await axios.get('/api/candidates/agents', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAgents(response.data);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching agents:', error);
-      // Fallback dummy data
-      setAgents([
-        {
-          _id: '1',
-          name: 'Alice Johnson',
-          email: 'alice@example.com',
-          phone: '+254712345678',
-          role: 'coordinator',
-          status: 'active',
-          tasksCompleted: 15,
-          tasksActive: 3,
-          joinedDate: '2025-01-10',
-          permissions: {
-            updateMaterials: true,
-            postUpdates: true,
-            respondToQuestions: true,
-            viewStatistics: true,
-            manageTasks: true
-          }
-        },
-        {
-          _id: '2',
-          name: 'Bob Smith',
-          email: 'bob@example.com',
-          phone: '+254723456789',
-          role: 'senior-agent',
-          status: 'active',
-          tasksCompleted: 12,
-          tasksActive: 5,
-          joinedDate: '2025-01-11',
-          permissions: {
-            updateMaterials: true,
-            postUpdates: true,
-            respondToQuestions: true,
-            viewStatistics: false,
-            manageTasks: false
-          }
-        },
-        {
-          _id: '3',
-          name: 'Carol White',
-          email: 'carol@example.com',
-          phone: '+254734567890',
-          role: 'agent',
-          status: 'active',
-          tasksCompleted: 8,
-          tasksActive: 2,
-          joinedDate: '2025-01-12',
-          permissions: {
-            updateMaterials: false,
-            postUpdates: false,
-            respondToQuestions: true,
-            viewStatistics: false,
-            manageTasks: false
-          }
-        }
-      ]);
+      setAgents([]);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/candidates/agents/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const searchStudents = async (query) => {
+    if (!query || query.length < 2) return;
+    
+    setSearchingStudents(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/candidates/agents/search-students?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStudentResults(response.data);
+    } catch (error) {
+      console.error('Error searching students:', error);
+      setStudentResults([]);
+    } finally {
+      setSearchingStudents(false);
+    }
+  };
+
+  const selectStudent = (student) => {
+    setSelectedStudent(student);
+    setFormData(prev => ({
+      ...prev,
+      userId: student._id
+    }));
+    setStudentSearch('');
+    setStudentResults([]);
   };
 
   const handleInputChange = (e) => {
@@ -135,30 +142,49 @@ const AgentManagement = () => {
   const handleAddAgent = async (e) => {
     e.preventDefault();
     
+    if (!selectedStudent && !selectedAgent) {
+      Swal.fire('Error', 'Please select a student to add as an agent', 'error');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/candidate/agents', formData, {
+      const payload = {
+        userId: formData.userId,
+        agentRole: formData.role,
+        permissions: formData.permissions,
+        notes: formData.notes
+      };
+
+      await axios.post('/api/candidates/agents', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      Swal.fire('Success', 'Agent added successfully!', 'success');
+      Swal.fire('Success', 'Agent added successfully! The student now has agent access.', 'success');
       fetchAgents();
+      fetchStats();
       setShowAddModal(false);
       resetForm();
     } catch (error) {
       console.error('Error adding agent:', error);
-      Swal.fire('Error', 'Failed to add agent. Please try again.', 'error');
+      Swal.fire('Error', error.response?.data?.message || 'Failed to add agent. Please try again.', 'error');
     }
   };
 
   const handleEditAgent = (agent) => {
     setSelectedAgent(agent);
+    setSelectedStudent(null);
     setFormData({
-      name: agent.name,
-      email: agent.email,
-      phone: agent.phone,
+      userId: agent.userId,
       role: agent.role,
-      permissions: agent.permissions
+      notes: agent.notes || '',
+      permissions: agent.permissions || {
+        updateMaterials: false,
+        postUpdates: false,
+        respondToQuestions: false,
+        viewStatistics: false,
+        manageTasks: false
+      }
     });
     setShowAddModal(true);
   };
@@ -168,25 +194,30 @@ const AgentManagement = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/candidate/agents/${selectedAgent._id}`, formData, {
+      await axios.put(`/api/candidates/agents/${selectedAgent._id}`, {
+        agentRole: formData.role,
+        permissions: formData.permissions,
+        notes: formData.notes
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       Swal.fire('Success', 'Agent updated successfully!', 'success');
       fetchAgents();
+      fetchStats();
       setShowAddModal(false);
       setSelectedAgent(null);
       resetForm();
     } catch (error) {
       console.error('Error updating agent:', error);
-      Swal.fire('Error', 'Failed to update agent. Please try again.', 'error');
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update agent. Please try again.', 'error');
     }
   };
 
   const handleDeleteAgent = async (agentId) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: 'This agent will be removed from your campaign team.',
+      text: 'This agent will be removed from your campaign team and their agent role will be revoked.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -197,15 +228,16 @@ const AgentManagement = () => {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`/api/candidate/agents/${agentId}`, {
+        await axios.delete(`/api/candidates/agents/${agentId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        Swal.fire('Removed!', 'Agent has been removed.', 'success');
+        Swal.fire('Removed!', 'Agent has been removed from your team.', 'success');
         fetchAgents();
+        fetchStats();
       } catch (error) {
         console.error('Error deleting agent:', error);
-        Swal.fire('Error', 'Failed to remove agent.', 'error');
+        Swal.fire('Error', error.response?.data?.message || 'Failed to remove agent.', 'error');
       }
     }
   };
@@ -213,7 +245,7 @@ const AgentManagement = () => {
   const toggleAgentStatus = async (agentId, currentStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`/api/candidate/agents/${agentId}/status`, {
+      await axios.patch(`/api/candidates/agents/${agentId}/status`, {
         status: currentStatus === 'active' ? 'inactive' : 'active'
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -221,18 +253,18 @@ const AgentManagement = () => {
 
       Swal.fire('Success', 'Agent status updated!', 'success');
       fetchAgents();
+      fetchStats();
     } catch (error) {
       console.error('Error updating status:', error);
-      Swal.fire('Error', 'Failed to update status.', 'error');
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update status.', 'error');
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      email: '',
-      phone: '',
+      userId: '',
       role: 'agent',
+      notes: '',
       permissions: {
         updateMaterials: false,
         postUpdates: false,
@@ -241,6 +273,9 @@ const AgentManagement = () => {
         manageTasks: false
       }
     });
+    setSelectedStudent(null);
+    setStudentSearch('');
+    setStudentResults([]);
   };
 
   const getRoleBadge = (role) => {
@@ -314,7 +349,7 @@ const AgentManagement = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Carstats.totalAgents || ds */}
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
           <div
@@ -612,6 +647,7 @@ const AgentManagement = () => {
           onClick={() => {
             setShowAddModal(false);
             setSelectedAgent(null);
+            resetForm();
           }}
         >
           <div
@@ -636,61 +672,217 @@ const AgentManagement = () => {
                   onClick={() => {
                     setShowAddModal(false);
                     setSelectedAgent(null);
+                    resetForm();
                   }}
                 ></button>
               </div>
               <form onSubmit={selectedAgent ? handleUpdateAgent : handleAddAgent}>
                 <div className="modal-body">
+                  {/* Info Banner for Adding New Agent */}
+                  {!selectedAgent && (
+                    <div 
+                      className="alert mb-3 d-flex align-items-start gap-2"
+                      style={{
+                        backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff',
+                        border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe'}`,
+                        borderRadius: '8px',
+                        color: isDarkMode ? '#93c5fd' : '#1e40af'
+                      }}
+                    >
+                      <FaUserFriends className="mt-1 flex-shrink-0" />
+                      <div>
+                        <strong>Adding a Campaign Agent</strong>
+                        <p className="mb-0 small" style={{ opacity: 0.9 }}>
+                          Search for a verified student using their student ID (e.g., 2400812450) or email. 
+                          Once added, the student will receive the <strong>Agent</strong> role and can help with your campaign based on the permissions you set.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="row g-3">
+                    {/* Student Search - only show when adding new agent */}
+                    {!selectedAgent && (
+                      <div className="col-12">
+                        <label className="form-label fw-semibold" style={{ color: colors.text }}>
+                          Search Student *
+                        </label>
+                        <p className="text-muted small mb-2">
+                          Enter student ID or email address
+                        </p>
+                        
+                        {/* Selected Student Display */}
+                        {selectedStudent ? (
+                          <div 
+                            className="p-3 rounded mb-2 d-flex align-items-center justify-content-between"
+                            style={{ 
+                              backgroundColor: isDarkMode ? colors.surfaceHover : '#f0f9ff',
+                              border: `1px solid ${isDarkMode ? colors.border : '#0ea5e9'}`
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-3">
+                              <div
+                                className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                style={{ width: '45px', height: '45px', fontSize: '1rem', fontWeight: 'bold' }}
+                              >
+                                {selectedStudent.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div>
+                                <div className="fw-semibold" style={{ color: colors.text }}>{selectedStudent.name}</div>
+                                <div className="small" style={{ color: colors.textSecondary }}>
+                                  {selectedStudent.email}
+                                </div>
+                                <div className="small" style={{ color: colors.textSecondary }}>
+                                  <FaIdCard className="me-1" size={10} />
+                                  {selectedStudent.studentId || 'N/A'} • 
+                                  <FaGraduationCap className="ms-1 me-1" size={10} />
+                                  {selectedStudent.faculty || 'N/A'}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                setSelectedStudent(null);
+                                setFormData(prev => ({ ...prev, userId: '' }));
+                              }}
+                            >
+                              <FaTimesCircle />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="position-relative">
+                            <div className="position-relative">
+                              <FaSearch
+                                className="position-absolute"
+                                style={{
+                                  left: '12px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  color: colors.textMuted
+                                }}
+                              />
+                              <input
+                                type="text"
+                                className="form-control ps-5"
+                                placeholder="Enter student ID or email..."
+                                value={studentSearch}
+                                onChange={(e) => setStudentSearch(e.target.value)}
+                                style={{
+                                  background: isDarkMode ? colors.surfaceHover : '#fff',
+                                  color: colors.text,
+                                  border: `1px solid ${colors.border}`
+                                }}
+                              />
+                              {searchingStudents && (
+                                <div 
+                                  className="position-absolute"
+                                  style={{ right: '12px', top: '50%', transform: 'translateY(-50%)' }}
+                                >
+                                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Search Results Dropdown */}
+                            {studentResults.length > 0 && (
+                              <div 
+                                className="position-absolute w-100 mt-1 rounded shadow-lg"
+                                style={{
+                                  backgroundColor: isDarkMode ? colors.surface : '#fff',
+                                  border: `1px solid ${colors.border}`,
+                                  maxHeight: '250px',
+                                  overflowY: 'auto',
+                                  zIndex: 1000
+                                }}
+                              >
+                                {studentResults.map(student => (
+                                  <div
+                                    key={student._id}
+                                    className="p-3 d-flex align-items-center gap-3"
+                                    style={{
+                                      cursor: 'pointer',
+                                      borderBottom: `1px solid ${colors.border}`,
+                                      transition: 'background-color 0.2s'
+                                    }}
+                                    onClick={() => selectStudent(student)}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                  >
+                                    <div
+                                      className="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                      style={{ width: '40px', height: '40px', fontSize: '0.9rem' }}
+                                    >
+                                      {student.name.split(' ').map(n => n[0]).join('')}
+                                    </div>
+                                    <div className="flex-grow-1 min-width-0">
+                                      <div className="fw-semibold text-truncate" style={{ color: colors.text }}>
+                                        {student.name}
+                                      </div>
+                                      <div className="small text-truncate" style={{ color: colors.textSecondary }}>
+                                        {student.email}
+                                      </div>
+                                      <div className="small" style={{ color: colors.textMuted }}>
+                                        {student.studentId && `ID: ${student.studentId}`}
+                                        {student.faculty && ` • ${student.faculty}`}
+                                      </div>
+                                    </div>
+                                    <FaPlus className="text-primary flex-shrink-0" />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {studentSearch.length >= 2 && studentResults.length === 0 && !searchingStudents && (
+                              <div 
+                                className="position-absolute w-100 mt-1 p-3 rounded text-center"
+                                style={{
+                                  backgroundColor: isDarkMode ? colors.surface : '#fff',
+                                  border: `1px solid ${colors.border}`,
+                                  color: colors.textMuted
+                                }}
+                              >
+                                No students found matching "{studentSearch}"
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Display selected student info when editing */}
+                    {selectedAgent && (
+                      <div className="col-12">
+                        <div 
+                          className="p-3 rounded"
+                          style={{ 
+                            backgroundColor: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                            border: `1px solid ${colors.border}`
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                              style={{ width: '45px', height: '45px', fontSize: '1rem', fontWeight: 'bold' }}
+                            >
+                              {selectedAgent.name?.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                              <div className="fw-semibold" style={{ color: colors.text }}>{selectedAgent.name}</div>
+                              <div className="small" style={{ color: colors.textSecondary }}>
+                                {selectedAgent.email}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Full Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        style={{
-                          background: isDarkMode ? colors.surfaceHover : '#fff',
-                          color: colors.text,
-                          border: `1px solid ${colors.border}`
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Email *</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                        style={{
-                          background: isDarkMode ? colors.surfaceHover : '#fff',
-                          color: colors.text,
-                          border: `1px solid ${colors.border}`
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Phone</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        style={{
-                          background: isDarkMode ? colors.surfaceHover : '#fff',
-                          color: colors.text,
-                          border: `1px solid ${colors.border}`
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Role *</label>
+                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Agent Role *</label>
                       <select
                         className="form-select"
                         name="role"
@@ -707,6 +899,22 @@ const AgentManagement = () => {
                         <option value="senior-agent">Senior Agent</option>
                         <option value="coordinator">Coordinator</option>
                       </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold" style={{ color: colors.text }}>Notes</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        placeholder="Optional notes about this agent"
+                        style={{
+                          background: isDarkMode ? colors.surfaceHover : '#fff',
+                          color: colors.text,
+                          border: `1px solid ${colors.border}`
+                        }}
+                      />
                     </div>
                     <div className="col-12">
                       <label className="form-label fw-semibold mb-3" style={{ color: colors.text }}>Permissions</label>
@@ -738,6 +946,7 @@ const AgentManagement = () => {
                     onClick={() => {
                       setShowAddModal(false);
                       setSelectedAgent(null);
+                      resetForm();
                     }}
                     style={{
                       backgroundColor: colors.cardBackground,
@@ -750,6 +959,7 @@ const AgentManagement = () => {
                   <button 
                     type="submit" 
                     className="btn btn-primary"
+                    disabled={!selectedAgent && !selectedStudent}
                     style={{
                       backgroundColor: '#0d6efd',
                       borderColor: '#0d6efd',

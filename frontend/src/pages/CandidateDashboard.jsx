@@ -10,11 +10,11 @@ import {
   FaImages,
   FaComments,
   FaBars,
-  FaTimes,
   FaSignOutAlt,
   FaMoon,
   FaSun
 } from 'react-icons/fa';
+import { IoCloseOutline } from 'react-icons/io5';
 
 // Import candidate components  
 import Loader from '../components/common/Loader';
@@ -33,6 +33,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   // const navigate = useNavigate(); // Removed unused variable
 
   // Handle window resize for responsive design
@@ -129,17 +130,17 @@ const CandidateDashboard = ({ user, onLogout }) => {
               onClick={() => setSidebarOpen(false)}
               style={{ 
                 color: colors.text,
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '50%',
-                width: isMobile ? '28px' : '32px',
-                height: isMobile ? '28px' : '32px',
+                background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '5px',
+                width: isMobile ? '40px' : '32px',
+                height: isMobile ? '40px' : '32px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <FaTimes size={isMobile ? 14 : 16} />
+              <IoCloseOutline size={isMobile ? 24 : 20} strokeWidth={1} />
             </button>
           </div>
 
@@ -432,37 +433,130 @@ const CandidateDashboard = ({ user, onLogout }) => {
               </span>
             </button>
             
-            {/* User avatar */}
-            <div
-              style={{
-                width: isMobile ? '28px' : '32px',
-                height: isMobile ? '28px' : '32px',
-                borderRadius: '50%',
-                background: user?.profilePicture ? 'transparent' : '#3b82f6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: isMobile ? '0.75rem' : '0.875rem',
-                overflow: 'hidden',
-                flexShrink: 0
-              }}
-            >
-              {user?.profilePicture ? (
-                <img 
-                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
-                  alt={user?.name} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
-                {user?.name?.charAt(0) || 'C'}
-              </span>
+            {/* User avatar with dropdown */}
+            <div style={{ position: 'relative' }}>
+              <div
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                style={{
+                  width: isMobile ? '36px' : '40px',
+                  height: isMobile ? '36px' : '40px',
+                  borderRadius: '50%',
+                  background: user?.profilePicture ? 'transparent' : '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                  border: showUserMenu ? '2px solid #3b82f6' : '2px solid transparent',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Click for options"
+              >
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
+                    alt={user?.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                  {user?.name?.charAt(0) || 'C'}
+                </span>
+              </div>
+
+              {/* User Dropdown Menu */}
+              {showUserMenu && (
+                <>
+                  {/* Overlay to close menu */}
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 998
+                    }}
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '0.5rem',
+                      width: isMobile ? '160px' : '180px',
+                      background: isDarkMode ? colors.surface : '#fff',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      zIndex: 999,
+                      overflow: 'hidden',
+                      padding: '0.5rem'
+                    }}
+                  >
+                    {/* View Profile Link */}
+                    <Link
+                      to="/candidate/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      style={{
+                        padding: '0.6rem 0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        color: colors.text,
+                        textDecoration: 'none',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = colors.sidebarHover}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <FaUser size={14} style={{ color: '#3b82f6' }} />
+                      <span>View Profile</span>
+                    </Link>
+
+                    <div style={{ height: '1px', background: colors.border, margin: '0.25rem 0' }} />
+
+                    {/* Logout Button */}
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        handleLogout();
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem 0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        color: '#dc3545',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <FaSignOutAlt size={14} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
