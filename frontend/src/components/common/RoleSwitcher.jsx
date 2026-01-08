@@ -79,6 +79,7 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     overflow: 'hidden',
     animation: 'fadeIn 0.2s ease',
   };
+  
 
   const menuItemStyle = (isActive) => ({
     display: 'flex',
