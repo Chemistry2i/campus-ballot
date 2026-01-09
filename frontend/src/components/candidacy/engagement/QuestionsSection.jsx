@@ -11,32 +11,63 @@ const QuestionsSection = ({ questions, onRefresh }) => {
   const handleAnswer = async (questionId) => {
     const result = await Swal.fire({
       title: 'Answer Question',
-      html: `<textarea id="answer" class="form-control" rows="4" placeholder="Type your answer..."></textarea>`,
+      html: `<textarea id="answer" class="form-control" rows="4" placeholder="Type your answer..." style="border-radius: 8px;"></textarea>`,
       showCancelButton: true,
       confirmButtonText: 'Submit Answer',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        popup: 'rounded',
+        confirmButton: 'btn btn-primary',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false,
+      didOpen: (popup) => {
+        popup.style.borderRadius = '8px';
+      },
       preConfirm: () => {
         const answer = document.getElementById('answer').value;
-        if (!answer) {
+        if (!answer || !answer.trim()) {
           Swal.showValidationMessage('Please provide an answer');
           return false;
         }
-        return answer;
+        return answer.trim();
       }
     });
 
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('token');
-        await axios.post(`/api/candidate/engagement/questions/${questionId}/answer`, {
+        await axios.put(`/api/candidate/engagement/questions/${questionId}/answer`, {
           answer: result.value
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        Swal.fire('Success', 'Answer submitted successfully!', 'success');
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Answer submitted successfully!',
+          customClass: {
+            popup: 'rounded'
+          },
+          didOpen: (popup) => {
+            popup.style.borderRadius = '8px';
+          }
+        });
         onRefresh();
       } catch (error) {
         console.error('Error submitting answer:', error);
-        Swal.fire('Error', 'Failed to submit answer.', 'error');
+        const errorMsg = error.response?.data?.message || 'Failed to submit answer. Please try again.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMsg,
+          customClass: {
+            popup: 'rounded'
+          },
+          didOpen: (popup) => {
+            popup.style.borderRadius = '8px';
+          }
+        });
       }
     }
   };
