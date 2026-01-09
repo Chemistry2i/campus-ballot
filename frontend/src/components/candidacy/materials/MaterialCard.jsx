@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { 
   FaFile, 
@@ -10,8 +10,25 @@ import {
   FaTrash
 } from 'react-icons/fa';
 
+// Helper to get the full image URL
+const getImageUrl = (url) => {
+  if (!url) return '';
+  // If already absolute URL, use as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // For relative URLs like /uploads/..., use API base URL in production
+  const apiBase = import.meta.env.VITE_API_URL || '';
+  if (apiBase) {
+    return `${apiBase.replace(/\/$/, '')}${url}`;
+  }
+  // In development with proxy, relative URL should work
+  return url;
+};
+
 const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
   const { isDarkMode, colors } = useTheme();
+  const [imageError, setImageError] = useState(false);
 
   const getFileIcon = (fileType) => {
     if (fileType.startsWith('image/')) return <FaFileImage size={40} color="#3b82f6" />;
@@ -51,22 +68,23 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         <div
           className="d-flex align-items-center justify-content-center mb-3"
           style={{
-            height: '120px',
+            minHeight: '120px',
             background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
             borderRadius: '8px',
             overflow: 'hidden'
           }}
         >
-          {material.fileType.startsWith('image/') ? (
+          {material.fileType.startsWith('image/') && !imageError ? (
             <img
-              src={material.url}
+              src={getImageUrl(material.url)}
               alt={material.title}
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
+                width: '100%',
+                height: 'auto',
                 borderRadius: '8px',
-                objectFit: 'cover'
+                objectFit: 'contain'
               }}
+              onError={() => setImageError(true)}
             />
           ) : (
             getFileIcon(material.fileType)
@@ -108,19 +126,28 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         <div className="d-flex gap-2">
           <button
             className="btn btn-sm btn-outline-primary flex-fill"
-            onClick={() => onDownload(material)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload(material);
+            }}
           >
             <FaDownload size={12} />
           </button>
           <button
             className="btn btn-sm btn-outline-info flex-fill"
-            onClick={() => onPreview(material)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview(material);
+            }}
           >
             <FaEye size={12} />
           </button>
           <button
             className="btn btn-sm btn-outline-danger flex-fill"
-            onClick={() => onDelete(material._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(material._id);
+            }}
           >
             <FaTrash size={12} />
           </button>

@@ -1,6 +1,22 @@
 import React from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 
+// Helper to get the full media URL
+const getMediaUrl = (url) => {
+  if (!url) return '';
+  // If already absolute URL, use as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // For relative URLs like /uploads/..., use API base URL in production
+  const apiBase = import.meta.env.VITE_API_URL || '';
+  if (apiBase) {
+    return `${apiBase.replace(/\/$/, '')}${url}`;
+  }
+  // In development with proxy, relative URL should work
+  return url;
+};
+
 const MaterialPreview = ({ material, onClose }) => {
   const { isDarkMode, colors } = useTheme();
 
@@ -46,19 +62,19 @@ const MaterialPreview = ({ material, onClose }) => {
           <div className="modal-body text-center">
             {material.fileType.startsWith('image/') && (
               <img
-                src={material.url}
+                src={getMediaUrl(material.url)}
                 alt={material.title}
                 style={{ maxWidth: '100%', maxHeight: '70vh' }}
               />
             )}
             {material.fileType.startsWith('video/') && (
               <video controls style={{ maxWidth: '100%', maxHeight: '70vh' }}>
-                <source src={material.url} type={material.fileType} />
+                <source src={getMediaUrl(material.url)} type={material.fileType} />
               </video>
             )}
             {material.fileType === 'application/pdf' && (
               <iframe
-                src={material.url}
+                src={getMediaUrl(material.url)}
                 style={{ width: '100%', height: '70vh', border: 'none' }}
                 title={material.title}
               />

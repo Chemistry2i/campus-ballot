@@ -11,13 +11,14 @@ import MaterialPreview from './materials/MaterialPreview';
 import UploadProgress from './materials/UploadProgress';
 
 const CampaignMaterials = () => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const fileInputRef = useRef(null);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(null);
 
   useEffect(() => {
@@ -25,73 +26,18 @@ const CampaignMaterials = () => {
   }, []);
 
   const fetchMaterials = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get('/api/candidate/materials', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMaterials(response.data);
-      setLoading(false);
+      setMaterials(response.data || []);
     } catch (error) {
       console.error('Error fetching materials:', error);
-      // Fallback dummy data
-      setMaterials([
-        {
-          _id: '1',
-          title: 'Campaign Poster 2025',
-          category: 'posters',
-          fileType: 'image/png',
-          fileSize: 2.5,
-          url: '/uploads/poster1.png',
-          uploadDate: '2025-01-10',
-          downloads: 45,
-          views: 123
-        },
-        {
-          _id: '2',
-          title: 'Election Manifesto',
-          category: 'manifestos',
-          fileType: 'application/pdf',
-          fileSize: 1.2,
-          url: '/uploads/manifesto.pdf',
-          uploadDate: '2025-01-12',
-          downloads: 67,
-          views: 234
-        },
-        {
-          _id: '3',
-          title: 'Campaign Video - Introduction',
-          category: 'videos',
-          fileType: 'video/mp4',
-          fileSize: 15.6,
-          url: '/uploads/intro.mp4',
-          uploadDate: '2025-01-11',
-          downloads: 23,
-          views: 156
-        },
-        {
-          _id: '4',
-          title: 'Event Flyer',
-          category: 'flyers',
-          fileType: 'image/jpeg',
-          fileSize: 1.8,
-          url: '/uploads/flyer1.jpg',
-          uploadDate: '2025-01-13',
-          downloads: 89,
-          views: 201
-        },
-        {
-          _id: '5',
-          title: 'Campaign Team Photo',
-          category: 'photos',
-          fileType: 'image/jpeg',
-          fileSize: 3.2,
-          url: '/uploads/team.jpg',
-          uploadDate: '2025-01-14',
-          downloads: 34,
-          views: 98
-        }
-      ]);
+      Swal.fire('Error', 'Failed to load materials. Please try again.', 'error');
+      setMaterials([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -104,9 +50,13 @@ const CampaignMaterials = () => {
     const result = await Swal.fire({
       title: 'Upload Materials',
       html: `
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Category</label>
-          <select id="category" class="form-select">
+        <div class="mb-3 text-start">
+          <label class="form-label fw-semibold" style="color: ${isDarkMode ? '#e2e8f0' : '#374151'}">Category</label>
+          <select id="category" class="form-select" style="
+            background-color: ${isDarkMode ? '#374151' : '#fff'};
+            color: ${isDarkMode ? '#e2e8f0' : '#1f2937'};
+            border-color: ${isDarkMode ? '#4b5563' : '#d1d5db'};
+          ">
             <option value="posters">Poster</option>
             <option value="flyers">Flyer</option>
             <option value="manifestos">Manifesto</option>
@@ -114,16 +64,24 @@ const CampaignMaterials = () => {
             <option value="photos">Photo</option>
           </select>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Title</label>
-          <input id="title" class="form-control" placeholder="Material title" />
+        <div class="mb-3 text-start">
+          <label class="form-label fw-semibold" style="color: ${isDarkMode ? '#e2e8f0' : '#374151'}">Title</label>
+          <input id="title" class="form-control" placeholder="Material title" style="
+            background-color: ${isDarkMode ? '#374151' : '#fff'};
+            color: ${isDarkMode ? '#e2e8f0' : '#1f2937'};
+            border-color: ${isDarkMode ? '#4b5563' : '#d1d5db'};
+          " />
         </div>
-        <div class="small text-muted">
+        <div class="small" style="color: ${isDarkMode ? '#9ca3af' : '#6b7280'}">
           ${files.length} file(s) selected
         </div>
       `,
+      background: isDarkMode ? '#1f2937' : '#fff',
+      color: isDarkMode ? '#e2e8f0' : '#1f2937',
       showCancelButton: true,
       confirmButtonText: 'Upload',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
       preConfirm: () => {
         const category = document.getElementById('category').value;
         const title = document.getElementById('title').value;
@@ -137,6 +95,9 @@ const CampaignMaterials = () => {
 
     if (result.isConfirmed) {
       const { category, title } = result.value;
+      
+      setIsUploading(true);
+      setUploadProgress(0);
       
       try {
         const formData = new FormData();
@@ -156,13 +117,15 @@ const CampaignMaterials = () => {
           }
         });
 
+        setIsUploading(false);
+        setUploadProgress(0);
         Swal.fire('Success', 'Materials uploaded successfully!', 'success');
         fetchMaterials();
-        setUploadProgress(0);
       } catch (error) {
         console.error('Error uploading materials:', error);
-        Swal.fire('Error', 'Failed to upload materials. Please try again.', 'error');
+        setIsUploading(false);
         setUploadProgress(0);
+        Swal.fire('Error', 'Failed to upload materials. Please try again.', 'error');
       }
     }
   };
@@ -180,6 +143,16 @@ const CampaignMaterials = () => {
 
     if (result.isConfirmed) {
       try {
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Please wait while the material is being removed.',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
         const token = localStorage.getItem('token');
         await axios.delete(`/api/candidate/materials/${materialId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -196,19 +169,53 @@ const CampaignMaterials = () => {
 
   const handleDownload = async (material) => {
     try {
+      Swal.fire({
+        title: 'Downloading...',
+        text: 'Please wait while your file is being prepared.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/candidate/materials/${material._id}/download`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
 
+      // Get filename from content-disposition header or use original name
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = material.originalName || material.title;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      // Ensure filename has an extension
+      if (!filename.includes('.') && material.fileType) {
+        const ext = material.fileType.split('/')[1];
+        if (ext) {
+          filename = `${filename}.${ext === 'jpeg' ? 'jpg' : ext}`;
+        }
+      }
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', material.title);
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
+
+      Swal.close();
+      
+      // Refresh to show updated download counts
+      fetchMaterials();
     } catch (error) {
       console.error('Error downloading material:', error);
       Swal.fire('Error', 'Failed to download material.', 'error');
@@ -217,15 +224,15 @@ const CampaignMaterials = () => {
 
   const filteredMaterials = materials.filter(material => {
     const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
-    const matchesSearch = material.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (material.title || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   const stats = {
     total: materials.length,
-    totalSize: materials.reduce((sum, m) => sum + m.fileSize, 0),
-    totalDownloads: materials.reduce((sum, m) => sum + m.downloads, 0),
-    totalViews: materials.reduce((sum, m) => sum + m.views, 0)
+    totalSize: materials.reduce((sum, m) => sum + (m.fileSize || 0), 0),
+    totalDownloads: materials.reduce((sum, m) => sum + (m.downloads || 0), 0),
+    totalViews: materials.reduce((sum, m) => sum + (m.views || 0), 0)
   };
 
   if (loading) {
@@ -281,7 +288,7 @@ const CampaignMaterials = () => {
       <MaterialsStats stats={stats} />
 
       {/* Upload Progress */}
-      <UploadProgress progress={uploadProgress} />
+      <UploadProgress progress={uploadProgress} isUploading={isUploading} />
 
       {/* Category Filters & Search */}
       <MaterialsFilter

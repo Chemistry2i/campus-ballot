@@ -290,6 +290,19 @@ const LandingPage = () => {
                     Contact
                   </a>
                 </li>
+                <li className="nav-item">
+                  <Link 
+                    className="nav-link" 
+                    to="/candidates"
+                    onClick={() => {
+                      if (window.innerWidth < 992) {
+                        document.querySelector('[data-bs-target="#navbarSupportedContent"]')?.click();
+                      }
+                    }}
+                  >
+                    Candidates
+                  </Link>
+                </li>
               </ul>
 
               {/* Separator */}

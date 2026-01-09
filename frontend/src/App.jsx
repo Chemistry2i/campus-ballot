@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import useSocket from './hooks/useSocket';
 import VotingPage from "./pages/VotingPage";
 import LandingPage from "./pages/LandingPage";
+import PublicCandidates from "./pages/PublicCandidates";
 import SuperAdmin from './components/superAdmin/SuperAdmin';
 import GlobalSettings from './components/superAdmin/GlobalSettings';
 import AuditLogs from './components/superAdmin/AuditLogs';
@@ -128,6 +129,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify/:token" element={<VerifyEmail />} />
+        
+        {/* Public Routes - No Authentication Required */}
+        <Route path="/candidates" element={<PublicCandidates />} />
+        
         <Route
           path="/admin/*"
           element={

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FaComments } from 'react-icons/fa';
+import { FaComments, FaExternalLinkAlt } from 'react-icons/fa';
 import Loader from '../common/Loader';
 import EngagementStats from './engagement/EngagementStats';
 import QuestionsSection from './engagement/QuestionsSection';
@@ -140,12 +140,27 @@ const VoterEngagement = () => {
   return (
     <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="mb-4">
-        <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
-          <FaComments className="me-2" style={{ color: '#3b82f6' }} />
-          Voter Engagement
-        </h4>
-        <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Interact with voters and share your vision</p>
+      <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div>
+          <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
+            <FaComments className="me-2" style={{ color: '#3b82f6' }} />
+            Voter Engagement
+          </h4>
+          <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Interact with voters and share your vision</p>
+        </div>
+        <a 
+          href="/candidates" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="btn btn-outline-primary d-flex align-items-center gap-2"
+          style={{
+            borderRadius: '8px',
+            fontWeight: '500'
+          }}
+        >
+          <FaExternalLinkAlt size={14} />
+          View Public Profile
+        </a>
       </div>
 
       {/* Stats */}

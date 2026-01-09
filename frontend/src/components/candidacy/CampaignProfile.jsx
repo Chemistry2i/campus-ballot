@@ -50,11 +50,53 @@ const CampaignProfile = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidate/profile', {
+      
+      // First, get the user's basic info from auth profile
+      const userResponse = await axios.get('/api/auth/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setFormData(response.data);
-      setProfileImage(response.data.profileImage);
+      
+      const userData = userResponse.data;
+      
+      // Try to get candidate-specific profile data
+      let candidateData = {};
+      try {
+        const candidateResponse = await axios.get('/api/candidates/me/candidacy', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        candidateData = candidateResponse.data || {};
+      } catch (err) {
+        // Candidate profile might not exist yet, that's okay
+        console.log('No candidate profile found, using user data');
+      }
+      
+      // Merge user data with candidate data, user data takes priority for basic fields
+      const mergedData = {
+        ...formData,
+        name: userData.name || candidateData.name || '',
+        email: userData.email || candidateData.email || '',
+        phone: userData.phone || candidateData.phone || '',
+        department: userData.department || candidateData.department || '',
+        yearOfStudy: userData.yearOfStudy || candidateData.yearOfStudy || '',
+        studentId: userData.studentId || candidateData.studentId || '',
+        bio: candidateData.bio || userData.bio || '',
+        manifesto: candidateData.manifesto || '',
+        campaignPromises: candidateData.campaignPromises?.length ? candidateData.campaignPromises : ['', '', ''],
+        qualifications: candidateData.qualifications?.length ? candidateData.qualifications : ['', ''],
+        achievements: candidateData.achievements?.length ? candidateData.achievements : ['', ''],
+        socialMedia: candidateData.socialMedia || {
+          facebook: '',
+          twitter: '',
+          instagram: '',
+          linkedin: '',
+          website: ''
+        },
+        profileImage: userData.profilePicture || candidateData.profileImage || null
+      };
+      
+      setFormData(mergedData);
+      setProfileImage(mergedData.profileImage);
+      
     } catch (error) {
       console.error('Error fetching profile:', error);
       // Load from localStorage as fallback
@@ -178,12 +220,14 @@ const CampaignProfile = () => {
           {/* Profile Picture Section */}
           <div className="col-12 col-lg-4">
             <div
-              className="card sticky-top"
+              className="card"
               style={{
                 background: isDarkMode ? colors.surface : '#fff',
                 border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
                 borderRadius: '12px',
-                top: '20px'
+                position: 'sticky',
+                top: '20px',
+                zIndex: 10
               }}
             >
               <div className="card-body text-center p-4">
@@ -277,14 +321,16 @@ const CampaignProfile = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       required
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     />
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Email *</label>
@@ -294,14 +340,16 @@ const CampaignProfile = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       required
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     />
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Phone Number</label>
@@ -311,13 +359,15 @@ const CampaignProfile = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     />
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Student ID *</label>
@@ -327,14 +377,16 @@ const CampaignProfile = () => {
                       name="studentId"
                       value={formData.studentId}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       required
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     />
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Department *</label>
@@ -344,14 +396,16 @@ const CampaignProfile = () => {
                       name="department"
                       value={formData.department}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       required
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     />
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Year of Study *</label>
@@ -360,12 +414,13 @@ const CampaignProfile = () => {
                       name="yearOfStudy"
                       value={formData.yearOfStudy}
                       onChange={handleInputChange}
-                      disabled={!editing}
+                      disabled
                       required
                       style={{
-                        background: isDarkMode ? colors.surfaceHover : '#fff',
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`
+                        background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'not-allowed'
                       }}
                     >
                       <option value="">Select Year</option>
@@ -375,6 +430,7 @@ const CampaignProfile = () => {
                       <option value="4">Fourth Year</option>
                       <option value="5">Fifth Year</option>
                     </select>
+                    <small className="text-muted">Contact admin to update</small>
                   </div>
                   <div className="col-12">
                     <label className="form-label fw-semibold" style={{ color: colors.text }}>Biography</label>
