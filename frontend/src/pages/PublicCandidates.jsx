@@ -564,8 +564,15 @@ const PublicCandidates = () => {
                           alignItems: 'center',
                           gap: '0.35rem'
                         }}>
-                          <FaFlag size={10} />
-                          {candidate.party}
+                          <span>{candidate.party}</span>
+                          {candidate.symbol && (
+                            <img 
+                              src={getImageUrl(candidate.symbol)} 
+                              alt={candidate.party}
+                              style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          )}
                         </span>
                       )}
                       <p style={{ 
@@ -633,11 +640,7 @@ const PublicCandidates = () => {
             className="modal-dialog modal-xl modal-dialog-scrollable"
             style={{ 
               maxWidth: '900px', 
-              margin: '1rem auto',
-              '@media (max-width: 768px)': {
-                margin: '0.5rem',
-                maxWidth: '100%'
-              }
+              margin: window.innerWidth < 768 ? '1rem 0.75rem' : '1rem auto'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -712,7 +715,7 @@ const PublicCandidates = () => {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
-                        <span style={{ fontSize: '2.5rem', color: '#fff', fontWeight: 'bold' }}>
+                        <span style={{ fontSize: window.innerWidth < 768 ? '2rem' : '2.5rem', color: '#fff', fontWeight: 'bold' }}>
                           {selectedCandidate.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </span>
                       )}
@@ -729,21 +732,39 @@ const PublicCandidates = () => {
                         fontSize: window.innerWidth < 768 ? '0.7rem' : '0.875rem',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '0.35rem'
+                        gap: '0.4rem'
                       }}>
-                        <FaFlag size={window.innerWidth < 768 ? 8 : 10} />
-                        {selectedCandidate.party}
+                        <span>{selectedCandidate.party}</span>
+                        {selectedCandidate.symbol && (
+                          <img 
+                            src={getImageUrl(selectedCandidate.symbol)} 
+                            alt={selectedCandidate.party}
+                            style={{ 
+                              width: window.innerWidth < 768 ? '20px' : '25px', 
+                              height: window.innerWidth < 768 ? '20px' : '25px', 
+                              objectFit: 'contain' 
+                            }}
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                        )}
                       </span>
                     )}
                   </div>
-                  <div className="col-auto">
+                  <div className="col-12 col-md-auto mt-2 mt-md-0">
                     <button 
-                      className="btn btn-light btn-sm"
+                      className="btn btn-light btn-sm w-100 w-md-auto"
                       onClick={() => handleShare(selectedCandidate)}
-                      style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem', padding: window.innerWidth < 768 ? '0.25rem 0.5rem' : '0.375rem 0.75rem' }}
+                      style={{ 
+                        fontSize: '0.875rem', 
+                        padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.375rem 0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
                     >
-                      <FaShare className="me-1" size={window.innerWidth < 768 ? 10 : 12} />
-                      <span className="d-none d-sm-inline">Share</span>
+                      <FaShare size={12} />
+                      Share Profile
                     </button>
                   </div>
                 </div>
@@ -827,9 +848,9 @@ const PublicCandidates = () => {
                       </div>
                     </div>
                   ) : candidateMaterials.length > 0 ? (
-                    <div className="row" style={{ gap: window.innerWidth < 768 ? '0.5rem' : '1rem', margin: 0 }}>
+                    <div className="row g-2 g-md-3">
                       {candidateMaterials.slice(0, 6).map(material => (
-                        <div key={material._id} className="col-6 col-md-4" style={{ padding: window.innerWidth < 768 ? '0' : '0.5rem' }}>
+                        <div key={material._id} className="col-6 col-md-4">
                           <div
                             style={{
                               background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
