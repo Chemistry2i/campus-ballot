@@ -8,7 +8,12 @@ const {
   updateAdminStatus,
   deleteAdmin,
   getAdminActivities,
-  getAdminsList
+  getAdminsList,
+  createObserver,
+  getAllObservers,
+  updateObserver,
+  deleteObserver,
+  getObserverActivity
 } = require('../controllers/superAdminController');
 const backup = require('../controllers/backupController');
 
@@ -26,6 +31,13 @@ router.delete('/admins/:id', protect, superAdminOnly, deleteAdmin);
 // Admin & Super Admin: Activity monitoring (with role-based filtering)
 router.get('/admin-activities', protect, hasRole('admin', 'super_admin'), getAdminActivities);
 router.get('/admins-list', protect, superAdminOnly, getAdminsList);
+
+// Super Admin: Manage observers
+router.get('/observers', protect, superAdminOnly, getAllObservers);
+router.post('/observers', protect, superAdminOnly, createObserver);
+router.put('/observers/:id', protect, superAdminOnly, updateObserver);
+router.delete('/observers/:id', protect, superAdminOnly, deleteObserver);
+router.get('/observers/:id/activity', protect, superAdminOnly, getObserverActivity);
 
 module.exports = router;
 

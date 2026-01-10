@@ -175,6 +175,51 @@ const studentOrCandidate = hasRole('student', 'candidate');
 const studentOrAgent = hasRole('student', 'agent');
 const candidateOnly = hasRole('candidate');
 const agentOnly = hasRole('agent');
+const observerOnly = hasRole('observer');
+const adminOrObserver = hasRole('admin', 'super_admin', 'observer');
+
+// Observer-specific middleware with election scope check
+const observerWithAccess = (checkElectionId = false) => {
+  return asyncHandler(async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const isObserver = req.user.role === 'observer';
+    const isAdmin = ['admin', 'super_admin'].includes(req.user.role);
+
+    // Admins have full access
+    if (isAdmin) {
+      return next();
+    }
+
+    // Check if user is observer
+    if (!isObserver) {
+      return res.status(403).json({ message: "Access denied: Observer role required" });
+    }
+
+    // If election-specific access check is required
+    if (checkElectionId && req.user.observerInfo?.accessLevel === 'election-specific') {
+      const electionId = req.params.electionId || req.query.electionId || req.body.electionId;
+      
+      if (!electionId) {
+        return res.status(400).json({ message: "Election ID required" });
+      }
+
+      const hasAccess = req.user.observerInfo.assignedElections?.some(
+        id => id.toString() === electionId.toString()
+      );
+
+      if (!hasAccess) {
+        return res.status(403).json({ 
+          message: "Access denied: Not assigned to this election" 
+        });
+      }
+    }
+
+    next();
+  });
+};
 
 // 👤 Optional authentication - sets req.user if token exists, but doesn't fail if missing
 const optionalAuth = asyncHandler(async (req, res, next) => {
@@ -222,5 +267,8 @@ module.exports = {
   studentOrAgent,
   candidateOnly,
   agentOnly,
+  observerOnly,
+  adminOrObserver,
+  observerWithAccess,
   optionalAuth
 };

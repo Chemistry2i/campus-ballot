@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import Dashboard from './Dashboard';
 import ManageAdmins from './ManageAdmins';
+import ManageObservers from './ManageObservers';
 import GlobalSettings from './GlobalSettings';
 import AuditLogs from './AuditLogs';
 import ElectionOversight from './ElectionOversight';
@@ -80,6 +81,7 @@ const SuperAdmin = ({ user, onLogout }) => {
     'system-health': { label: 'System Health', icon: 'fa-heartbeat' },
     'dashboard': { label: 'Dashboard', icon: 'fa-chart-line' },
     'manage-admins': { label: 'Manage Admins', icon: 'fa-users-gear' },
+    'manage-observers': { label: 'Manage Observers', icon: 'fa-eye' },
     'global-settings': { label: 'Global Settings', icon: 'fa-sliders' },
     'audit-logs': { label: 'Audit Logs', icon: 'fa-file-lines' },
     'election-oversight': { label: 'Election Oversight', icon: 'fa-clipboard-check' },
@@ -537,6 +539,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             <Route path="system-health" element={<SystemHealth />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="manage-admins" element={<ManageAdmins collapsed={collapsed} isMobile={isMobile} />} />
+            <Route path="manage-observers" element={<ManageObservers />} />
             <Route path="global-settings" element={<GlobalSettings />} />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="election-oversight" element={<ElectionOversight />} />

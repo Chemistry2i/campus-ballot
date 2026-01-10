@@ -36,6 +36,7 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const engagementRoutes = require('./routes/engagementRoutes');
+const observerRoutes = require('./routes/observerRoutes');
 const backupController = require('./controllers/backupController');
 const cron = require('node-cron');
 
@@ -112,6 +113,7 @@ app.use('/api/meta', metaRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/observer', observerRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 

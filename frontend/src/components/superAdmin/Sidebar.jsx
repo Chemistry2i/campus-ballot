@@ -8,6 +8,7 @@ const navItems = [
   { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
+  { label: 'Manage Observers', icon: 'fa-solid fa-eye', to: '/super-admin/manage-observers' },
   { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
   { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
   { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
@@ -247,7 +248,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   }}
                   aria-current={isActive ? 'page' : undefined}
                   tabIndex={0}
-                  onKeyDown={e => handleKeyDown(e, idx)}
                   onClick={() => isMobile && setCollapsed(true)}
                   title={collapsed ? item.label : undefined}
                 >

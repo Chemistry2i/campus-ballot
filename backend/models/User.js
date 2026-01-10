@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'admin', 'super_admin', 'candidate', 'agent'], // Primary role
+        enum: ['student', 'admin', 'super_admin', 'candidate', 'agent', 'observer'], // Primary role
         default: 'student',
         required: true,
         trim: true,
@@ -57,6 +57,30 @@ const userSchema = new mongoose.Schema({
             type: [String],
             enum: ['updateMaterials', 'postUpdates', 'respondToQuestions', 'viewStatistics', 'manageTasks'],
             default: []
+        }
+    },
+    // Observer-specific fields
+    observerInfo: {
+        assignedElections: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Election'
+        }],
+        organization: {
+            type: String,
+            trim: true
+        },
+        accessLevel: {
+            type: String,
+            enum: ['full', 'election-specific'],
+            default: 'election-specific'
+        },
+        assignedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        assignedDate: {
+            type: Date,
+            default: Date.now
         }
     },
     studentId: {

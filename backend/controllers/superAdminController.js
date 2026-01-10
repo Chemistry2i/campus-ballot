@@ -334,6 +334,208 @@ const getAdminsList = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Create new observer
+// @route   POST /api/super-admin/observers
+// @access  Super Admin only
+const createObserver = asyncHandler(async (req, res) => {
+  const { 
+    name, 
+    email, 
+    password, 
+    organization, 
+    accessLevel, 
+    assignedElections 
+  } = req.body;
+
+  // Validation
+  if (!name || !email || !password) {
+    res.status(400);
+    throw new Error("Name, email, and password are required");
+  }
+
+  // Check if user already exists
+  const userExists = await User.findOne({ email: email.toLowerCase() });
+  if (userExists) {
+    res.status(400);
+    throw new Error("User with this email already exists");
+  }
+
+  // Validate assigned elections if election-specific access
+  if (accessLevel === 'election-specific' && (!assignedElections || assignedElections.length === 0)) {
+    res.status(400);
+    throw new Error("At least one election must be assigned for election-specific access");
+  }
+
+  // Create observer
+  const observer = await User.create({
+    name,
+    email: email.toLowerCase(),
+    password,
+    role: 'observer',
+    isVerified: true, // Observers are pre-verified
+    observerInfo: {
+      organization: organization || '',
+      accessLevel: accessLevel || 'election-specific',
+      assignedElections: assignedElections || [],
+      assignedBy: req.user._id,
+      assignedDate: new Date()
+    }
+  });
+
+  // Log activity
+  await logActivity(
+    req.user._id,
+    'CREATE_OBSERVER',
+    'User',
+    observer._id,
+    { observerEmail: email, accessLevel, organization },
+    getIpAddress(req),
+    getUserAgent(req)
+  );
+
+  res.status(201).json({
+    success: true,
+    message: "Observer created successfully",
+    data: {
+      id: observer._id,
+      name: observer.name,
+      email: observer.email,
+      role: observer.role,
+      organization: observer.observerInfo.organization,
+      accessLevel: observer.observerInfo.accessLevel,
+      assignedElections: observer.observerInfo.assignedElections
+    }
+  });
+});
+
+// @desc    Get all observers
+// @route   GET /api/super-admin/observers
+// @access  Super Admin only
+const getAllObservers = asyncHandler(async (req, res) => {
+  const observers = await User.find({ role: 'observer' })
+    .populate('observerInfo.assignedElections', 'title status startDate endDate')
+    .populate('observerInfo.assignedBy', 'name email')
+    .select('-password')
+    .sort('-createdAt');
+
+  res.json({
+    success: true,
+    count: observers.length,
+    data: observers
+  });
+});
+
+// @desc    Update observer
+// @route   PUT /api/super-admin/observers/:id
+// @access  Super Admin only
+const updateObserver = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, organization, accessLevel, assignedElections } = req.body;
+
+  const observer = await User.findById(id);
+
+  if (!observer || observer.role !== 'observer') {
+    res.status(404);
+    throw new Error("Observer not found");
+  }
+
+  // Update fields
+  if (name) observer.name = name;
+  if (organization !== undefined) observer.observerInfo.organization = organization;
+  if (accessLevel) observer.observerInfo.accessLevel = accessLevel;
+  if (assignedElections) observer.observerInfo.assignedElections = assignedElections;
+
+  await observer.save();
+
+  // Log activity
+  await logActivity(
+    req.user._id,
+    'UPDATE_OBSERVER',
+    'User',
+    observer._id,
+    { changes: req.body },
+    getIpAddress(req),
+    getUserAgent(req)
+  );
+
+  res.json({
+    success: true,
+    message: "Observer updated successfully",
+    data: observer
+  });
+});
+
+// @desc    Delete observer
+// @route   DELETE /api/super-admin/observers/:id
+// @access  Super Admin only
+const deleteObserver = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const observer = await User.findById(id);
+
+  if (!observer || observer.role !== 'observer') {
+    res.status(404);
+    throw new Error("Observer not found");
+  }
+
+  await observer.deleteOne();
+
+  // Log activity
+  await logActivity(
+    req.user._id,
+    'DELETE_OBSERVER',
+    'User',
+    id,
+    { observerEmail: observer.email },
+    getIpAddress(req),
+    getUserAgent(req)
+  );
+
+  res.json({
+    success: true,
+    message: "Observer deleted successfully"
+  });
+});
+
+// @desc    Get observer activity logs
+// @route   GET /api/super-admin/observers/:id/activity
+// @access  Super Admin only
+const getObserverActivity = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { page = 1, limit = 50 } = req.query;
+
+  const observer = await User.findById(id);
+
+  if (!observer || observer.role !== 'observer') {
+    res.status(404);
+    throw new Error("Observer not found");
+  }
+
+  const logs = await Log.find({ userId: id })
+    .sort('-timestamp')
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+
+  const total = await Log.countDocuments({ userId: id });
+
+  res.json({
+    success: true,
+    data: {
+      observer: {
+        id: observer._id,
+        name: observer.name,
+        email: observer.email
+      },
+      logs,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalLogs: total
+      }
+    }
+  });
+});
+
 module.exports = {
   getSystemSummary,
   getAllAdmins,
@@ -341,5 +543,10 @@ module.exports = {
   updateAdminStatus,
   deleteAdmin,
   getAdminActivities,
-  getAdminsList
+  getAdminsList,
+  createObserver,
+  getAllObservers,
+  updateObserver,
+  deleteObserver,
+  getObserverActivity
 };

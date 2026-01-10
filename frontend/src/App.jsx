@@ -24,6 +24,7 @@ import './styles/darkmode.css';
 import SimpleCandidateTest from './components/SimpleCandidateTest';
 import TestingRoutes from './components/TestingRoutes';
 import CandidateApplication from './pages/CandidateApplication';
+import { ObserverLayout, ObserverDashboardContent, ElectionMonitor } from './components/observer';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -116,6 +117,8 @@ function App() {
                 <Navigate to="/admin" replace />
               ) : currentUser.role === 'super_admin' ? (
                 <Navigate to="/super-admin/system-health" replace />
+              ) : currentUser.role === 'observer' ? (
+                <Navigate to="/observer/dashboard" replace />
               ) : (
                 <Navigate to="/student-dashboard" replace />
               )
@@ -189,6 +192,20 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/observer/*"
+          element={
+            <ProtectedRoute user={currentUser} requiredRole="observer">
+              <ThemeProvider>
+                <ObserverLayout />
+              </ThemeProvider>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ObserverDashboardContent />} />
+          <Route path="elections/:electionId" element={<ElectionMonitor />} />
+        </Route>
         <Route
           path="/test-routes"
           element={
