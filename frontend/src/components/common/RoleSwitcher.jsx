@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUserGraduate, FaUserTie, FaExchangeAlt, FaChevronDown } from 'react-icons/fa';
+import { FaUserGraduate, FaUserTie, FaUsers, FaExchangeAlt, FaChevronDown } from 'react-icons/fa';
 
 /**
  * RoleSwitcher Component
@@ -15,22 +15,36 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user has candidate role (either primary or additional)
+  // Check if user has multiple roles (student + candidate/agent)
   const hasMultipleRoles = user?.additionalRoles?.includes('candidate') || 
-                           (user?.role === 'candidate' && user?.additionalRoles?.includes('student'));
+                           user?.additionalRoles?.includes('agent') ||
+                           (user?.role === 'candidate' && user?.additionalRoles?.includes('student')) ||
+                           (user?.role === 'agent' && user?.additionalRoles?.includes('student'));
 
   // Don't render if user doesn't have multiple roles
   if (!hasMultipleRoles) return null;
 
   // Determine current active role based on current path
   const isInCandidateDashboard = location.pathname.startsWith('/candidate');
-  const currentRole = isInCandidateDashboard ? 'candidate' : 'student';
+  const isInAgentDashboard = location.pathname.startsWith('/agent');
+  const currentRole = isInCandidateDashboard ? 'candidate' : isInAgentDashboard ? 'agent' : 'student';
+
+  // Get available roles
+  const availableRoles = ['student'];
+  if (user?.additionalRoles?.includes('candidate') || user?.role === 'candidate') {
+    availableRoles.push('candidate');
+  }
+  if (user?.additionalRoles?.includes('agent') || user?.role === 'agent') {
+    availableRoles.push('agent');
+  }
 
   const handleSwitch = (targetRole) => {
     setIsOpen(false);
-    if (targetRole === 'candidate' && !isInCandidateDashboard) {
+    if (targetRole === 'candidate' && currentRole !== 'candidate') {
       navigate('/candidate');
-    } else if (targetRole === 'student' && isInCandidateDashboard) {
+    } else if (targetRole === 'agent' && currentRole !== 'agent') {
+      navigate('/agent');
+    } else if (targetRole === 'student' && currentRole !== 'student') {
       navigate('/student-dashboard');
     }
   };
@@ -143,7 +157,7 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
       >
         <FaExchangeAlt style={{ fontSize: window.innerWidth < 768 ? '12px' : '14px', color: '#6366f1' }} />
         <span style={{ display: window.innerWidth < 400 ? 'none' : 'inline' }}>
-          {currentRole === 'student' ? 'Student' : 'Candidate'}
+          {currentRole === 'student' ? 'Student' : currentRole === 'candidate' ? 'Candidate' : 'Agent'}
         </span>
         <FaChevronDown 
           style={{ 
@@ -221,29 +235,57 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
               )}
             </div>
             
-            <div
-              className="role-menu-item"
-              style={menuItemStyle(currentRole === 'candidate')}
-              onClick={() => handleSwitch('candidate')}
-            >
-              <div style={iconContainerStyle('candidate')}>
-                <FaUserTie />
-              </div>
-              <div>
-                <div style={{ fontWeight: '500' }}>Candidate View</div>
-                <div style={{ 
-                  fontSize: window.innerWidth < 768 ? '11px' : '12px', 
-                  color: isDarkMode ? '#9ca3af' : '#6b7280' 
-                }}>
-                  Manage your campaign
+            {availableRoles.includes('candidate') && (
+              <div
+                className="role-menu-item"
+                style={menuItemStyle(currentRole === 'candidate')}
+                onClick={() => handleSwitch('candidate')}
+              >
+                <div style={iconContainerStyle('candidate')}>
+                  <FaUserTie />
                 </div>
-              </div>
-              {currentRole === 'candidate' && (
-                <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
-                  Active
+                <div>
+                  <div style={{ fontWeight: '500' }}>Candidate View</div>
+                  <div style={{ 
+                    fontSize: window.innerWidth < 768 ? '11px' : '12px', 
+                    color: isDarkMode ? '#9ca3af' : '#6b7280' 
+                  }}>
+                    Manage your campaign
+                  </div>
                 </div>
-              )}
-            </div>
+                {currentRole === 'candidate' && (
+                  <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                    Active
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {availableRoles.includes('agent') && (
+              <div
+                className="role-menu-item"
+                style={menuItemStyle(currentRole === 'agent')}
+                onClick={() => handleSwitch('agent')}
+              >
+                <div style={{...iconContainerStyle('agent'), background: isDarkMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.15)', color: isDarkMode ? '#a78bfa' : '#7c3aed'}}>
+                  <FaUsers />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '500' }}>Agent View</div>
+                  <div style={{ 
+                    fontSize: window.innerWidth < 768 ? '11px' : '12px', 
+                    color: isDarkMode ? '#9ca3af' : '#6b7280' 
+                  }}>
+                    Support candidate campaigns
+                  </div>
+                </div>
+                {currentRole === 'agent' && (
+                  <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                    Active
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}

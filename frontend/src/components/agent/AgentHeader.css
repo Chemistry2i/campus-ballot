@@ -1,0 +1,62 @@
+/* Responsive styles for AgentHeader */
+.agent-header-root {
+  width: 100%;
+}
+.agent-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  flex-wrap: wrap;
+}
+.agent-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  flex: 1 1 0;
+  min-width: 0;
+}
+.agent-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.agent-time {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.agent-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
+  flex-wrap: wrap;
+}
+.agent-circle-btn {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .agent-time {
+    display: none;
+  }
+
+  .agent-actions {
+    gap: 0.4rem;
+  }
+
+  .agent-circle-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .agent-search-box {
+    min-width: 140px !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+}

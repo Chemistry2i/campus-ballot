@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // You can configure storage as needed
+const { upload } = require('../config/cloudinary');
 
 const {
   createCandidate,

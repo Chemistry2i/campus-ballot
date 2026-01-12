@@ -1,0 +1,38 @@
+/* Responsive sidebar for AgentDashboard */
+.agent-sidebar {
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+/* Mobile: hide sidebar by translating left; open with .open */
+@media (max-width: 767px) {
+  .agent-sidebar {
+    transform: translateX(-100%);
+    width: 80%;
+    max-width: 320px;
+    z-index: 2000;
+  }
+
+  .agent-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .agent-main-mobile-shift {
+    margin-left: 0 !important;
+  }
+
+  .agent-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1500;
+  }
+
+  /* show menu button in header on mobile */
+  .agent-menu-btn {
+    display: inline-flex !important;
+  }
+}
+
+/* Desktop: hide mobile menu button */
+.agent-menu-btn { display: none; }

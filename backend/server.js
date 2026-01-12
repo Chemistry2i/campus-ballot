@@ -72,15 +72,6 @@ app.use(cors({
 
 // Static files
 app.use(express.static("public"));
-// Serve uploaded files (images) from the uploads folder
-// Add headers so images can be embedded/loaded cross-origin by the frontend dev server
-app.use('/uploads', (req, res, next) => {
-  // Allow the resource to be loaded cross-origin (needed when frontend runs on a different origin)
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  // Allow simple cross-origin GETs (images) from any origin in dev; CORS middleware still applies for APIs
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  return next();
-}, express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from React build
 // const path = require("path");

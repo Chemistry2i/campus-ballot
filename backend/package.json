@@ -40,6 +40,8 @@
 
     "bcryptjs": "^3.0.2",
 
+    "cloudinary": "^1.41.3",
+
     "colors": "^1.4.0",
 
     "cookie-parser": "^1.4.7",
@@ -66,11 +68,14 @@
 
     "multer": "^2.0.2",
 
+    "multer-storage-cloudinary": "^4.0.0",
+
+    "node-cron": "^3.0.3",
+
     "nodemailer": "^7.0.5",
 
     "nodemon": "^3.1.11",
 
-    "node-cron": "^3.0.3",
     "socket.io": "^4.8.1"
 
   }

@@ -2014,8 +2014,8 @@ function StudentDashboard({ user }) {
           </div>
           {/* Sidebar Footer */}
           <div style={{ 
-            marginTop: '1rem', 
-            paddingTop: '1rem', 
+            marginTop: '0.5em', 
+            paddingTop: '0.5rem', 
             paddingLeft: '1.5rem',
             paddingRight: '1.5rem',
             paddingBottom: '1.5rem',

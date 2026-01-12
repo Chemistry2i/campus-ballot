@@ -1,0 +1,26 @@
+/* Global small tweaks for agent pages on mobile */
+@media (max-width: 767px) {
+  .container-fluid.p-4 {
+    padding: 0.75rem !important;
+  }
+
+  .card .card-body {
+    padding: 0.75rem !important;
+  }
+
+  .btn.w-100.d-flex {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .list-group-item .d-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  .badge {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+}

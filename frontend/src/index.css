@@ -17,8 +17,6 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
   font-family: 'Poppins', Arial, Helvetica, sans-serif;
@@ -302,6 +300,13 @@ html {
   overflow-x: hidden !important;
 }
 
+/* Page-level helper to ensure specific pages (agent) can span full width
+   without changing global container behavior. Use only on page wrappers. */
+.agent-page-root {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 /* Testimonials horizontal scroll animation */
 .testimonials-scroll-container {
   overflow: hidden;

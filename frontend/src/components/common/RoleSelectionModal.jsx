@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaUserGraduate, FaUserTie, FaTimes } from 'react-icons/fa';
+import { FaUserGraduate, FaUserTie, FaUsers, FaTimes } from 'react-icons/fa';
 
 /**
  * RoleSelectionModal Component
@@ -166,7 +166,11 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
           <div style={{ fontSize: window.innerWidth < 768 ? '36px' : '48px', marginBottom: window.innerWidth < 768 ? '12px' : '16px' }}>🎉</div>
           <h2 style={titleStyle}>Welcome back, {user?.name?.split(' ')[0] || 'Champion'}!</h2>
           <p style={subtitleStyle}>
-            You're registered as a <strong>candidate</strong>. Choose how you'd like to continue:
+            {user?.additionalRoles?.includes('candidate') && user?.additionalRoles?.includes('agent') 
+              ? "You have multiple roles. Choose how you'd like to continue:" 
+              : user?.additionalRoles?.includes('candidate') 
+              ? "You're registered as a candidate. Choose how you'd like to continue:" 
+              : "You're registered as an agent. Choose how you'd like to continue:"}
           </p>
         </div>
 
@@ -185,19 +189,37 @@ const RoleSelectionModal = ({ user, onSelectRole, onClose }) => {
             </div>
           </div>
 
-          <div 
-            className="role-card"
-            style={cardStyle('candidate')}
-            onClick={() => onSelectRole('candidate')}
-          >
-            <div style={iconContainerStyle('candidate')}>
-              <FaUserTie />
+          {user?.additionalRoles?.includes('agent') && (
+            <div 
+              className="role-card"
+              style={{...cardStyle('agent'), background: 'linear-gradient(145deg, #f5f3ff, #ede9fe)'}}
+              onClick={() => onSelectRole('agent')}
+            >
+              <div style={{...iconContainerStyle('agent'), background: '#8b5cf6', boxShadow: '0 8px 24px rgba(139, 92, 246, 0.4)'}}>
+                <FaUsers />
+              </div>
+              <div style={cardTitleStyle}>Agent Dashboard</div>
+              <div style={cardDescStyle}>
+                Support candidate campaigns and voter outreach
+              </div>
             </div>
-            <div style={cardTitleStyle}>Candidate Dashboard</div>
-            <div style={cardDescStyle}>
-              Manage your campaign, agents, and view statistics
+          )}
+
+          {user?.additionalRoles?.includes('candidate') && (
+            <div 
+              className="role-card"
+              style={cardStyle('candidate')}
+              onClick={() => onSelectRole('candidate')}
+            >
+              <div style={iconContainerStyle('candidate')}>
+                <FaUserTie />
+              </div>
+              <div style={cardTitleStyle}>Candidate Dashboard</div>
+              <div style={cardDescStyle}>
+                Manage your campaign, agents, and view statistics
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div style={noteStyle}>

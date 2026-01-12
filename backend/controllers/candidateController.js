@@ -24,18 +24,16 @@ const createCandidate = asyncHandler(async (req, res) => {
       manifesto
     } = req.body;
 
-    // Handle files (photo and symbol)
+    // Handle files (photo and symbol) - store Cloudinary URLs if available
     let photo = null;
     let symbol = null;
     if (req.files) {
       if (req.files.photo && req.files.photo[0]) {
-        // normalize to URL path served by /uploads
-        const fname = req.files.photo[0].filename || req.files.photo[0].path.split(/[\\/]/).pop();
-        photo = `/uploads/${fname}`;
+        // Use Cloudinary URL if available, fallback to local path
+        photo = req.files.photo[0].path || null;
       }
       if (req.files.symbol && req.files.symbol[0]) {
-        const sname = req.files.symbol[0].filename || req.files.symbol[0].path.split(/[\\/]/).pop();
-        symbol = `/uploads/${sname}`;
+        symbol = req.files.symbol[0].path || null;
       }
     }
 
