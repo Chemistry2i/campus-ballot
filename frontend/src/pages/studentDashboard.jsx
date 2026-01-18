@@ -2,7 +2,7 @@ import "./swal-zindex-override.css";
 import "../styles/animations.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';

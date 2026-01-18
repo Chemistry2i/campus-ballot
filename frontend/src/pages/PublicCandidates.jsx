@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { FaDownload } from 'react-icons/fa';
 

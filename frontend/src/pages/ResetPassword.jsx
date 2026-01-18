@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLock, faKey } from "@fortawesome/free-solid-svg-icons";
