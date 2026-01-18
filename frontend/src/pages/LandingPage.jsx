@@ -82,7 +82,7 @@ const LandingPage = () => {
 
       // Send to backend API
       const response = await fetch(
-        "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/contact",
+        "https://api.campusballot.tech/api/contact",
         {
           method: "POST",
           headers: {

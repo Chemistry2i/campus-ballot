@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev${imagePath}`;
+  return `https://api.campusballot.tech${imagePath}`;
 }
 
 export default getImageUrl;

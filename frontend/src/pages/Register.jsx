@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/auth/register",
+      "https://api.campusballot.tech/api/auth/register",
       form
     );
     Swal.fire({

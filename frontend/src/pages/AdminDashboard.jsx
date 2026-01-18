@@ -94,7 +94,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   async function fetchStats() {
     try {
       const res = await axios.get(
-        "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
+        "https://api.campusballot.tech/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -209,7 +209,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/dashboard-stats",
+        "https://api.campusballot.tech/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -243,14 +243,14 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       let res;
       try {
         res = await axios.get(
-          "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications",
+          "https://api.campusballot.tech/api/admin/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } catch (err) {
         res = await axios.get(
-          "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications",
+          "https://api.campusballot.tech/api/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -303,7 +303,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     );
     try {
       await axios.put(
-        `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${id}/read`,
+        `https://api.campusballot.tech/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -313,7 +313,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.put(
-          `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications/${id}/read`,
+          `https://api.campusballot.tech/api/admin/notifications/${id}/read`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -351,7 +351,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
 
     try {
       await axios.delete(
-        `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${id}`,
+        `https://api.campusballot.tech/api/notifications/${id}`,
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -364,7 +364,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.delete(
-          `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/admin/notifications/${id}`,
+          `https://api.campusballot.tech/api/admin/notifications/${id}`,
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -389,7 +389,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
       try {
         await axios.put(
-          "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/mark-all-read",
+          "https://api.campusballot.tech/api/notifications/mark-all-read",
           {},
           {
             headers: { Authorization: `Bearer ${user?.token}` },
@@ -400,7 +400,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
         await Promise.all(
           unread.map((n) =>
             axios.put(
-              `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/notifications/${
+              `https://api.campusballot.tech/api/notifications/${
                 n._id || n.id
               }/read`,
               {},
