@@ -559,8 +559,11 @@ const logout = asyncHandler(async (req, res) => {
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
     });
+      // For students, clear currentSessionToken to force logout on all devices
+      if (req.user.role === 'student') {
+        await User.findByIdAndUpdate(req.user._id, { $set: { currentSessionToken: null } });
+      }
   }
-  
   res.json({ message: "Logout successful" });
 });
 
