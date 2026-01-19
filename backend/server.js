@@ -56,8 +56,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",           // local dev
-    "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
+    "https://www.campusballot.tech",           // local dev
+    "https://www.campusballot.tech",
     CORS_ORIGIN   // deployed frontend
   ],
   credentials: true
@@ -129,8 +129,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
-      "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
+      "https://www.campusballot.tech",
+      "https://www.campusballot.tech",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],

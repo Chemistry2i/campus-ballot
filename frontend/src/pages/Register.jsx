@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev/api/auth/register",
+      "https://api.campusballot.tech/api/auth/register",
       form
     );
     Swal.fire({

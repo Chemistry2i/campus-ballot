@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev${imagePath}`;
+  return `https://api.campusballot.tech${imagePath}`;
 }
 
 export default getImageUrl;
