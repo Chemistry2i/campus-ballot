@@ -53,12 +53,58 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(helmet());
+// Add strong Content Security Policy (CSP)
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'", "https://www.campusballot.tech", "https://api.campusballot.tech"],
+      scriptSrc: [
+        "'self'",
+        "https://www.campusballot.tech",
+        "https://api.campusballot.tech",
+        "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net"
+      ],
+      styleSrc: [
+        "'self'",
+        "https://www.campusballot.tech",
+        "https://api.campusballot.tech",
+        "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net",
+        "'unsafe-inline'"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://res.cloudinary.com",
+        "https://www.campusballot.tech",
+        "https://api.campusballot.tech"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://www.campusballot.tech",
+        "https://api.campusballot.tech"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net",
+        "https://www.campusballot.tech",
+        "https://api.campusballot.tech"
+      ],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",           // local dev
+    "https://www.campusballot.tech",
+    "https://api.campusballot.tech",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
-    CORS_ORIGIN   // deployed frontend
+    "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
 }));
@@ -81,13 +127,32 @@ app.use((req, res, next) => {
   });
   next();
 });
-// app.use(rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100,
-//   message: "Too many requests, please try again later.",
-//   standardHeaders: true,
-//   legacyHeaders: false,
-// }));
+
+// Custom rate limiter: higher limits for admin, super admin, observer
+const { ipKeyGenerator } = require("express-rate-limit");
+
+const customRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: (req, res) => {
+    let limit = 100;
+    try {
+      const user = req.user || (req.session && req.session.user);
+      if (user && ["admin", "super admin", "observer"].includes(user.role)) {
+        limit = 1000;
+      }
+    } catch (e) {}
+    return limit;
+  },
+  keyGenerator: (req, res) => {
+    if (req.user && req.user.id) return req.user.id;
+    // Use the recommended helper for IPs
+    return ipKeyGenerator(req, res);
+  },
+  message: "Too many requests, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(customRateLimiter);
 
 // Static files
 app.use(express.static("public"));

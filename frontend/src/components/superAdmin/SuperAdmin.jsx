@@ -148,12 +148,13 @@ const SuperAdmin = ({ user, onLogout }) => {
               ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
               : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
             borderBottom: `1px solid ${colors.border}`,
-            padding: '1rem 2rem',
+            padding: '1.2rem 2rem', // Increased from 1rem to 1.2rem
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '1.5rem',
+            minHeight: '72px', // Increased from default (if any) to 72px
             boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(37,99,235,0.08)',
             position: 'sticky',
             top: 0,
@@ -161,281 +162,139 @@ const SuperAdmin = ({ user, onLogout }) => {
           }}
         >
           {/* LEFT - Logo & Title */}
-           <div className="d-flex align-items-center justify-content-start flex-nowrap gap-3" style={{ width: 'auto', flexShrink: 0 }}>
-            <div className="d-flex align-items-center gap-3 flex-shrink-0" style={{ minWidth: 0 }}>
-              <div 
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: isDarkMode 
-                    ? 'linear-gradient(135deg, #fffbe6 0%, #fbbf24 100%)'
-                    : 'linear-gradient(135deg, #fffbe6 0%, #fbbf24 100%)',
-                  boxShadow: '0 4px 12px rgba(251, 191, 36, 0.25)'
-                }}
-              >
-                <i className="fa-solid fa-crown" style={{ fontSize: '28px', color: '#d97706' }}></i>
-              </div>
-              <div>
-                <h1 className="mb-0 fw-bold" style={{ fontSize: '1.5rem', color: colors.text }}>
-                  Super Admin
-                </h1>
-                <p className="mb-0 small" style={{ color: colors.textMuted, fontSize: '0.75rem' }}>
-                  System Control
-                </p>
-              </div>
-            </div> 
+          <div className="d-flex align-items-center gap-1 flex-shrink-0" style={{ minWidth: 0 }}>
+            {/* Kyambogo University logo for branding, increased size, reduced gap */}
+            <img src="/logo.jpg" alt="Kyambogo University Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', marginRight: '6px' }} />
+            <span className="fw-bold" style={{ fontSize: '1.15rem', color: colors.text }}>
+              Super Admin
+            </span>
           </div>
-
-          {/* CENTER - Search & Status */}
-          <div className="d-flex align-items-center gap-2 flex-grow-1 justify-content-center" style={{ minWidth: '380px' }}>
-            {/* Search Bar */}
-            <div className="flex-grow-1" style={{ maxWidth: '380px', minWidth: 0 }}>
-              <div className="position-relative d-flex align-items-center gap-2">
-                <i 
-                  className="fa-solid fa-search position-absolute" 
-                  style={{ 
-                    left: '12px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)',
-                    color: colors.textMuted 
-                  }}
-                  aria-label="Search icon"
-                ></i>
-                <input
-                  type="text"
-                  className="form-control search-input"
-                  placeholder="Search users, logs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    paddingLeft: '40px',
-                    paddingRight: searchQuery ? '40px' : '12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.border}`,
-                    background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
-                    color: colors.text,
-                    height: '38px',
-                    fontSize: '0.9rem'
-                  }}
-                  aria-label="Search input"
-                />
-                {searchQuery && (
-                  <button
-                    className="btn btn-sm position-absolute"
-                    onClick={() => setSearchQuery('')}
-                    style={{
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      padding: '0.25rem 0.5rem',
-                      color: colors.textMuted
-                    }}
-                    aria-label="Clear search"
-                  >
-                    <i className="fa-solid fa-times"></i>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* System Status Badge */}
-            <div
-              className="d-flex align-items-center gap-2 px-2 py-1 rounded"
+          {/* CENTER - Search & Greeting */}
+          <div className="d-flex align-items-center gap-2 flex-grow-1 justify-content-center" style={{ minWidth: '280px', padding: '0 8px' }}>
+            <input
+              type="text"
+              className="form-control search-input search-animate"
+              placeholder="Search users, logs..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
               style={{
-                background: isDarkMode ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.05)',
-                border: `1px solid ${isDarkMode ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)'}`,
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'box-shadow 0.2s',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
+                paddingLeft: '14px',
+                borderRadius: '14px',
+                border: `1.5px solid ${colors.border}`,
+                boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+                background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                color: colors.text,
+                height: '42px',
+                fontSize: '1rem',
+                width: '700px', // Reduced width
+                transition: 'box-shadow 0.2s, transform 0.2s',
               }}
-              tabIndex={0}
-              title="System Status: Healthy"
+              aria-label="Search input"
+              onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
+              onBlur={e => e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)'}
+            />
+            {/* Customizable greeting with waving hand or sun/moon icon */}
+            <span className="ms-2 text-muted d-flex align-items-center" style={{ fontWeight: 600, fontSize: '1.05rem', gap: '0.4rem', whiteSpace: 'nowrap' }}>
+              {isDarkMode ? (
+                <i className="fa-solid fa-moon" style={{ color: '#2563eb', fontSize: '1.1rem' }}></i>
+              ) : (
+                <span role="img" aria-label="wave" style={{ fontSize: '1.1rem' }}>👋</span>
+              )}
+              Welcome, {user?.name?.split(' ')[0] || 'Super Admin'}!
+            </span>
+          </div>
+          {/* RIGHT - Notifications, Theme, Avatar */}
+          <div className="d-flex align-items-center gap-2 flex-shrink-0" style={{ whiteSpace: 'nowrap', paddingRight: '8px' }}>
+            {/* Notifications - compact, animated hover */}
+            <button 
+              className="btn btn-sm d-flex align-items-center justify-content-center position-relative notif-animate"
+              style={{ background: 'transparent', border: 'none', color: colors.text, width: '32px', height: '32px', fontSize: '1.1rem', padding: 0, transition: 'transform 0.18s, box-shadow 0.18s', marginRight: '16px' }}
+              onClick={() => setShowNotifications(!showNotifications)}
+              aria-label="Show notifications"
+              title="Notifications"
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(37,99,235,0.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
             >
+              <i className="fa-solid fa-bell"></i>
+              {notifications.some(n => !n.read) && (
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem', padding: '2px 4px' }}>
+                  {notifications.filter(n => !n.read).length}
+                </span>
+              )}
+            </button>
+            {/* Theme Toggle - with tooltip and animated hover */}
+            <div title="Switch to light/dark mode" style={{ transition: 'transform 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}>
+              <ThemeToggle showLabel={true} />
+            </div>
+            {/* User Profile - compact, with dropdown menu - moved to last, animated hover */}
+            <div className="d-flex align-items-center gap-1 position-relative" style={{ paddingLeft: '0.5rem', transition: 'transform 0.18s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}>
               <div
                 style={{
-                  width: '6px',
-                  height: '6px',
+                  width: '45px',
+                  height: '45px',
+                  cursor: 'pointer',
                   borderRadius: '50%',
-                  background: '#10b981',
-                  animation: 'pulse 2s infinite'
+                  background: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold',
+                  overflow: 'hidden',
+                  transition: 'box-shadow 0.18s, transform 0.18s',
                 }}
-                aria-label="System healthy indicator"
-              />
-              <span className="small fw-bold" style={{ color: '#10b981', fontSize: '0.8rem' }}>Healthy</span>
-            </div>
-
-            {/* Notifications */}
-            <div className="position-relative">
-              <button 
-                className="btn btn-sm d-flex align-items-center justify-content-center position-relative"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '6px',
-                  background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(37,99,235,0.05)',
-                  border: `1px solid ${colors.border}`,
-                  color: colors.text,
-                  padding: 0
-                }}
-                onClick={() => setShowNotifications(!showNotifications)}
-                aria-label="Show notifications"
-                title="Notifications"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                aria-label="Open user menu"
+                title="User menu"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') setShowProfileMenu(!showProfileMenu); }}
               >
-                <i className="fa-solid fa-bell"></i>
-                {notifications.some(n => !n.read) && (
-                  <span 
-                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                    style={{ fontSize: '0.6rem', padding: '2px 4px' }}
-                  >
-                    {notifications.filter(n => !n.read).length}
-                  </span>
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt="Super Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'SA'
                 )}
-              </button>
-              {showNotifications && (
-                <div 
+              </div>
+              {showProfileMenu && (
+                <div
                   className="position-absolute shadow-lg rounded"
                   style={{
-                    top: '50px',
+                    top: '66px',
                     right: 0,
-                    width: '340px',
-                    background: colors.surface,
+                    minWidth: '180px',
+                    zIndex: 100,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                     border: `1px solid ${colors.border}`,
-                    zIndex: 1000,
-                    maxHeight: '400px',
-                    overflowY: 'auto'
+                    padding: '0.5rem 0',
+                    background: isDarkMode ? colors.surface : '#fff',
+                    color: colors.text,
+                    transition: 'background 0.2s, color 0.2s',
                   }}
                 >
-                  <div className="p-3 border-bottom d-flex align-items-center justify-content-between" style={{ borderColor: colors.border }}>
-                    <h6 className="mb-0 fw-bold" style={{ color: colors.text, fontSize: '0.95rem' }}>Notifications</h6>
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-link btn-sm p-0"
-                        style={{ color: colors.primary, textDecoration: 'underline', fontSize: 12 }}
-                        onClick={() => setNotifications(n => n.map(x => ({ ...x, read: true })))}
-                        disabled={notifications.every(n => n.read)}
-                        aria-label="Mark all as read"
-                      >Mark all as read</button>
-                      <button
-                        className="btn btn-link btn-sm p-0"
-                        style={{ color: colors.danger, textDecoration: 'underline', fontSize: 12 }}
-                        onClick={() => setNotifications([])}
-                        aria-label="Clear notifications"
-                      >Clear all</button>
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    {notifications.length === 0 ? (
-                      <div className="text-center text-muted py-3">No notifications</div>
-                    ) : notifications.map(n => (
-                      <div
-                        key={n.id}
-                        className={`p-2 mb-1 rounded d-flex align-items-start gap-2`}
-                        style={{
-                          background: !n.read
-                            ? (isDarkMode ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.08)')
-                            : (isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)'),
-                          borderLeft: !n.read ? `3px solid ${colors.primary}` : 'none',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => setNotifications(list => list.map(x => x.id === n.id ? { ...x, read: true } : x))}
-                        aria-label={n.title}
-                      >
-                        <i className={`fa-solid ${n.type === 'info' ? 'fa-circle-info text-primary' : n.type === 'warning' ? 'fa-exclamation-triangle text-warning' : 'fa-check-circle text-success'} mt-1`} style={{ fontSize: '0.9rem' }}></i>
-                        <div className="flex-grow-1">
-                          <p className="mb-0 small fw-bold" style={{ color: colors.text }}>{n.title}</p>
-                          <p className="mb-0 small" style={{ color: colors.textMuted, fontSize: '0.85rem' }}>{n.message}</p>
-                          <span className="small" style={{ color: colors.textMuted, fontSize: '0.75rem' }}>{n.time}</span>
-                        </div>
-                        {!n.read && <span className="badge bg-primary ms-2" style={{ fontSize: '0.7rem' }}>New</span>}
-                      </div>
-                    ))}
-                  </div>
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: colors.text, fontSize: '0.95rem', cursor: 'pointer' }}>
+                    <i className="fa-solid fa-user" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Profile
+                  </button>
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: colors.text, fontSize: '0.95rem', cursor: 'pointer' }}>
+                    <i className="fa-solid fa-gear" style={{ color: isDarkMode ? '#fbbf24' : '#2563eb', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Settings
+                  </button>
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.95rem', cursor: 'pointer' }} onClick={handleLogout}>
+                    <i className="fa-solid fa-right-from-bracket" style={{ color: '#dc2626', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Logout
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Help & Shortcuts */}
-            <button 
-              className="btn btn-sm d-flex align-items-center justify-content-center"
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '6px',
-                background: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(37,99,235,0.05)',
-                border: `1px solid ${colors.border}`,
-                color: colors.text,
-                padding: 0,
-                cursor: 'pointer'
-              }}
-              onClick={() => setShowShortcuts(true)}
-              aria-label="Keyboard shortcuts"
-              title="Keyboard Shortcuts (Ctrl+Shift+?)"
-            >
-              <i className="fa-solid fa-keyboard"></i>
-            </button>
           </div>
-
-          {/* RIGHT - User Profile, Theme & Logout */}
-          <div className="d-flex align-items-center gap-2 flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
-            {/* User Profile Brief */}
-            <div className="d-flex align-items-center gap-2" style={{ paddingRight: '0.5rem', borderRight: `1px solid ${colors.border}` }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: '#2563eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '0.85rem',
-                fontWeight: 'bold'
-              }}>
-                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'SA'}
-              </div>
-              <div className="d-none d-lg-block">
-                <p className="mb-0 small fw-bold" style={{ color: colors.text, fontSize: '0.85rem' }}>{user?.name || 'Super Admin'}</p>
-                <p className="mb-0 small" style={{ color: colors.textMuted, fontSize: '0.75rem' }}>super_admin</p>
-              </div>
-            </div>
-
-            {/* Theme Toggle */}
-            <ThemeToggle showLabel={true} />
-
-            {/* Logout Button */}
-            <button
-              className="btn btn-outline-danger btn-sm d-flex align-items-center gap-2"
-              onClick={handleLogout}
-              style={{ borderRadius: '6px', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-              aria-label="Logout"
-              title="Logout from system"
-            >
-              <i className="fa-solid fa-right-from-bracket"></i>
-              <span className="d-none d-md-inline">Logout</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Breadcrumb Navigation */}
-        <div
-          style={{
-            background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-            borderBottom: `1px solid ${colors.border}`,
-            padding: '0.75rem 2rem',
-            fontSize: '0.9rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          <i className="fa-solid fa-home" style={{ color: colors.primary, fontSize: '0.85rem' }}></i>
-          <span style={{ color: colors.text }}>Dashboard</span>
-          <i className="fa-solid fa-chevron-right" style={{ color: colors.textMuted, fontSize: '0.7rem', margin: '0 0.25rem' }}></i>
-          <span style={{ color: colors.textMuted }}>System Management</span>
         </div>
 
         {/* Keyboard Shortcuts Modal */}
@@ -558,3 +417,17 @@ const SuperAdmin = ({ user, onLogout }) => {
 };
 
 export default SuperAdmin;
+
+/* Add this CSS to the file or your global stylesheet:
+.profile-menu-item {
+  transition: background 0.22s, color 0.22s;
+}
+.profile-menu-item:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+[data-theme="dark"] .profile-menu-item:hover {
+  background: #1e293b;
+  color: #60a5fa;
+}
+*/
