@@ -22,11 +22,10 @@ const SystemHealth = () => {
   const fetchSystemHealth = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/super-admin/system-health', {
+      const res = await axios.get('/api/super-admin/reports/system-summary', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHealthData(res.data);
-      
       // Add to metrics history for charts
       const now = new Date();
       const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -41,37 +40,9 @@ const SystemHealth = () => {
         // Keep only last 20 data points
         return newHistory.slice(-20);
       });
-      
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch system health', err);
-      // Fallback dummy data
-      const dummyData = {
-        status: 'Healthy',
-        uptime: '45 days 12 hours',
-        cpuUsage: Math.floor(Math.random() * 30) + 30,
-        memoryUsage: Math.floor(Math.random() * 20) + 50,
-        databaseConnections: 15,
-        activeUsers: 234,
-        apiResponseTime: Math.floor(Math.random() * 50) + 100,
-        errorRate: 0.02,
-      };
-      setHealthData(dummyData);
-      
-      // Add to metrics history
-      const now = new Date();
-      const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-      setMetricsHistory(prev => {
-        const newHistory = [...prev, {
-          time: timeLabel,
-          cpu: dummyData.cpuUsage,
-          memory: dummyData.memoryUsage,
-          responseTime: dummyData.apiResponseTime,
-          activeUsers: dummyData.activeUsers
-        }];
-        return newHistory.slice(-20);
-      });
-      
       setLoading(false);
     }
   };
@@ -98,6 +69,17 @@ const SystemHealth = () => {
       </div>
     </div>
   );
+
+  // Compute status based on real metrics
+  const computeStatus = () => {
+    if (!healthData) return 'Unknown';
+    if (typeof healthData.cpuUsage === 'number' && healthData.cpuUsage > 90) return 'Critical';
+    if (typeof healthData.memoryUsage === 'number' && healthData.memoryUsage > 90) return 'Critical';
+    if (typeof healthData.cpuUsage === 'number' && healthData.cpuUsage > 75) return 'Warning';
+    if (typeof healthData.memoryUsage === 'number' && healthData.memoryUsage > 75) return 'Warning';
+    return 'Healthy';
+  };
+  const status = computeStatus();
 
   return (
     <div className="container-fluid">
@@ -238,15 +220,59 @@ const SystemHealth = () => {
           </div>
         </div>
 
-        {/* API Response Time */}
+        {/* API Response Time (real data) */}
         <div className="col-md-3">
           <div className="card">
             <div className="card-body">
               <h6 className="card-title text-muted mb-2">API Response Time</h6>
               <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
-                {healthData?.apiResponseTime}ms
+                {typeof healthData?.apiResponseTime === 'number' && !isNaN(healthData.apiResponseTime)
+                  ? `${healthData.apiResponseTime}ms`
+                  : 'N/A'}
               </div>
               <small className="text-muted">Average response time</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card">
+            <div className="card-body">
+              <h6 className="card-title text-muted mb-2">Error Rate</h6>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: healthData?.errorRate > 0.05 ? '#ef4444' : '#10b981' }}>
+                {typeof healthData?.errorRate === 'number' ? (healthData.errorRate * 100).toFixed(2) + '%' : 'N/A'}
+              </div>
+              <small className="text-muted">API errors per request</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Metrics */}
+      <div className="row g-3 mb-4">
+        {/* Database Connections (optional, only if backend provides) */}
+        {typeof healthData?.databaseConnections !== 'undefined' && (
+          <div className="col-md-3">
+            <div className="card">
+              <div className="card-body">
+                <h6 className="card-title text-muted mb-2">Database Connections</h6>
+                <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
+                  {healthData?.databaseConnections}
+                </div>
+                <small className="text-muted">Active connections</small>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="col-md-3">
+          <div className="card">
+            <div className="card-body">
+              <h6 className="card-title text-muted mb-2">Active Users</h6>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#06b6d4' }}>
+                {healthData?.activeUsers}
+              </div>
+              <small className="text-muted">Currently online</small>
             </div>
           </div>
         </div>
@@ -263,45 +289,6 @@ const SystemHealth = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Additional Metrics */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <h6 className="card-title text-muted mb-2">Database Connections</h6>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
-                {healthData?.databaseConnections}
-              </div>
-              <small className="text-muted">Active connections</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <h6 className="card-title text-muted mb-2">Active Users</h6>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#06b6d4' }}>
-                {healthData?.activeUsers}
-              </div>
-              <small className="text-muted">Currently online</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card">
-            <div className="card-body">
-              <h6 className="card-title text-muted mb-2">Error Rate</h6>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: healthData?.errorRate > 0.05 ? '#ef4444' : '#10b981' }}>
-                {(healthData?.errorRate * 100).toFixed(2)}%
-              </div>
-              <small className="text-muted">API errors per request</small>
-            </div>
-          </div>
-        </div>
 
         <div className="col-md-3">
           <div className="card">
@@ -313,12 +300,12 @@ const SystemHealth = () => {
                     width: '16px',
                     height: '16px',
                     borderRadius: '50%',
-                    backgroundColor: healthData?.status === 'Healthy' ? '#10b981' : '#ef4444',
+                    backgroundColor: status === 'Healthy' ? '#10b981' : status === 'Warning' ? '#f59e0b' : '#ef4444',
                     animation: 'pulse 2s infinite'
                   }}
                 />
                 <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-                  {healthData?.status}
+                  {status}
                 </span>
               </div>
               <small className="text-muted">System operational status</small>

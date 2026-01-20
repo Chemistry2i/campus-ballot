@@ -103,6 +103,11 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 
     req.user = user;
+    // Update lastSeen for active user tracking
+    if (user) {
+      user.lastSeen = new Date();
+      await user.save();
+    }
     next();
   } catch (err) {
     console.log("[AUTH ERROR] ❌", {

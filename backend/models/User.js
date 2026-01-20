@@ -171,6 +171,11 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    // Track last seen for active user monitoring
+    lastSeen: {
+        type: Date,
+        default: null
+    },
     profilePicture: {
         type: String,
         default: null,

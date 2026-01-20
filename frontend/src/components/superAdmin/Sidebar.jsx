@@ -139,7 +139,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 color: '#2563eb',
                 marginBottom: '0.5rem',
                 letterSpacing: '0.5px',
-                marginTop: '2.2rem', // Increased extra space above header
+                marginTop: '2rem', // Increased extra space above header
               }}
             >
               Super Admin Panel
@@ -149,7 +149,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 border: 'none',
                 borderTop: `1.5px solid ${colors.border}`,
                 margin: '0.5rem 1.2rem 1.2rem 1.2rem',
-                opacity: isDarkMode ? 0.18 : 0.35,
+                opacity: isDarkMode ? 0.8 : 0.8,
               }}
             />
             
@@ -258,6 +258,15 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 <span style={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>Add New Admin</span>
               </button>
             </div>
+            {/* Divider between Add Admin and nav links */}
+            <hr
+              style={{
+                border: 'none',
+                borderTop: `1.5px solid ${colors.border}`,
+                margin: '.75rem 1.2rem 0rem 1.2rem',
+                opacity: isDarkMode ? 0.8 : 0.8,
+              }}
+            />
           </>
         )}
         {/* Collapse/Expand Button */}
@@ -298,11 +307,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           overflowY: 'auto',
           overflowX: 'hidden',
           minHeight: 0,
-          paddingBottom: '0.5rem',
-          paddingTop: '0.5rem',
+          paddingBottom: '0rem',
           width: '100%',
         }}
       >
+      
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
@@ -327,7 +336,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 to={item.to}
                 className={`sidebar-nav-link nav-link d-flex align-items-center mb-1 ${isActive ? 'active fw-bold' : ''}`}
                 style={{
-                  fontSize: '1em',
+                  fontSize: '0.875em',
                   gap: '0.75rem',
                   padding: collapsed ? '0.45rem 0.45rem' : '0.85rem 1.5rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',

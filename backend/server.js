@@ -62,6 +62,25 @@ app.use(cors({
   ],
   credentials: true
 }));
+
+// --- API Response Time Tracking Middleware ---
+if (!global.__apiResponseTimes) global.__apiResponseTimes = [];
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    const diff = process.hrtime(start);
+    const ms = diff[0] * 1000 + diff[1] / 1e6;
+    // Only track API routes
+    if (req.originalUrl.startsWith('/api/')) {
+      global.__apiResponseTimes.push(ms);
+      // Keep only last 100 response times
+      if (global.__apiResponseTimes.length > 100) {
+        global.__apiResponseTimes.shift();
+      }
+    }
+  });
+  next();
+});
 // app.use(rateLimit({
 //   windowMs: 15 * 60 * 1000, // 15 minutes
 //   max: 100,

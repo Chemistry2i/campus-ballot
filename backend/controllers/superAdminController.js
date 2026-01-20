@@ -25,6 +25,15 @@ const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivit
 // @route   GET /api/super-admin/reports/system-summary
 // @access  Super Admin only
 const getSystemSummary = asyncHandler(async (req, res) => {
+      // Database connections (MongoDB)
+      let databaseConnections = 0;
+      try {
+        const mongoose = require('mongoose');
+        // For Mongoose 6+, connections is an array, and readyState 1 means connected
+        databaseConnections = mongoose.connections.filter(conn => conn.readyState === 1).length;
+      } catch (e) {
+        databaseConnections = 0;
+      }
   try {
     // Basic counts
     const totalUsers = await User.countDocuments();
@@ -34,10 +43,48 @@ const getSystemSummary = asyncHandler(async (req, res) => {
     const totalElections = await Election.countDocuments();
     const activeElections = await Election.countDocuments({ status: 'active' });
     const totalVotes = await Vote.countDocuments();
-    
+
     // Calculate voter turnout
     const votedUsers = await Vote.distinct('user');
     const voterTurnout = totalUsers > 0 ? Math.round((votedUsers.length / totalUsers) * 100) : 0;
+
+    // Real system metrics
+    const os = require('os');
+    const process = require('process');
+    // CPU usage (average over all cores)
+    const cpus = os.cpus();
+    const cpuLoad = cpus.reduce((acc, cpu) => {
+      const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+      return acc + (cpu.times.user / total);
+    }, 0) / cpus.length;
+    const cpuUsagePercent = Math.round(cpuLoad * 100);
+
+    // Memory usage
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const memUsagePercent = Math.round((usedMem / totalMem) * 100);
+
+    // Uptime
+    const uptimeSeconds = os.uptime();
+    const uptimeHours = Math.floor(uptimeSeconds / 3600);
+    const uptimeLabel = uptimeHours > 0 ? `${uptimeHours}h` : `${Math.floor(uptimeSeconds / 60)}m`;
+
+    // API response time (real, from global memory)
+    let apiResponseTime = null;
+    if (global.__apiResponseTimes && global.__apiResponseTimes.length > 0) {
+      const sum = global.__apiResponseTimes.reduce((a, b) => a + b, 0);
+      apiResponseTime = Math.round(sum / global.__apiResponseTimes.length);
+    } else {
+      apiResponseTime = null;
+    }
+
+    // Error rate (mock, you can implement real tracking)
+    const errorRate = 0; // %
+
+    // Active users (real: lastSeen within 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const activeUsers = await User.countDocuments({ lastSeen: { $gte: fiveMinutesAgo } });
 
     // Recent actions (mock data for now)
     const recentActions = [
@@ -94,7 +141,15 @@ const getSystemSummary = asyncHandler(async (req, res) => {
         { date: '2024-05-04', status: 'OK' },
         { date: '2024-05-05', status: 'OK' },
       ],
-      topElections: electionParticipation.slice(0, 5)
+      topElections: electionParticipation.slice(0, 5),
+      // Real system metrics
+      cpuUsage: cpuUsagePercent,
+      memoryUsage: memUsagePercent,
+      uptime: uptimeLabel,
+      apiResponseTime,
+      errorRate,
+      activeUsers,
+      databaseConnections
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
