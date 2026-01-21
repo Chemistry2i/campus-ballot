@@ -475,13 +475,28 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
             minHeight: 64,
           }}
         >
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, }}>
             <span
-              className="fw-bold"
-              style={{ fontSize: "1.2rem", color: colors.primary }}
+              style={{
+                background: '#2563eb',
+                color: '#fff',
+                borderRadius: '6px',
+                width: 45,
+                height: 45,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 600,
+                fontSize: 18,
+                boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+              }}
             >
-              Admin Panel
+              <i className="fa fa-user-shield" style={{ fontSize: 18, color: '#fff' }}></i>
             </span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 20, color: isDarkMode ? '#fff' : '#222' }}>Admin Dashboard</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manage elections, candidates, and users</div>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <ThemeToggle showLabel />
