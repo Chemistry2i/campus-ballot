@@ -30,6 +30,11 @@ const voteSchema = new mongoose.Schema({
 
 // Prevent double voting per user per election per position
 voteSchema.index({ user: 1, election: 1, position: 1 }, { unique: true });
+voteSchema.index({ candidate: 1 });
+voteSchema.index({ status: 1 });
+voteSchema.index({ election: 1 });
+voteSchema.index({ position: 1 });
+voteSchema.index({ createdAt: 1 });
 
 const Vote = mongoose.model('Vote', voteSchema);
 module.exports = Vote;

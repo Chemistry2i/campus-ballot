@@ -129,6 +129,15 @@ const candidateSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add indexes for performance
+candidateSchema.index({ user: 1 });
+candidateSchema.index({ election: 1 });
+candidateSchema.index({ position: 1 });
+candidateSchema.index({ status: 1 });
+candidateSchema.index({ studentId: 1 });
+candidateSchema.index({ votes: -1 });
+candidateSchema.index({ name: 1 });
+candidateSchema.index({ yearOfStudy: 1 });
+
 const Candidate = mongoose.model('Candidate', candidateSchema);
-// Export the Candidate model
 module.exports = Candidate;

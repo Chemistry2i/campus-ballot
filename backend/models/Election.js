@@ -76,6 +76,15 @@ const ElectionSchema = new mongoose.Schema({
 });
 
 // Create the Election model
-const Election = mongoose.model('Election', ElectionSchema);
+// Add indexes for performance
+// Removed duplicate index for title (already defined in schema)
+ElectionSchema.index({ status: 1 });
+ElectionSchema.index({ startDate: 1 });
+ElectionSchema.index({ endDate: 1 });
+ElectionSchema.index({ createdBy: 1 });
+ElectionSchema.index({ candidates: 1 });
+ElectionSchema.index({ 'eligibility.faculty': 1 });
+ElectionSchema.index({ 'eligibility.yearOfStudy': 1 });
 
+const Election = mongoose.model('Election', ElectionSchema);
 module.exports = Election;

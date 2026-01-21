@@ -207,6 +207,15 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Add indexes for performance
+// Removed duplicate index for email (already defined in schema)
+userSchema.index({ role: 1 });
+// Removed duplicate index for studentId (already defined in schema)
+userSchema.index({ faculty: 1 });
+userSchema.index({ lastSeen: 1 });
+userSchema.index({ accountStatus: 1 });
+userSchema.index({ isVerified: 1 });
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;
 // Export the User model for use in other parts of the
