@@ -103,7 +103,7 @@ app.use(cors({
   origin: [
     "https://www.campusballot.tech",
     "https://api.campusballot.tech",
-    "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
+    "https://www.campusballot.tech",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
@@ -213,8 +213,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
-      "https://legendary-space-journey-74p9qrwrq99hpppj-5173.app.github.dev",
+      "https://www.campusballot.tech",
+      "https://www.campusballot.tech",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],
