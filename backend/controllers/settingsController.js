@@ -2,12 +2,19 @@ const Setting = require('../models/Setting');
 const SettingsHistory = require('../models/SettingsHistory');
 const User = require('../models/User');
 
+// Use node-cache for settings caching
+const cache = require('../utils/cache');
+
 // Get or create the singleton settings document
 async function getSettings(req, res) {
   try {
-    let s = await Setting.findOne();
+    let s = cache.get('settings');
     if (!s) {
-      s = await Setting.create({});
+      s = await Setting.findOne();
+      if (!s) {
+        s = await Setting.create({});
+      }
+      cache.set('settings', s);
     }
     return res.json(s);
   } catch (err) {
@@ -32,6 +39,7 @@ async function updateSettingsSection(req, res) {
     // Update section fields shallowly
     s[section] = { ...(s[section] || {}), ...payload };
     await s.save();
+    cache.set('settings', s); // Update cache after save
 
     // record history (user may be undefined if unauthenticated)
     await SettingsHistory.create({ user: req.user?._id, section, before, after: s[section], reason: req.body.meta?.reason || req.body.reason || null });

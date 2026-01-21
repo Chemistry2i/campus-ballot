@@ -8,5 +8,10 @@ const settingsHistorySchema = new mongoose.Schema({
   reason: { type: String, default: null },
 }, { timestamps: true });
 
+// Add indexes for performance
+settingsHistorySchema.index({ user: 1 });
+settingsHistorySchema.index({ section: 1 });
+settingsHistorySchema.index({ createdAt: -1 });
+
 const SettingsHistory = mongoose.model('SettingsHistory', settingsHistorySchema);
 module.exports = SettingsHistory;
