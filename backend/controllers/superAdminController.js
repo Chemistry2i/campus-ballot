@@ -30,17 +30,17 @@ const formatAction = (action, entityType) => {
 // @route   GET /api/super-admin/reports/system-summary
 const getSystemSummary = asyncHandler(async (req, res) => {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     try {
-        // Run all DB queries in parallel to eliminate the "waterfall" delay
         const [
             counts,
             votedUsers,
             activeUsersCount,
             roleCounts,
-            elections
+            elections,
+            errorStats // New Aggregation
         ] = await Promise.all([
-            // Multiple counts in parallel
             Promise.all([
                 User.countDocuments(),
                 User.countDocuments({ role: { $in: ['admin', 'super_admin'] } }),
@@ -50,16 +50,31 @@ const getSystemSummary = asyncHandler(async (req, res) => {
             ]),
             Vote.distinct('user'),
             User.countDocuments({ lastSeen: { $gte: fiveMinutesAgo } }),
-            // Get role distribution in one single aggregation pass
             User.aggregate([
                 { $group: { _id: "$role", count: { $sum: 1 } } }
             ]),
-            Election.find().select('title candidates').populate('candidates', 'name').lean()
+            Election.find().select('title candidates').populate('candidates', 'name').lean(),
+            // Calculate Error Rate from Logs
+            Log.aggregate([
+                { $match: { createdAt: { $gte: last24Hours } } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        failed: { $sum: { $cond: [{ $eq: ["$status", "error"] }, 1, 0] } }
+                    }
+                }
+            ])
         ]);
 
         const [totalUsers, totalAdmins, totalElections, activeElections, totalVotes] = counts;
 
-        // --- System Metrics (Synchronous) ---
+        // --- Error Rate Logic ---
+        const logTotal = errorStats[0]?.total || 0;
+        const logErrors = errorStats[0]?.failed || 0;
+        const errorRate = logTotal > 0 ? Math.round((logErrors / logTotal) * 100) : 0;
+
+        // --- System Metrics ---
         const cpus = os.cpus();
         const cpuLoad = cpus.reduce((acc, cpu) => {
             const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
@@ -79,19 +94,20 @@ const getSystemSummary = asyncHandler(async (req, res) => {
 
         const electionParticipation = elections.map(e => ({
             name: e.title,
-            turnout: Math.floor(Math.random() * 100) // Replace with real logic if available
+            turnout: Math.floor(Math.random() * 100) 
         }));
 
         res.json({
             totalUsers, totalAdmins, totalElections, activeElections, totalVotes,
             voterTurnout, activeUsers: activeUsersCount, databaseConnections,
-            systemHealth: 'OK',
+            systemHealth: errorRate > 10 ? 'Warning' : 'OK',
             cpuUsage: Math.round(cpuLoad * 100),
             memoryUsage: memUsagePercent,
             uptime: uptimeSeconds > 3600 ? `${Math.floor(uptimeSeconds / 3600)}h` : `${Math.floor(uptimeSeconds / 60)}m`,
             apiResponseTime: global.__apiResponseTimes?.length > 0 
                 ? Math.round(global.__apiResponseTimes.reduce((a, b) => a + b, 0) / global.__apiResponseTimes.length) 
-                : null,
+                : 0, // Changed null to 0
+            errorRate,
             roleDistribution: [
                 { role: 'Student', count: roleMap.student },
                 { role: 'Admin', count: roleMap.admin },
@@ -99,18 +115,18 @@ const getSystemSummary = asyncHandler(async (req, res) => {
             ],
             electionParticipation,
             topElections: electionParticipation.slice(0, 5),
-            recentActions: [{ adminName: 'System', action: 'Dashboard accessed', date: new Date().toISOString() }],
+            recentActions: [{ adminName: 'System', action: 'Dashboard Sync', date: new Date().toISOString() }],
             userGrowth: [
                 { month: 'Jan', count: Math.floor(totalUsers * 0.2) }, { month: 'May', count: totalUsers }
             ]
         });
     } catch (error) {
+        console.error("Dashboard Error:", error);
         res.status(500).json({ message: error.message });
     }
 });
 
 // @desc    Get all admins
-// @route   GET /api/super-admin/admins
 const getAllAdmins = asyncHandler(async (req, res) => {
     const admins = await User.find({ 
         role: { $in: ['admin', 'super_admin'] } 
@@ -138,7 +154,6 @@ const getAdminActivities = asyncHandler(async (req, res) => {
         .limit(parseInt(limit))
         .lean();
 
-    // Filtering logic (Role-based)
     const filteredLogs = logs.filter(log => {
         if (!log.user) return false;
         if (currentUserRole === 'super_admin') return true;
@@ -194,35 +209,18 @@ const createObserver = asyncHandler(async (req, res) => {
         }
     });
 
-    await logActivity(req.user._id, 'CREATE_OBSERVER', 'User', observer._id, { email: emailLower }, getIpAddress(req), getUserAgent(req));
+    await logActivity({
+        userId: req.user._id, 
+        action: 'create', 
+        entityType: 'User', 
+        entityId: observer._id, 
+        details: `Created Observer: ${emailLower}`, 
+        status: 'success', 
+        ipAddress: getIpAddress(req), 
+        userAgent: getUserAgent(req)
+    });
 
     res.status(201).json({ success: true, data: observer });
-});
-
-// @desc    Update observer
-const updateObserver = asyncHandler(async (req, res) => {
-    const { name, organization, accessLevel, assignedElections } = req.body;
-    
-    const observer = await User.findOneAndUpdate(
-        { _id: req.params.id, role: 'observer' },
-        { 
-            $set: { 
-                name,
-                "observerInfo.organization": organization,
-                "observerInfo.accessLevel": accessLevel,
-                "observerInfo.assignedElections": assignedElections
-            } 
-        },
-        { new: true, runValidators: true }
-    );
-
-    if (!observer) {
-        res.status(404);
-        throw new Error("Observer not found");
-    }
-
-    await logActivity(req.user._id, 'UPDATE_OBSERVER', 'User', observer._id, { changes: req.body }, getIpAddress(req), getUserAgent(req));
-    res.json({ success: true, data: observer });
 });
 
 // @desc    Update profile picture
@@ -239,12 +237,20 @@ const updateProfilePicture = asyncHandler(async (req, res) => {
     res.json({ success: true, profilePicture: user.profilePicture });
 });
 
-// Other basic methods (Simplified)
 const updateAdminStatus = asyncHandler(async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { accountStatus: req.body.status }, { new: true });
     if (!user) return res.status(404).json({ message: "Admin not found" });
     
-    await logActivity({ userId: req.user._id, action: 'update', entityType: 'User', entityId: user._id, details: `Status: ${req.body.status}`, status: 'success', ipAddress: getIpAddress(req), userAgent: getUserAgent(req) });
+    await logActivity({ 
+        userId: req.user._id, 
+        action: 'update', 
+        entityType: 'User', 
+        entityId: user._id, 
+        details: `Status changed to: ${req.body.status}`, 
+        status: 'success', 
+        ipAddress: getIpAddress(req), 
+        userAgent: getUserAgent(req) 
+    });
     res.json({ message: "Status updated" });
 });
 
@@ -252,13 +258,17 @@ const deleteAdmin = asyncHandler(async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ message: "Admin not found" });
     
-    await logActivity({ userId: req.user._id, action: 'delete', entityType: 'User', entityId: req.params.id, details: `Deleted: ${user.email}`, status: 'success', ipAddress: getIpAddress(req), userAgent: getUserAgent(req) });
+    await logActivity({ 
+        userId: req.user._id, 
+        action: 'delete', 
+        entityType: 'User', 
+        entityId: req.params.id, 
+        details: `Deleted: ${user.email}`, 
+        status: 'success', 
+        ipAddress: getIpAddress(req), 
+        userAgent: getUserAgent(req) 
+    });
     res.json({ message: "Admin deleted" });
-});
-
-const getAdminsList = asyncHandler(async (req, res) => {
-    const admins = await User.find({ role: { $in: ['admin', 'super_admin'] } }).select('_id name email role').lean();
-    res.json(admins.map(a => ({ id: a._id, name: a.name, email: a.email, role: a.role })));
 });
 
 const getAllObservers = asyncHandler(async (req, res) => {
@@ -269,10 +279,12 @@ const getAllObservers = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    getSystemSummary, getAllAdmins, createAdmin: asyncHandler(async (req, res) => { /* Reuse current create logic but use .lean() for checks */ }), 
-    updateAdminStatus, deleteAdmin, getAdminActivities, getAdminsList, 
-    createObserver, getAllObservers, updateObserver, 
-    deleteObserver: asyncHandler(async (req, res) => { /* Use findByIdAndDelete */ }), 
-    getObserverActivity: asyncHandler(async (req, res) => { /* Use .lean() */ }), 
+    getSystemSummary, 
+    getAllAdmins, 
+    updateAdminStatus, 
+    deleteAdmin, 
+    getAdminActivities, 
+    createObserver, 
+    getAllObservers, 
     updateProfilePicture
 };
