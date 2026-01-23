@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
@@ -73,8 +73,19 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       unread: false,
     },
   ]);
-  const [notifications, setNotifications] = useState([]);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'info', title: 'System Update Available', message: 'New security patches ready', time: '2 hours ago', read: false },
+    { id: 2, type: 'warning', title: 'High CPU Usage', message: 'CPU usage at 78%', time: '5 minutes ago', read: false },
+    { id: 3, type: 'success', title: 'Backup Completed', message: 'Daily backup successful', time: '1 day ago', read: true },
+  ]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture || user?.avatarUrl || '/logo.png');
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const profileMenuRef = useRef(null);
   const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
@@ -184,26 +195,46 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     };
   }, [stats, joinRoom, leaveRoom]);
 
-  // Handle logout confirmation with SweetAlert
-  const handleLogout = async () => {
-    const result = await Swal.fire({
-      title: "Confirm Logout",
-      text: "Are you sure you want to logout?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Logout",
-      cancelButtonText: "Cancel",
-    });
-    if (result.isConfirmed) {
-      onLogout();
+  // Close profile menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
     }
-  };
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
 
-  // Close dropdowns when clicking outside
-  const closeDropdowns = () => {
-    setShowMessagesDropdown(false);
-    setShowNotificationsDropdown(false);
-  };
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Cmd/Ctrl + ? to show shortcuts
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '?') {
+        e.preventDefault();
+        setShowShortcuts(!showShortcuts);
+      }
+      // Cmd/Ctrl + K to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector('.search-input')?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [showShortcuts]);
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Add fetchStats function to component scope
   const refreshStats = async () => {
@@ -421,6 +452,27 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     }
   };
 
+  // Handle logout confirmation with SweetAlert
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Confirm Logout",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Logout",
+      cancelButtonText: "Cancel",
+    });
+    if (result.isConfirmed) {
+      onLogout();
+    }
+  };
+
+  // Close dropdowns when clicking outside
+  const closeDropdowns = () => {
+    setShowMessagesDropdown(false);
+    setShowNotificationsDropdown(false);
+  };
+
   if (loading)
     return (
       <div
@@ -498,17 +550,170 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
               <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manage elections, candidates, and users</div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <ThemeToggle showLabel />
-            <span className="me-3" style={{ color: colors.textMuted }}>
-              Welcome, <strong style={{ color: colors.text }}>{user?.name}</strong>
-            </span>
+          {/* Right: Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Time */}
+            <div style={{
+              background: colors.primary, // Updated to use primary color
+              color: '#fff',
+              borderRadius: 3,
+              padding: '4px 16px',
+              fontWeight: 500,
+              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 80,
+              justifyContent: 'center',
+            }}>
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+            </div>
+            {/* Search */}
+            {isSearchExpanded ? (
+              <input
+                type="text"
+                className="form-control search-input search-animate"
+                placeholder="Search users, logs..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  paddingLeft: '14px',
+                  borderRadius: '14px',
+                  border: `1.5px solid ${colors.border}`,
+                  boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+                  background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                  color: colors.text,
+                  height: '36px',
+                  fontSize: '1rem',
+                  width: '250px',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                }}
+                aria-label="Search input"
+                onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
+                onBlur={e => {
+                  e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)';
+                  setIsSearchExpanded(false);
+                }}
+                autoFocus
+              />
+            ) : (
+              <button
+                aria-label="Search"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 36,
+                  height: 36,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setIsSearchExpanded(true)}
+              >
+                <span className="fa fa-search" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+              </button>
+            )}
+            {/* Notification icon with border */}
             <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={handleLogout}
+              aria-label="Notifications"
+              style={{
+                background: 'none',
+                border: isDarkMode ? '2px solid #334155' : '2px solid #e5e7eb',
+                borderRadius: '10px',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowNotifications(!showNotifications)}
             >
-              <i className="fa-solid fa-right-from-bracket me-1"></i> Logout
+              <span className="fa fa-bell" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+              {/* Notification dot */}
+              {notifications.some(n => !n.read) && (
+                <span style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  width: 8,
+                  height: 8,
+                  background: '#22c55e',
+                  borderRadius: '8px',
+                  border: '2px solid #fff',
+                  boxShadow: '0 0 0 2px #22c55e44',
+                }} />
+              )}
             </button>
+            {/* Toggle button (moon/sun icon only, no text) */}
+            <ThemeToggle showLabel={false} />
+            {/* Profile dropdown */}
+            <div style={{ position: 'relative' }} ref={profileMenuRef}>
+              <div
+                style={{
+                  width: '45px',
+                  height: '45px',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  overflow: 'hidden',
+                  transition: 'box-shadow 0.18s, transform 0.18s',
+                }}
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                aria-label="Open user menu"
+                title="User menu"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') setShowProfileMenu(!showProfileMenu); }}
+              >
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                ) : (
+                  user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'A'
+                )}
+              </div>
+              {showProfileMenu && (
+                <div
+                  className="position-absolute shadow-lg rounded"
+                  style={{
+                    top: '50px',
+                    right: 0,
+                    minWidth: '180px',
+                    zIndex: 100,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                    border: `1px solid ${colors.border}`,
+                    padding: '0.5rem 0',
+                    background: isDarkMode ? colors.surface : '#fff',
+                    color: colors.text,
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                >
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: colors.text, fontSize: '0.95rem', cursor: 'pointer' }}>
+                    <i className="fa-solid fa-user" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Profile
+                  </button>
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: colors.text, fontSize: '0.95rem', cursor: 'pointer' }}>
+                    <i className="fa-solid fa-gear" style={{ color: isDarkMode ? '#fbbf24' : '#2563eb', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Settings
+                  </button>
+                  <hr style={{ margin: '0.5rem 0', borderColor: colors.border }} />
+                  <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
+                    style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.95rem', cursor: 'pointer' }} onClick={handleLogout}>
+                    <i className="fa-solid fa-right-from-bracket" style={{ color: '#dc2626', fontSize: '1rem', transition: 'color 0.25s' }}></i>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
