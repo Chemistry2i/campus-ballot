@@ -14,7 +14,8 @@ import {
   FaSun,
   FaUserTie,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaBookOpen
 } from 'react-icons/fa';
 
 // Import agent components
@@ -22,6 +23,8 @@ import AgentHeader from '../components/agent/AgentHeader';
 import AgentDashboardMain from '../components/agent/AgentDashboard';
 import TaskManagement from '../components/agent/TaskManagement';
 import VoterOutreach from '../components/agent/VoterOutreach';
+import AgentCandidates from '../components/agent/AgentCandidates';
+import AgentAnalytics from '../components/agent/AgentAnalytics';
 
 const AgentDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
@@ -260,40 +263,64 @@ const AgentDashboard = ({ user, onLogout }) => {
         </div>
 
         {/* Sidebar Footer */}
-        <div style={{ 
-          padding: 'clamp(0.75rem, 2vw, 1rem)',
-          borderTop: `1px solid ${colors.border}`,
-          background: isDarkMode ? 'rgba(0,0,0,0.2)' : '#f9fafb'
-        }}>
-          {!sidebarCollapsed && (
-            <div style={{ marginBottom: '0.75rem' }}>
-              <RoleSwitcher user={user} isDarkMode={isDarkMode} colors={colors} />
-            </div>
-          )}
-          
+        {!isMobile && (
           <div style={{ 
-            display: 'flex', 
-            gap: '0.5rem',
-            flexDirection: sidebarCollapsed ? 'column' : 'row'
+            padding: '1rem 1.5rem',
+            marginTop: 'auto',
+            borderTop: `1px solid ${colors.border}`,
+            background: colors.surface,
+            color: colors.textMuted,
+            fontSize: '0.75rem',
+            textAlign: 'center',
           }}>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FaBookOpen style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2025 VoteSys
+            </div>
             <button
-              onClick={toggleTheme}
+              onClick={handleLogout}
               style={{
-                flex: sidebarCollapsed ? 'none' : 1,
-                width: sidebarCollapsed ? '100%' : 'auto',
-                padding: 'clamp(0.5rem, 1.5vw, 0.75rem)',
-                background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
+                background: 'transparent',
                 border: 'none',
-                borderRadius: 'clamp(6px, 1vw, 8px)',
-                color: colors.text,
+                color: '#dc2626',
+                fontSize: '0.75rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 'clamp(0.5rem, 1vw, 0.75rem)',
-                fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)',
-                fontWeight: 500,
-                transition: 'all 0.2s'
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+              Logout
+            </button>
+          </div>
+        )}
+        
+        {isMobile && (
+          <div style={{ 
+            marginTop: 'auto', 
+            padding: '0.75rem 1rem',
+            borderTop: `1px solid ${colors.border}`,
+            display: 'flex',
+            gap: '0.5rem',
+            justifyContent: 'center'
+          }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                padding: '0.5rem 1rem',
+                background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
+                border: 'none',
+                borderRadius: '6px',
+                color: colors.text,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.75rem',
+                fontWeight: 500
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#d1d5db';
@@ -302,28 +329,22 @@ const AgentDashboard = ({ user, onLogout }) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb';
               }}
             >
-              {isDarkMode ? <FaSun size={16} /> : <FaMoon size={16} />}
-              {!sidebarCollapsed && <span style={{ whiteSpace: 'nowrap' }}>{isDarkMode ? 'Light' : 'Dark'}</span>}
+              {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
             </button>
-
             <button
               onClick={handleLogout}
               style={{
-                flex: sidebarCollapsed ? 'none' : 1,
-                width: sidebarCollapsed ? '100%' : 'auto',
-                padding: 'clamp(0.5rem, 1.5vw, 0.75rem)',
+                padding: '0.5rem 1rem',
                 background: 'rgba(239, 68, 68, 0.1)',
                 border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: 'clamp(6px, 1vw, 8px)',
+                borderRadius: '6px',
                 color: '#ef4444',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: 'clamp(0.5rem, 1vw, 0.75rem)',
-                fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)',
-                fontWeight: 500,
-                transition: 'all 0.2s'
+                gap: '0.5rem',
+                fontSize: '0.75rem',
+                fontWeight: 500
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
@@ -332,11 +353,10 @@ const AgentDashboard = ({ user, onLogout }) => {
                 e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
               }}
             >
-              <FaSignOutAlt size={16} />
-              {!sidebarCollapsed && <span style={{ whiteSpace: 'nowrap' }}>Logout</span>}
+              <FaSignOutAlt size={14} />
             </button>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Main Content */}
@@ -397,7 +417,9 @@ const AgentDashboard = ({ user, onLogout }) => {
           <Routes>
             <Route path="/" element={<AgentDashboardMain />} />
             <Route path="/tasks" element={<TaskManagement />} />
+            <Route path="/candidates" element={<AgentCandidates />} />
             <Route path="/outreach" element={<VoterOutreach />} />
+            <Route path="/analytics" element={<AgentAnalytics />} />
           </Routes>
         </main>
       </div>
