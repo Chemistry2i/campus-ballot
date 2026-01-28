@@ -733,46 +733,77 @@ function StudentDashboard({ user }) {
     <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: window.innerWidth <= 768 ? '0 0.75rem' : '0 1rem' }}>
       {/* Welcome Banner */}
       <div 
-        className="mb-4 rounded shadow-sm"
+        className="mb-4 rounded-3 position-relative overflow-hidden"
         style={{
           background: isDarkMode 
-            ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-            : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' 
+            : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
           color: '#fff',
-          borderRadius: '12px',
-          padding: window.innerWidth <= 768 ? '1.5rem 2rem' : '2.5rem 3.5rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          overflow: 'hidden'
+          boxShadow: '0 8px 24px rgba(37, 99, 235, 0.2)',
+          padding: 'clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2.5rem)'
         }}
       >
-        <div className="d-flex align-items-center justify-content-between flex-wrap">
-          <div>
-            <h2 className="mb-2">Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋</h2>
-            <p className="mb-0 opacity-90">
-              {elections.length > 0 && getElectionStatus(elections[0])?.status === 'active' 
-                ? 'An election is currently active. Cast your vote now!' 
-                : 'Stay tuned for upcoming elections. Check back soon!'}
-            </p>
-          </div>
-          {user?.profilePicture && (
-            <div
-              style={{
-                width: '70px',
-                height: '70px',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                border: '3px solid rgba(255,255,255,0.3)'
-              }}
-              className="d-none d-md-block"
-            >
-              <img 
-                src={user.profilePicture || '/default-avatar.png'} 
-                alt={user?.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+        <div className="position-relative" style={{ zIndex: 1 }}>
+          <div className="d-flex align-items-center gap-3 mb-3 flex-column flex-sm-row">
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h2 className="mb-2 fw-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', lineHeight: 1.2 }}>
+                Welcome, {user?.name?.split(' ')[0] || 'Student'}! 👋
+              </h2>
+              <p className="mb-0 opacity-90" style={{ fontSize: 'clamp(0.85rem, 2vw, 1rem)', lineHeight: 1.4 }}>
+                {elections.length > 0 && getElectionStatus(elections[0])?.status === 'active' 
+                  ? 'An election is currently active. Cast your vote now!' 
+                  : 'Stay tuned for upcoming elections. Check back soon!'}
+              </p>
             </div>
-          )}
+          </div>
+          
+          {/* Info Badges - Responsive Grid */}
+          <div className="d-flex gap-2 gap-md-4 mt-3 flex-wrap" style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)' }}>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-poll"></i>
+              <span className="d-none d-sm-inline">Voting Portal</span>
+              <span className="d-sm-none">Voting</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-check-circle"></i>
+              <span className="d-none d-sm-inline">Track Elections</span>
+              <span className="d-sm-none">Track</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-bell"></i>
+              <span className="d-none d-sm-inline">Get Notified</span>
+              <span className="d-sm-none">Notify</span>
+            </div>
+          </div>
         </div>
+        
+        {/* Decorative Blurred Circles */}
+        <div 
+          className="position-absolute"
+          style={{
+            top: '-40px',
+            right: '-40px',
+            width: 'clamp(150px, 30vw, 200px)',
+            height: 'clamp(150px, 30vw, 200px)',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            filter: 'blur(40px)',
+            zIndex: 0
+          }}
+        />
+        <div 
+          className="position-absolute"
+          style={{
+            bottom: '-20px',
+            right: 'clamp(50px, 15vw, 100px)',
+            width: 'clamp(100px, 25vw, 150px)',
+            height: 'clamp(100px, 25vw, 150px)',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.08)',
+            filter: 'blur(30px)',
+            zIndex: 0
+          }}
+        />
       </div>
 
       {/* Statistics Cards - 8 cards in single row */}
@@ -1831,22 +1862,73 @@ function StudentDashboard({ user }) {
               </ul>
             </div>
 
-            {/* Profile Dropdown */}
+            {/* Profile Dropdown - User Image */}
             <div className="dropdown">
               <button 
-                className="btn btn-sm d-flex align-items-center gap-2"
+                className="btn btn-sm p-0"
                 style={{
-                  background: isDarkMode ? colors.surfaceHover : 'rgba(255,255,255,0.2)',
-                  color: isDarkMode ? colors.text : '#fff',
-                  border: `1px solid ${isDarkMode ? colors.border : 'rgba(255,255,255,0.3)'}`,
-                  whiteSpace: 'nowrap'
+                  width: 'clamp(36px, 8vw, 44px)',
+                  height: 'clamp(36px, 8vw, 44px)',
+                  borderRadius: '50%',
+                  border: `2px solid rgba(255, 255, 255, 0.4)`,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: user?.profilePicture ? 'transparent' : 'rgba(255, 255, 255, 0.2)',
+                  backdropFilter: user?.profilePicture ? 'none' : 'blur(10px)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
                 }}
                 data-bs-toggle="dropdown"
+                title={user?.name || 'Profile'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.7)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
-                <FaUserCircle /> 
-                <span className="d-none d-md-inline">{user?.name?.split(' ')[0]}</span>
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt={user?.name} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) {
+                        e.target.nextSibling.style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <div 
+                  style={{ 
+                    display: user?.profilePicture ? 'none' : 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    fontSize: 'clamp(0.8rem, 2vw, 1.2rem)',
+                    fontWeight: 'bold',
+                    color: '#fff'
+                  }}
+                >
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
               </button>
               <ul className="dropdown-menu dropdown-menu-end" style={{ background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6' }}>
+                <li className="dropdown-header px-3 pt-2" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d', fontWeight: 600 }}>
+                  {user?.name || 'User'}
+                </li>
+                <li><hr className="dropdown-divider my-1" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
                 <li>
                   <button className="dropdown-item" onClick={() => setActiveView('profile')}
                     style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
@@ -1860,10 +1942,10 @@ function StudentDashboard({ user }) {
                     style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <FaUserEdit className="me-2" /> Edit Profile
+                    <FaCog className="me-2" /> Settings
                   </button>
                 </li>
-                <li><hr className="dropdown-divider" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
+                <li><hr className="dropdown-divider my-1" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
                 <li>
                   <button 
                     className="dropdown-item"
