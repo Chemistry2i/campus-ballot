@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://friendly-space-succotash-6v5pp7gq764hx555-5000.app.github.dev/api/auth/register",
+      "https://api.campusballot.tech/api/auth/register",
       form
     );
     Swal.fire({
