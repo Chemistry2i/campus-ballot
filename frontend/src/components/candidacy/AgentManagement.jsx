@@ -19,6 +19,7 @@ import {
   FaGraduationCap
 } from 'react-icons/fa';
 import Loader from '../common/Loader';
+import ThemedTable from '../common/ThemedTable';
 
 const AgentManagement = () => {
   const { isDarkMode, colors } = useTheme();
@@ -495,19 +496,18 @@ const AgentManagement = () => {
         }}
       >
         <div className="card-body p-0" style={{ overflowX: 'auto' }}>
-          <div className="table-responsive">
-            <table className={`table table-striped table-hover mb-0 ${isDarkMode ? 'table-dark' : ''}`} style={{ minWidth: '800px' }}>
-              <thead className={isDarkMode ? 'table-dark' : 'table-light'} style={{ position: 'sticky', top: 0 }}>
-                <tr>
-                  <th style={{ color: colors.text, padding: '1rem', minWidth: '200px' }}>Agent</th>
-                  <th style={{ color: colors.text, minWidth: '120px' }}>Role</th>
-                  <th style={{ color: colors.text, minWidth: '180px' }}>Contact</th>
-                  <th style={{ color: colors.text, minWidth: '100px' }}>Tasks</th>
-                  <th style={{ color: colors.text, minWidth: '100px' }}>Status</th>
-                  <th style={{ color: colors.text, minWidth: '100px' }}>Joined</th>
-                  <th style={{ color: colors.text, minWidth: '120px' }}>Actions</th>
-                </tr>
-              </thead>
+          <ThemedTable striped bordered hover responsive style={{ minWidth: '800px' }}>
+            <thead style={{ position: 'sticky', top: 0 }}>
+              <tr>
+                <th style={{ color: colors.text, padding: '1rem', minWidth: '200px' }}>Agent</th>
+                <th style={{ color: colors.text, minWidth: '120px' }}>Role</th>
+                <th style={{ color: colors.text, minWidth: '180px' }}>Contact</th>
+                <th style={{ color: colors.text, minWidth: '100px' }}>Tasks</th>
+                <th style={{ color: colors.text, minWidth: '100px' }}>Status</th>
+                <th style={{ color: colors.text, minWidth: '100px' }}>Joined</th>
+                <th style={{ color: colors.text, minWidth: '120px' }}>Actions</th>
+              </tr>
+            </thead>
               <tbody>
                 {filteredAgents.length === 0 ? (
                   <tr>
@@ -625,8 +625,7 @@ const AgentManagement = () => {
                   ))
                 )}
               </tbody>
-            </table>
-          </div>
+            </ThemedTable>
         </div>
       </div>
 

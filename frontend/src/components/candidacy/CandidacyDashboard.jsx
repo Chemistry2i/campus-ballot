@@ -15,6 +15,7 @@ import {
   FaTasks
 } from 'react-icons/fa';
 import Loader from '../common/Loader';
+import ThemedTable from '../common/ThemedTable';
 
 const CandidacyDashboard = () => {
   const { isDarkMode, colors } = useTheme();
@@ -177,58 +178,108 @@ const CandidacyDashboard = () => {
   }
 
   return (
-    <div className="container-fluid p-2">
-      {/* Welcome Banner */}
+    <div className="container-fluid p-0">
+      {/* Professional Banner */}
       <div 
-        className="mb-2"
+        className="mb-3 rounded-3 position-relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)`,
-          borderRadius: '5px',
+          background: isDarkMode 
+            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' 
+            : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
           color: '#fff',
-          padding: '1.5rem 1rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 8px 24px rgba(37, 99, 235, 0.15)',
+          padding: 'clamp(1.5rem, 3vw, 2.5rem) clamp(1rem, 2vw, 2rem)'
         }}
       >
-        <div className="d-flex align-items-center justify-content-between flex-wrap">
-          <div>
-            <h2 className="mb-2">Welcome back, {user?.name || 'Candidate'}! 👋</h2>
-            <p className="mb-0 opacity-90">Ready to manage your campaign? Let's make it count!</p>
-          </div>
-          {user?.profilePicture && (
-            <div
+        <div className="position-relative" style={{ zIndex: 1 }}>
+          <div className="d-flex align-items-center gap-3 mb-3 flex-column flex-sm-row">
+            <div 
+              className="d-flex align-items-center justify-content-center flex-shrink-0"
               style={{
-                width: '70px',
-                height: '70px',
+                width: 'clamp(50px, 10vw, 70px)',
+                height: 'clamp(50px, 10vw, 70px)',
                 borderRadius: '50%',
-                overflow: 'hidden',
-                border: '3px solid rgba(255,255,255,0.3)'
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                order: 2
               }}
             >
-              <img 
-                src={user.profilePicture || '/default-avatar.png'} 
-                alt={user?.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <i className="fa-solid fa-person-circle text-light" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}></i>
             </div>
-          )}
+            <div style={{ order: 1, minWidth: 0 }}>
+              <h2 className="mb-2 fw-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', lineHeight: 1.2 }}>
+                Welcome, {user?.name?.split(' ')[0] || 'Candidate'}! 🚀
+              </h2>
+              <p className="mb-0 opacity-90" style={{ fontSize: 'clamp(0.85rem, 2vw, 1rem)', lineHeight: 1.4 }}>
+                Manage your campaign and track your performance
+              </p>
+            </div>
+          </div>
+          
+          {/* Info Badges - Responsive Grid */}
+          <div className="d-flex gap-2 gap-md-4 mt-3 flex-wrap" style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.9rem)' }}>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-chart-line"></i>
+              <span className="d-none d-sm-inline">Campaign Analytics</span>
+              <span className="d-sm-none">Analytics</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-users"></i>
+              <span className="d-none d-sm-inline">Agent Management</span>
+              <span className="d-sm-none">Agents</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-bullhorn"></i>
+              <span className="d-none d-sm-inline">Campaign Materials</span>
+              <span className="d-sm-none">Materials</span>
+            </div>
+          </div>
         </div>
+        
+        {/* Decorative Blurred Circles */}
+        <div 
+          className="position-absolute"
+          style={{
+            top: '-40px',
+            right: '-40px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            filter: 'blur(40px)',
+            zIndex: 0
+          }}
+        />
+        <div 
+          className="position-absolute"
+          style={{
+            bottom: '-20px',
+            right: '100px',
+            width: '150px',
+            height: '150px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.08)',
+            filter: 'blur(30px)',
+            zIndex: 0
+          }}
+        />
       </div>
 
       {/* Header */}
-      <div className="mb-2">
-        <h4 className="fw-bold mb-1" style={{ color: colors.text, fontSize: '1.25rem' }}>
+      <div className="mb-3">
+        <h4 className="fw-bold mb-1" style={{ color: colors.text, fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
           <FaTrophy className="me-2" style={{ color: '#f59e0b' }} />
           Candidacy Dashboard
         </h4>
-        <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Manage your campaigns and track your performance</p>
+        <p className="text-muted mb-0" style={{ fontSize: 'clamp(0.8rem, 2vw, 0.9rem)' }}>Manage your campaigns and track your performance</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="row g-2 mb-2">
+      <div className="row g-2 mb-3">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="col-6 col-md-4 col-lg-3 col-xl-2">
+            <div key={index} className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
               <div
                 className="card h-100"
                 style={{
@@ -237,7 +288,8 @@ const CandidacyDashboard = () => {
                   borderRadius: '8px',
                   overflow: 'hidden',
                   transition: 'all 0.3s ease',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  padding: 'clamp(0.5rem, 2vw, 0.75rem)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
@@ -248,7 +300,7 @@ const CandidacyDashboard = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-1 d-flex flex-column align-items-center justify-content-center text-center">
+                <div className="card-body p-0 d-flex flex-column align-items-center justify-content-center text-center">
                   <div
                     className="d-flex align-items-center justify-content-center mb-2"
                     style={{
@@ -260,10 +312,10 @@ const CandidacyDashboard = () => {
                   >
                     <Icon size={18} color={stat.color} />
                   </div>
-                  <h4 className="fw-bold mb-1" style={{ color: stat.color, fontSize: '1.4rem' }}>
+                  <h5 className="fw-bold mb-1" style={{ color: stat.color, fontSize: 'clamp(1rem, 3vw, 1.4rem)' }}>
                     {stat.value}
-                  </h4>
-                  <p className="mb-0 small" style={{ color: colors.textSecondary, fontSize: '0.75rem' }}>{stat.title}</p>
+                  </h5>
+                  <p className="mb-0" style={{ color: colors.textSecondary, fontSize: 'clamp(0.65rem, 1.5vw, 0.75rem)', lineHeight: 1.2 }}>{stat.title}</p>
                 </div>
               </div>
             </div>
@@ -272,7 +324,7 @@ const CandidacyDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="row g-2 mb-2">
+      <div className="row g-2 mb-3">
         <div className="col-12">
           <div
             className="card"
@@ -283,11 +335,11 @@ const CandidacyDashboard = () => {
             }}
           >
             <div className="card-header" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderBottom: `1px solid ${colors.border}` }}>
-              <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>Quick Actions</h5>
+              <h5 className="mb-0 fw-bold" style={{ color: colors.text, fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>Quick Actions</h5>
             </div>
             <div className="card-body">
-              <div className="row g-2">
-                <div className="col-6 col-md-3">
+              <div className="row g-2 g-md-3">
+                <div className="col-6 col-sm-6 col-md-3">
                   <Link 
                     to="/candidate/profile" 
                     className="btn btn-primary w-100 d-flex flex-column align-items-center p-2 text-decoration-none"
@@ -296,7 +348,8 @@ const CandidacyDashboard = () => {
                       borderColor: '#0d6efd', 
                       color: '#fff',
                       fontWeight: '600',
-                      fontSize: '0.85rem'
+                      fontSize: 'clamp(0.7rem, 1.5vw, 0.85rem)',
+                      minHeight: '80px'
                     }}
                   >
                     <div 
@@ -313,7 +366,7 @@ const CandidacyDashboard = () => {
                     <span>Edit Profile</span>
                   </Link>
                 </div>
-                <div className="col-6 col-md-3">
+                <div className="col-6 col-sm-6 col-md-3">
                   <Link 
                     to="/candidate/materials" 
                     className="btn btn-success w-100 d-flex flex-column align-items-center p-2 text-decoration-none"
@@ -322,7 +375,8 @@ const CandidacyDashboard = () => {
                       borderColor: '#198754', 
                       color: '#fff',
                       fontWeight: '600',
-                      fontSize: '0.85rem'
+                      fontSize: 'clamp(0.7rem, 1.5vw, 0.85rem)',
+                      minHeight: '80px'
                     }}
                   >
                     <div 
@@ -339,7 +393,7 @@ const CandidacyDashboard = () => {
                     <span>Campaign Materials</span>
                   </Link>
                 </div>
-                <div className="col-6 col-md-3">
+                <div className="col-6 col-sm-6 col-md-3">
                   <Link 
                     to="/candidate/agents" 
                     className="btn btn-info w-100 d-flex flex-column align-items-center p-2 text-decoration-none"
@@ -348,7 +402,8 @@ const CandidacyDashboard = () => {
                       borderColor: '#0dcaf0', 
                       color: '#000',
                       fontWeight: '600',
-                      fontSize: '0.85rem'
+                      fontSize: 'clamp(0.7rem, 1.5vw, 0.85rem)',
+                      minHeight: '80px'
                     }}
                   >
                     <div 
@@ -365,7 +420,7 @@ const CandidacyDashboard = () => {
                     <span>Manage Agents</span>
                   </Link>
                 </div>
-                <div className="col-6 col-md-3">
+                <div className="col-6 col-sm-6 col-md-3">
                   <Link 
                     to="/candidate/stats" 
                     className="btn btn-warning w-100 d-flex flex-column align-items-center p-2 text-decoration-none"
@@ -374,7 +429,8 @@ const CandidacyDashboard = () => {
                       borderColor: '#ffc107', 
                       color: '#000',
                       fontWeight: '600',
-                      fontSize: '0.85rem'
+                      fontSize: 'clamp(0.7rem, 1.5vw, 0.85rem)',
+                      minHeight: '80px'
                     }}
                   >
                     <div 
@@ -412,71 +468,69 @@ const CandidacyDashboard = () => {
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>My Elections</h5>
             </div>
             <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className={`table table-striped table-hover mb-0 ${isDarkMode ? 'table-dark' : ''}`}>
-                  <thead className={isDarkMode ? 'table-dark' : 'table-light'}>
+              <ThemedTable striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th style={{ color: colors.text, padding: '1rem' }}>Election Title</th>
+                    <th style={{ color: colors.text }}>Position</th>
+                    <th style={{ color: colors.text }}>Status</th>
+                    <th style={{ color: colors.text }}>Votes</th>
+                    <th style={{ color: colors.text }}>Ranking</th>
+                    <th style={{ color: colors.text }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboardData.elections.length === 0 ? (
                     <tr>
-                      <th style={{ color: colors.text, padding: '1rem', borderColor: colors.border }}>Election Title</th>
-                      <th style={{ color: colors.text, borderColor: colors.border }}>Position</th>
-                      <th style={{ color: colors.text, borderColor: colors.border }}>Status</th>
-                      <th style={{ color: colors.text, borderColor: colors.border }}>Votes</th>
-                      <th style={{ color: colors.text, borderColor: colors.border }}>Ranking</th>
-                      <th style={{ color: colors.text, borderColor: colors.border }}>Actions</th>
+                      <td colSpan="6" className="text-center py-4" style={{ color: colors.textMuted }}>
+                        No elections found. Apply for candidacy to get started!
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.elections.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="text-center py-4" style={{ color: colors.textMuted }}>
-                          No elections found. Apply for candidacy to get started!
+                  ) : (
+                    dashboardData.elections.map((election) => (
+                      <tr key={election._id}>
+                        <td style={{ color: colors.text, padding: '1rem' }}>
+                          <div className="fw-semibold">{election.title}</div>
+                          <small style={{ color: colors.textSecondary }}>
+                            {new Date(election.startDate).toLocaleDateString()} - {new Date(election.endDate).toLocaleDateString()}
+                          </small>
+                        </td>
+                        <td style={{ color: colors.text }}>
+                          <span className="badge bg-secondary">{election.position}</span>
+                        </td>
+                        <td>{getStatusBadge(election.status)}</td>
+                        <td style={{ color: colors.text }}>
+                          <div className="fw-semibold">{election.currentVotes}</div>
+                          <small style={{ color: colors.textSecondary }}>
+                            {election.votePercentage}% of position votes
+                          </small>
+                        </td>
+                        <td style={{ color: colors.text }}>
+                          {election.ranking ? (
+                            <span className="badge bg-primary">#{election.ranking}</span>
+                          ) : (
+                            <span style={{ color: colors.textSecondary }}>N/A</span>
+                          )}
+                        </td>
+                        <td>
+                          <Link
+                            to={`/candidacy/election/${election._id}`}
+                            className="btn btn-sm"
+                            style={{
+                              backgroundColor: '#0d6efd',
+                              color: '#fff',
+                              border: 'none',
+                              fontWeight: '500'
+                            }}
+                          >
+                            View Details
+                          </Link>
                         </td>
                       </tr>
-                    ) : (
-                      dashboardData.elections.map((election) => (
-                        <tr key={election._id}>
-                          <td style={{ color: colors.text, padding: '1rem', borderColor: colors.border }}>
-                            <div className="fw-semibold">{election.title}</div>
-                            <small style={{ color: colors.textSecondary }}>
-                              {new Date(election.startDate).toLocaleDateString()} - {new Date(election.endDate).toLocaleDateString()}
-                            </small>
-                          </td>
-                          <td style={{ color: colors.text, borderColor: colors.border }}>
-                            <span className="badge bg-secondary">{election.position}</span>
-                          </td>
-                          <td style={{ borderColor: colors.border }}>{getStatusBadge(election.status)}</td>
-                          <td style={{ color: colors.text, borderColor: colors.border }}>
-                            <div className="fw-semibold">{election.currentVotes}</div>
-                            <small style={{ color: colors.textSecondary }}>
-                              {election.votePercentage}% of position votes
-                            </small>
-                          </td>
-                          <td style={{ color: colors.text, borderColor: colors.border }}>
-                            {election.ranking ? (
-                              <span className="badge bg-primary">#{election.ranking}</span>
-                            ) : (
-                              <span style={{ color: colors.textSecondary }}>N/A</span>
-                            )}
-                          </td>
-                          <td style={{ borderColor: colors.border }}>
-                            <Link
-                              to={`/candidacy/election/${election._id}`}
-                              className="btn btn-sm"
-                              style={{
-                                backgroundColor: '#0d6efd',
-                                color: '#fff',
-                                border: 'none',
-                                fontWeight: '500'
-                              }}
-                            >
-                              View Details
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </ThemedTable>
             </div>
           </div>
         </div>

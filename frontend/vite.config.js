@@ -13,12 +13,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://friendly-space-succotash-6v5pp7gq764hx555-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://friendly-space-succotash-6v5pp7gq764hx555-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       }
