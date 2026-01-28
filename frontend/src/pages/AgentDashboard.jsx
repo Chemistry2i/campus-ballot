@@ -101,16 +101,16 @@ const AgentDashboard = ({ user, onLogout }) => {
           background: isDarkMode ? colors.surface : '#fff',
           borderRight: `1px solid ${colors.border}`,
           transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
-          position: isMobile ? 'fixed' : 'relative',
+          position: 'fixed',
           left: isMobile ? (sidebarOpen ? '0' : '-280px') : '0',
-          top: isMobile ? '0' : 'auto',
-          height: isMobile ? '100vh' : 'auto',
-          zIndex: isMobile ? 1000 : 'auto',
+          top: '0',
+          height: '100vh',
+          maxHeight: '100vh',
+          zIndex: isMobile ? 1000 : 100,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          flexShrink: 0,
-          overflowY: 'auto'
+          flexShrink: 0
         }}
       >
         <div style={{ padding: isMobile ? '1rem' : '0.5rem', flex: 1, overflowY: 'auto', margin: 0 }}>
@@ -119,7 +119,8 @@ const AgentDashboard = ({ user, onLogout }) => {
             {!sidebarCollapsed && (
               <h4 className="fw-bold mb-0" style={{ 
                 color: colors.text,
-                fontSize: 'clamp(1.1rem, 2vw, 1.3rem)'
+                fontSize: 'clamp(1.1rem, 2vw, 1.3rem)',
+                marginTop: 'clamp(0.5rem, 2vw, 1rem)'
               }}>
                 <FaUserTie style={{ marginRight: '0.5rem', color: '#8b5cf6' }} />
                 Agent Portal
@@ -169,7 +170,7 @@ const AgentDashboard = ({ user, onLogout }) => {
             )}
           </div>
 
-          {/* User Info */}
+          {/* User Info - Profile Picture */}
           {!sidebarCollapsed && (
             <div
               style={{
@@ -182,20 +183,51 @@ const AgentDashboard = ({ user, onLogout }) => {
             >
               <div
                 style={{
-                  width: 'clamp(50px, 8vw, 60px)',
-                  height: 'clamp(50px, 8vw, 60px)',
+                  width: '80px',
+                  height: '80px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
                   fontWeight: 'bold',
-                  fontSize: 'clamp(1.2rem, 3vw, 1.5rem)',
-                  margin: '0 auto clamp(0.5rem, 1vw, 0.75rem)'
+                  fontSize: '2rem',
+                  margin: '0 auto clamp(0.5rem, 1vw, 0.75rem)',
+                  overflow: 'hidden',
+                  border: `3px solid rgba(139, 92, 246, 0.4)`,
+                  boxShadow: '0 6px 16px rgba(139, 92, 246, 0.25)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(139, 92, 246, 0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.25)';
                 }}
               >
-                {user?.name?.charAt(0) || 'A'}
+                {user?.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt={user?.name} 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) {
+                        e.target.nextSibling.style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                  {user?.name?.charAt(0) || 'A'}
+                </span>
               </div>
               <div className="text-center">
                 <div className="fw-semibold" style={{ 
@@ -207,10 +239,23 @@ const AgentDashboard = ({ user, onLogout }) => {
                 </div>
                 <small style={{ 
                   color: colors.textSecondary,
-                  fontSize: 'clamp(0.75rem, 1.3vw, 0.8rem)'
+                  fontSize: 'clamp(0.75rem, 1.3vw, 0.8rem)',
+                  display: 'block',
+                  marginBottom: '0.5rem'
                 }}>
                   {user?.email}
                 </small>
+                <span style={{
+                  display: 'inline-block',
+                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                  color: '#8b5cf6',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '12px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600
+                }}>
+                  👥 Campaign Agent
+                </span>
               </div>
             </div>
           )}
@@ -369,7 +414,9 @@ const AgentDashboard = ({ user, onLogout }) => {
         overflow: 'hidden',
         width: isMobile ? '100%' : 'auto',
         margin: 0,
-        padding: 0
+        padding: 0,
+        marginLeft: isMobile ? '0' : (sidebarCollapsed ? '70px' : '280px'),
+        transition: 'margin-left 0.3s ease'
       }}>
         {/* Mobile Menu Button */}
         {isMobile && (

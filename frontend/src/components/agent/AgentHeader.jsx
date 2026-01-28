@@ -356,29 +356,68 @@ const AgentHeader = ({ user, onLogout }) => {
             )}
           </div>
 
-          {/* Profile Menu */}
+          {/* Profile Menu - User Image */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowProfile(!showProfile)}
               style={{
-                background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                border: 'none',
+                width: 'clamp(36px, 8vw, 44px)',
+                height: 'clamp(36px, 8vw, 44px)',
                 borderRadius: '50%',
-                width: 'clamp(2.25rem, 5vw, 2.5rem)',
-                height: 'clamp(2.25rem, 5vw, 2.5rem)',
+                border: `2px solid rgba(255, 255, 255, 0.4)`,
+                overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: 'clamp(0.9rem, 1.8vw, 1rem)',
-                transition: 'all 0.2s'
+                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                backdropFilter: user?.profilePicture ? 'none' : 'blur(10px)',
+                padding: 0,
+                transition: 'all 0.2s ease',
+                cursor: 'pointer'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              data-bs-toggle="dropdown"
+              title={user?.name || 'Profile'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.7)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
-              {user?.name?.charAt(0).toUpperCase() || 'A'}
+              {user?.profilePicture ? (
+                <img 
+                  src={user.profilePicture} 
+                  alt={user?.name} 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    if (e.target.nextSibling) {
+                      e.target.nextSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <div 
+                style={{ 
+                  display: user?.profilePicture ? 'none' : 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                  fontWeight: 'bold',
+                  color: '#fff'
+                }}
+              >
+                {user?.name?.charAt(0).toUpperCase() || 'A'}
+              </div>
             </button>
 
             {showProfile && (
