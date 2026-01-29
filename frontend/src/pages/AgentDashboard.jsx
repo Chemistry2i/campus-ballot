@@ -15,7 +15,16 @@ import {
   FaUserTie,
   FaBars,
   FaTimes,
-  FaBookOpen
+  FaBookOpen,
+  FaFileAlt,
+  FaHandshake,
+  FaComment,
+  FaEnvelope,
+  FaVideo,
+  FaChartBar,
+  FaBell,
+  FaQuestionCircle,
+  FaChartLine
 } from 'react-icons/fa';
 
 // Import agent components
@@ -51,7 +60,17 @@ const AgentDashboard = ({ user, onLogout }) => {
   const menuItems = [
     { path: '/agent', icon: FaHome, label: 'Dashboard', exact: true },
     { path: '/agent/tasks', icon: FaTasks, label: 'Tasks' },
-    { path: '/agent/outreach', icon: FaRoute, label: 'Outreach' }
+    { path: '/agent/candidates', icon: FaUserTie, label: 'My Candidates' },
+    { path: '/agent/outreach', icon: FaRoute, label: 'Voter Outreach' },
+    { path: '/agent/materials', icon: FaFileAlt, label: 'Campaign Materials' },
+    { path: '/agent/engagement', icon: FaHandshake, label: 'Voter Engagement' },
+    { path: '/agent/communication', icon: FaComment, label: 'Communication' },
+    { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
+    { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
+    { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
+    { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
+    { path: '/agent/analytics', icon: FaChartLine, label: 'AgentAnalytics' },
+    { path: '/agent/help', icon: FaQuestionCircle, label: 'Help & Support' }
   ];
 
   const isActive = (path, exact) => {
@@ -273,9 +292,9 @@ const AgentDashboard = ({ user, onLogout }) => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: sidebarCollapsed ? '0' : 'clamp(0.75rem, 1.5vw, 1rem)',
-                    padding: sidebarCollapsed ? '0.75rem' : 'clamp(0.75rem, 1.5vw, 1rem)',
-                    marginBottom: '0.5rem',
+                    gap: sidebarCollapsed ? '0' : 'clamp(0.5rem, 1vw, 0.75rem)',
+                    padding: sidebarCollapsed ? '0.5rem' : 'clamp(0.5rem, 1vw, 0.75rem)',
+                    marginBottom: '0.25rem',
                     borderRadius: 'clamp(6px, 1vw, 8px)',
                     textDecoration: 'none',
                     color: active ? '#8b5cf6' : colors.text,
@@ -284,7 +303,7 @@ const AgentDashboard = ({ user, onLogout }) => {
                       : 'transparent',
                     borderLeft: active ? '3px solid #8b5cf6' : '3px solid transparent',
                     fontWeight: active ? 600 : 400,
-                    fontSize: 'clamp(0.85rem, 1.5vw, 0.95rem)',
+                    fontSize: 'clamp(0.75rem, 1vw, 0.85rem)',
                     justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                     transition: 'all 0.2s ease'
                   }}
