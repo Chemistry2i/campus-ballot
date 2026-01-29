@@ -1,6 +1,6 @@
 {
   "name": "Campus Ballot",
-  "short_name": "Ballot",
+  "short_name": "Campus Ballot",
   "description": "Campus Election and Voting System",
   "start_url": "/",
   "display": "standalone",
@@ -9,16 +9,16 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo.jpg",
-      "type": "image/jpeg",
+      "src": "/favicon.png",
+      "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/logo.jpg",
-      "type": "image/jpeg",
+      "src": "/logo.png",
+      "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "categories": ["education", "utilities"],
@@ -26,7 +26,8 @@
     {
       "src": "/screenshot1.png",
       "type": "image/png",
-      "sizes": "540x720"
+      "sizes": "540x720",
+      "form_factor": "narrow"
     }
   ]
 }
