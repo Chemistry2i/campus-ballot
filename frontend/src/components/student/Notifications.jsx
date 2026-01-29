@@ -7,7 +7,7 @@ import { faBell, faCheckCircle, faTrash, faInfoCircle, faSpinner } from '@fortaw
 
 // Normalize VITE_API_URL to a full URL. Some env setups may provide just a port like ":5000" —
 // guard against that by prefixing localhost when necessary.
-let _apiBase = import.meta.env.VITE_API_URL || 'https://api.campusballot.tech';
+let _apiBase = import.meta.env.VITE_API_URL || 'https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev';
 if (_apiBase && _apiBase.startsWith(':')) _apiBase = `http://localhost${_apiBase}`;
 axios.defaults.baseURL = _apiBase.replace(/\/$/, '');
 

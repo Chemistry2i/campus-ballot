@@ -32,7 +32,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev";
 
 function Elections({ user }) {
   const [elections, setElections] = useState([]);

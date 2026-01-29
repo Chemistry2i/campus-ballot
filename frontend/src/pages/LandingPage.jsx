@@ -82,7 +82,7 @@ const LandingPage = () => {
 
       // Send to backend API
       const response = await fetch(
-        "https://api.campusballot.tech/api/contact",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/contact",
         {
           method: "POST",
           headers: {
@@ -169,7 +169,7 @@ const LandingPage = () => {
     },
     {
       q: "What if there's a technical issue during voting?",
-      a: "Contact support immediately at support@campusballot.com or use the Contact form. Our technical team monitors elections in real-time and can assist with any issues. All system activities are logged for troubleshooting.",
+      a: "Contact support immediately at support@campusballot.tech or use the Contact form. Our technical team monitors elections in real-time and can assist with any issues. All system activities are logged for troubleshooting.",
     },
     {
       q: "Can alumni or external users participate?",
@@ -1831,7 +1831,7 @@ const LandingPage = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        info@campusballot.com
+                        info@campusballot.tech
                       </a>
                     </div>
                   </div>
@@ -1982,7 +1982,7 @@ const LandingPage = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        support@campusballot.com
+                        support@campusballot.tech
                       </a>
                     </div>
                   </div>
@@ -2147,7 +2147,7 @@ const LandingPage = () => {
                   Contact Support
                 </a>
                 <a
-                  href="mailto:support@campusballot.com"
+                  href="mailto:support@campusballot.tech"
                   className="btn btn-outline-primary"
                 >
                   <i className="fa-solid fa-life-ring me-2"></i>
@@ -2229,13 +2229,13 @@ const LandingPage = () => {
                   <Link to="/login">Login</Link>
                 </li>
                 <li>
-                  <a href="#contact">Contact Support</a>
+                  <Link to="/contact-support">Contact Support</Link>
                 </li>
                 <li>
-                  <a href="#">Documentation</a>
+                  <Link to="/documentation">Documentation</Link>
                 </li>
                 <li>
-                  <a href="#">Privacy Policy</a>
+                  <Link to="/privacy-policy">Privacy Policy</Link>
                 </li>
               </ul>
             </Col>
@@ -2245,21 +2245,19 @@ const LandingPage = () => {
               <h6 className="text-white fw-bold mb-3">Support</h6>
               <ul className="footer-links list-unstyled">
                 <li>
-                  <a href="#contact">Help Center</a>
+                  <Link to="/documentation">Help Center</Link>
                 </li>
                 <li>
-                  <a href="mailto:support@campusballot.com">
-                    Technical Support
-                  </a>
+                  <Link to="/technical-support">Technical Support</Link>
                 </li>
                 <li>
-                  <a href="#">Terms of Service</a>
+                  <Link to="/terms-of-service">Terms of Service</Link>
                 </li>
                 <li>
-                  <a href="#">Security</a>
+                  <Link to="/security-policy">Security</Link>
                 </li>
                 <li>
-                  <a href="#">System Status</a>
+                  <a href="https://status.campusballot.tech" target="_blank" rel="noopener noreferrer">System Status</a>
                 </li>
               </ul>
             </Col>
@@ -2271,18 +2269,16 @@ const LandingPage = () => {
                 <li className="d-flex align-items-start mb-2">
                   <i className="fa-solid fa-location-dot me-2 mt-1"></i>
                   <span className="text-white-50 small">
-                    School of Computing and Information Science
-                    <br />
-                    Kyambogo University, Kampala
+                    SCIS, Kyambogo University, Kampala
                   </span>
                 </li>
                 <li className="d-flex align-items-center mb-2">
                   <i className="fa-solid fa-envelope me-2"></i>
                   <a
-                    href="mailto:info@campusballot.com"
+                    href="mailto:info@campusballot.tech"
                     className="text-white-50 small"
                   >
-                    info@campusballot.com
+                    info@campusballot.tech
                   </a>
                 </li>
                 <li className="d-flex align-items-center mb-2">
@@ -2306,6 +2302,19 @@ const LandingPage = () => {
             className="footer-bottom mt-4 pt-4"
             style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}
           >
+            <Row className="align-items-center mb-3">
+              <Col className="text-center">
+                <div className="d-flex justify-content-center gap-3 flex-wrap">
+                  <Link to="/privacy-policy" className="text-white-50 small text-decoration-none" style={{transition: 'color 0.3s'}}>Privacy Policy</Link>
+                  <span className="text-white-50">|</span>
+                  <Link to="/terms-of-service" className="text-white-50 small text-decoration-none" style={{transition: 'color 0.3s'}}>Terms of Service</Link>
+                  <span className="text-white-50">|</span>
+                  <Link to="/eula" className="text-white-50 small text-decoration-none" style={{transition: 'color 0.3s'}}>EULA</Link>
+                  <span className="text-white-50">|</span>
+                  <Link to="/security-policy" className="text-white-50 small text-decoration-none" style={{transition: 'color 0.3s'}}>Security Policy</Link>
+                </div>
+              </Col>
+            </Row>
             <Row className="align-items-center">
               <Col md={6} className="text-center text-md-start mb-2 mb-md-0">
                 <p className="text-white-50 small mb-0">
