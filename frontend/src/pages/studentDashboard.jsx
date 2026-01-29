@@ -63,7 +63,9 @@ import {
   FaHome,
   FaArrowUp,
   FaUser,
-  FaCircle
+  FaCircle,
+  FaArchive,
+  FaSpinner
 } from "react-icons/fa";
 import { FaMoon, FaSun } from "react-icons/fa";
 import useSocket from '../hooks/useSocket';
@@ -132,6 +134,15 @@ function StudentDashboard({ user }) {
   const [profileImageFile, setProfileImageFile] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Enhanced Notification System States
+  const [notifSearch, setNotifSearch] = useState('');
+  const [notifFilter, setNotifFilter] = useState('all'); // 'all', 'unread', 'read'
+  const [notifSort, setNotifSort] = useState('newest'); // 'newest', 'oldest'
+  const [selectedNotifs, setSelectedNotifs] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [archivedNotifs, setArchivedNotifs] = useState([]);
 
   const token = localStorage.getItem("token");
   const { socketRef } = useSocket();
@@ -1289,91 +1300,419 @@ function StudentDashboard({ user }) {
     </div>
   ); }
 
-  function renderNotificationsView() { return (
-    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#e9ecef', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <div className="card-header d-flex align-items-center justify-content-between"
-           style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
-        <span className="d-flex align-items-center gap-2">
-          <FaBell /> Notifications
-        </span>
-        <span className="badge bg-white text-primary">{notifications.length}</span>
+  function renderNotificationsView() { 
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    // Get category badge for notification
+    const getCategoryBadge = (notif) => {
+      const categoryMap = {
+        'success': { label: 'Success', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: FaCheckCircle },
+        'alert': { label: 'Alert', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', icon: FaBell },
+        'update': { label: 'Update', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: FaInfoCircle },
+        'event': { label: 'Event', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', icon: FaInfoCircle }
+      };
+      const category = notif.type || (notif.message?.includes('elected') ? 'success' : 'update');
+      return categoryMap[category] || categoryMap['update'];
+    };
+
+    // Filter and search
+    const getFilteredNotifications = () => {
+      let filtered = showArchived ? archivedNotifs : notifications;
+
+      if (notifFilter === 'unread') {
+        filtered = filtered.filter(n => !n.read);
+      } else if (notifFilter === 'read') {
+        filtered = filtered.filter(n => n.read);
+      }
+
+      if (notifSearch) {
+        filtered = filtered.filter(n =>
+          (n.title?.toLowerCase().includes(notifSearch.toLowerCase())) ||
+          (n.message?.toLowerCase().includes(notifSearch.toLowerCase()))
+        );
+      }
+
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return notifSort === 'newest' ? dateB - dateA : dateA - dateB;
+      });
+
+      return filtered;
+    };
+
+    // Group by date
+    const groupByDate = (notifs) => {
+      const grouped = {};
+      notifs.forEach(n => {
+        const date = new Date(n.createdAt);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        let dateKey;
+        if (date.toDateString() === today.toDateString()) {
+          dateKey = 'Today';
+        } else if (date.toDateString() === yesterday.toDateString()) {
+          dateKey = 'Yesterday';
+        } else if ((today - date) / (1000 * 60 * 60 * 24) < 7) {
+          dateKey = 'This Week';
+        } else {
+          dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(n);
+      });
+      return grouped;
+    };
+
+    // Archive notification
+    const archiveNotification = async (notifId) => {
+      try {
+        const notifToArchive = notifications.find(n => n._id === notifId);
+        if (notifToArchive) {
+          setArchivedNotifs([...archivedNotifs, notifToArchive]);
+          setNotifications(notifications.filter(n => n._id !== notifId));
+        }
+      } catch (err) {
+        console.error('Failed to archive', err);
+      }
+    };
+
+    // Bulk actions
+    const bulkMarkAsRead = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await Promise.all(
+          selectedNotifs.map(id => axios.put(`/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } }))
+        );
+        await fetchNotifications();
+        setSelectedNotifs([]);
+      } catch (err) {
+        console.error('Failed to mark as read', err);
+      }
+    };
+
+    const bulkArchive = () => {
+      selectedNotifs.forEach(id => archiveNotification(id));
+      setSelectedNotifs([]);
+    };
+
+    const filteredNotifications = getFilteredNotifications();
+    const groupedNotifications = groupByDate(filteredNotifications);
+
+    return (
+    <div className="card shadow-sm border-0" style={{ borderRadius: '12px', background: isDarkMode ? colors.surface : '#fff', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      {/* Header with Actions */}
+      <div className="p-3" style={{ background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderBottom: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
+        <div className="d-flex flex-column flex-lg-row align-items-start align-lg-items-center justify-content-between gap-2 mb-2">
+          <div>
+            <h5 className="mb-1 d-flex align-items-center gap-2">
+              <FaBell /> Notifications
+            </h5>
+            {unreadCount > 0 && <span className="badge bg-danger">{unreadCount} unread</span>}
+          </div>
+          <div className="d-flex gap-2">
+            {unreadCount > 0 && (
+              <button 
+                className="btn btn-sm btn-light"
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const unreadIds = notifications.filter(n => !n.read).map(n => n._id);
+                    await Promise.all(
+                      unreadIds.map(id => axios.put(`/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } }))
+                    );
+                    await fetchNotifications();
+                  } catch (err) {
+                    console.error('Failed to mark all as read', err);
+                  }
+                }}
+              >
+                <FaCheckCircle className="me-2" /> Mark all as read
+              </button>
+            )}
+            <button 
+              className="btn btn-sm btn-light"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <FaCog /> Settings
+            </button>
+          </div>
+        </div>
+
+        {/* Search and Filter Bar - Mobile Responsive */}
+        <div className="row g-2">
+          <div className="col-12 col-lg-6">
+            <div className="input-group">
+              <span className="input-group-text" style={{ background: isDarkMode ? colors.surfaceHover : '#fff', border: 0, color: isDarkMode ? colors.text : '#6c757d' }}>
+                <FaSearch size={14} />
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search..."
+                value={notifSearch}
+                onChange={(e) => setNotifSearch(e.target.value)}
+                style={{
+                  background: isDarkMode ? colors.surfaceHover : '#fff',
+                  color: isDarkMode ? colors.text : '#000',
+                  border: 0,
+                  height: 'auto',
+                  minHeight: '36px',
+                  fontSize: '0.875rem',
+                  padding: '6px 10px'
+                }}
+              />
+            </div>
+          </div>
+          <div className="col-6 col-sm-6 col-lg-3">
+            <select
+              className="form-select"
+              value={notifFilter}
+              onChange={(e) => setNotifFilter(e.target.value)}
+              style={{
+                background: isDarkMode ? colors.surfaceHover : '#fff',
+                color: isDarkMode ? colors.text : '#000',
+                border: 0,
+                height: 'auto',
+                minHeight: '36px',
+                fontSize: '0.875rem',
+                padding: '6px 10px'
+              }}
+            >
+              <option value="all">All</option>
+              <option value="unread">Unread</option>
+              <option value="read">Read</option>
+            </select>
+          </div>
+          <div className="col-6 col-sm-6 col-lg-3">
+            <select
+              className="form-select"
+              value={notifSort}
+              onChange={(e) => setNotifSort(e.target.value)}
+              style={{
+                background: isDarkMode ? colors.surfaceHover : '#fff',
+                color: isDarkMode ? colors.text : '#000',
+                border: 0,
+                height: 'auto',
+                minHeight: '36px',
+                fontSize: '0.875rem',
+                padding: '6px 10px'
+              }}
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+        </div>
       </div>
-            <div className="card-body p-4" style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined }}>
-        {notifications.length === 0 ? (
-          <div className="text-center py-5">
-            <FaBell className="mb-3 text-muted" size={48} />
-            <h4 className="text-muted">No notifications</h4>
-            <p className="text-muted">You'll see important updates and announcements here.</p>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="px-3 py-2 border-bottom" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#dee2e6' }}>
+          <small className="fw-semibold d-block mb-2" style={{ color: isDarkMode ? colors.text : '#000' }}>Notification Settings</small>
+          <div className="row g-2">
+            <div className="col-12 col-sm-6">
+              <label className="form-check d-flex align-items-center">
+                <input className="form-check-input" type="checkbox" defaultChecked />
+                <span className="form-check-label ms-2 mb-0" style={{ fontSize: '0.9rem' }}>Email Alerts</span>
+              </label>
+            </div>
+            <div className="col-12 col-sm-6">
+              <label className="form-check d-flex align-items-center">
+                <input className="form-check-input" type="checkbox" defaultChecked />
+                <span className="form-check-label ms-2 mb-0" style={{ fontSize: '0.9rem' }}>Browser Notifications</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions Bar */}
+      {selectedNotifs.length > 0 && (
+        <div className="px-3 py-2 border-bottom d-flex flex-column flex-sm-row align-items-start align-sm-items-center justify-content-between gap-2" style={{ background: isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)', borderColor: isDarkMode ? colors.border : '#dee2e6' }}>
+          <small className="text-muted fw-semibold">{selectedNotifs.length} selected</small>
+          <div className="d-flex gap-2">
+            <button className="btn btn-sm btn-outline-success" onClick={bulkMarkAsRead} style={{ fontSize: '0.85rem' }}>
+              <FaCheckCircle className="me-1" /> Read
+            </button>
+            <button className="btn btn-sm btn-outline-warning" onClick={bulkArchive} style={{ fontSize: '0.85rem' }}>
+              <FaArchive className="me-1" /> Archive
+            </button>
+            <button className="btn btn-sm btn-outline-secondary" onClick={() => setSelectedNotifs([])} style={{ fontSize: '0.85rem' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications List */}
+      <div style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : undefined, maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+        {filteredNotifications.length === 0 ? (
+          <div className="text-center py-4 px-3">
+            <FaBell className="mb-2 text-muted" size={40} />
+            <h6 className="text-muted mb-1">No notifications</h6>
+            <small className="text-muted">
+              {showArchived ? 'No archived notifications' : 'You\'re all caught up!'}
+            </small>
           </div>
         ) : (
-          <div className="list-group list-group-flush">
-            {notifications.map((notification, index) => (
-              <div
-                key={notification._id || index}
-                className={`list-group-item border border-1 mb-2`}
-                style={{ background: isDarkMode ? (notification.read ? colors.surface : colors.surfaceHover) : (notification.read ? '#ffffff' : '#f1f3f5'), color: isDarkMode ? colors.text : undefined, borderColor: isDarkMode ? colors.border : '#e9ecef' }}
-              >
-                <div className="d-flex align-items-start gap-3">
-                  <div style={{ width: 44, height: 44, minWidth: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }} className={`bg-${notification.type === 'success' ? 'success' : 'info'} bg-opacity-10`}>
-                    {notification.type === 'success' ? (
-                      <FaCheckCircle className="text-success" size={18} />
-                    ) : (
-                      <FaInfoCircle className="text-info" size={18} />
-                    )}
-                  </div>
-                  <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className="fw-semibold text-truncate" style={{ maxWidth: 420 }}>
-                      {typeof notification.title === 'string' ? notification.title :
-                        (notification.title && typeof notification.title === 'object' && (notification.title.text || notification.title.value)) ? (notification.title.text || notification.title.value) :
-                        (notification.title ? '[Invalid notification]' : 'Notification')}
-                    </div>
-                    <p className="text-muted mb-1 small text-truncate" style={{ maxWidth: 420 }}>
-                      {typeof notification.message === 'string' ? notification.message :
-                        (typeof notification.content === 'string' ? notification.content :
-                          (notification.message && typeof notification.message === 'object' && (notification.message.text || notification.message.value)) ? (notification.message.text || notification.message.value) :
-                          (notification.content && typeof notification.content === 'object' && (notification.content.text || notification.content.value)) ? (notification.content.text || notification.content.value) :
-                          '[Invalid message]')}
-                    </p>
-                    <small className="text-muted">
-                      {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : 'Recently'}
-                    </small>
-                  </div>
-                    <div className="d-flex flex-column gap-2 align-items-end">
-                      {!notification.read && (
-                        <span className="badge bg-primary">New</span>
-                      )}
-                      <div className="d-flex gap-2">
+          <div>
+            {Object.entries(groupedNotifications).map(([dateKey, notifs]) => (
+              <div key={dateKey}>
+                {/* Date Header */}
+                <div className="px-3 py-2 d-flex align-items-center gap-2" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`, fontSize: '0.8rem' }}>
+                  <small className="text-muted fw-semibold text-uppercase">{dateKey}</small>
+                  <div style={{ flex: 1, height: '1px', background: isDarkMode ? colors.border : '#e9ecef' }}></div>
+                  <small className="text-muted">{notifs.length}</small>
+                </div>
+
+                {/* Notifications */}
+                {notifs.map((notification, idx) => {
+                  const category = getCategoryBadge(notification);
+                  const isSelected = selectedNotifs.includes(notification._id);
+
+                  return (
+                    <div
+                      key={notification._id || idx}
+                      className="d-flex align-items-start gap-2 p-2"
+                      style={{
+                        background: isSelected ? (isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)') : (isDarkMode ? (notification.read ? colors.surface : colors.surfaceHover) : (notification.read ? '#ffffff' : '#f8f9fa')),
+                        borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        className="form-check-input mt-1"
+                        checked={isSelected}
+                        onChange={() => {
+                          if (isSelected) {
+                            setSelectedNotifs(selectedNotifs.filter(id => id !== notification._id));
+                          } else {
+                            setSelectedNotifs([...selectedNotifs, notification._id]);
+                          }
+                        }}
+                        style={{ minWidth: '18px', marginTop: '2px' }}
+                      />
+
+                      {/* Icon */}
+                      <div
+                        className="flex-shrink-0 rounded d-flex align-items-center justify-content-center"
+                        style={{
+                          width: 38,
+                          height: 38,
+                          minWidth: 38,
+                          background: category.bg
+                        }}
+                      >
+                        <category.icon style={{ color: category.color, fontSize: '16px' }} />
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div className="d-flex justify-content-between align-items-start gap-1 mb-1">
+                          <div style={{ minWidth: 0 }}>
+                            <div className="fw-semibold" style={{ fontSize: '0.9rem', lineHeight: '1.3' }}>
+                              {typeof notification.title === 'string' ? notification.title : 'Notification'}
+                            </div>
+                            <div style={{ marginTop: '2px' }}>
+                              <span className="badge me-1" style={{ background: category.bg, color: category.color, fontSize: '0.65rem', padding: '2px 6px' }}>
+                                {category.label}
+                              </span>
+                              {!notification.read && <span className="badge bg-primary" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>New</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem', lineHeight: '1.3' }}>
+                          {typeof notification.message === 'string' ? notification.message : '[Message]'}
+                        </p>
+                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                          {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : 'Recently'}
+                        </small>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="d-flex gap-1 flex-shrink-0">
                         <button
-                          className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
+                          className="btn btn-sm d-flex align-items-center justify-content-center"
                           onClick={() => {
                             setSelectedNotification(notification);
                             setShowNotificationModal(true);
                           }}
-                          style={{ minWidth: 44 }}
+                          style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
+                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
+                            color: isDarkMode ? colors.text : '#6c757d',
+                            fontSize: '12px'
+                          }}
+                          title="View"
                         >
-                          <FaEye className="me-0 me-sm-2" />
-                          <span className="d-none d-sm-inline">View</span>
+                          <FaEye size={13} />
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
-                          onClick={() => deleteNotification(notification._id)}
-                          disabled={deletingNotificationIds.includes(notification._id)}
-                          style={{ minWidth: 44 }}
+                          className="btn btn-sm d-flex align-items-center justify-content-center"
+                          onClick={() => markNotificationAsRead(notification._id)}
+                          disabled={markingReadIds.includes(notification._id)}
+                          style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
+                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
+                            color: isDarkMode ? colors.text : '#6c757d',
+                            fontSize: '12px',
+                            opacity: markingReadIds.includes(notification._id) ? 0.6 : 1
+                          }}
+                          title={notification.read ? 'Mark unread' : 'Mark as read'}
                         >
-                          {deletingNotificationIds.includes(notification._id) ? (
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          {markingReadIds.includes(notification._id) ? (
+                            <FaSpinner size={13} className="fa-spin" />
                           ) : (
-                            <><FaTrash className="me-0 me-sm-2" /><span className="d-none d-sm-inline">Delete</span></>
+                            <FaCheckCircle size={13} />
                           )}
+                        </button>
+                        <button
+                          className="btn btn-sm d-flex align-items-center justify-content-center"
+                          onClick={() => archiveNotification(notification._id)}
+                          style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
+                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
+                            color: isDarkMode ? colors.text : '#6c757d',
+                            fontSize: '12px'
+                          }}
+                          title="Archive"
+                        >
+                          <FaArchive size={13} />
                         </button>
                       </div>
                     </div>
-                </div>
+                  );
+                })}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Archive Tab */}
+      {archivedNotifs.length > 0 && (
+        <div className="px-3 py-2 border-top" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#dee2e6' }}>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <FaArchive className="me-2" style={{ fontSize: '12px' }} /> {showArchived ? 'Hide' : 'Show'} Archive ({archivedNotifs.length})
+          </button>
+        </div>
+      )}
     </div>
   ); }
 
@@ -1416,7 +1755,7 @@ function StudentDashboard({ user }) {
             <p className="mb-2 text-white-50">{user?.email}</p>
             
             {/* Role Badge */}
-            <span className="badge bg-white text-secondary px-3 py-2">
+            <span className="badge bg-white text-secondary px-2 py-2">
               <FaUserGraduate className="me-2" /> {user?.role}
             </span>
           </div>
