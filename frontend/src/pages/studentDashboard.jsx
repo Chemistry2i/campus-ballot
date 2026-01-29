@@ -65,7 +65,9 @@ import {
   FaUser,
   FaCircle,
   FaArchive,
-  FaSpinner
+  FaSpinner,
+  FaChevronUp,
+  FaChevronDown
 } from "react-icons/fa";
 import { FaMoon, FaSun } from "react-icons/fa";
 import useSocket from '../hooks/useSocket';
@@ -143,9 +145,28 @@ function StudentDashboard({ user }) {
   const [showArchived, setShowArchived] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [archivedNotifs, setArchivedNotifs] = useState([]);
+  const [expandedNotifs, setExpandedNotifs] = useState([]);
+  const [persistedArchivedNotifs, setPersistedArchivedNotifs] = useState([]);
+  const [isMobileDevice, setIsMobileDevice] = useState(window.innerWidth < 768);
 
   const token = localStorage.getItem("token");
   const { socketRef } = useSocket();
+
+  // Detect mobile device for responsive button sizing
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileDevice(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Load archived notifications from localStorage on mount
+  useEffect(() => {
+    const savedArchivedIds = JSON.parse(localStorage.getItem('archivedNotifications') || '[]');
+    setPersistedArchivedNotifs(savedArchivedIds);
+  }, []);
 
   useEffect(() => {
     fetchElections();
@@ -317,7 +338,10 @@ function StudentDashboard({ user }) {
       const res = await axios.get("/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications(res.data);
+      // Filter out archived notifications
+      const archivedIds = persistedArchivedNotifs || [];
+      const filteredNotifications = res.data.filter(n => !archivedIds.includes(n._id));
+      setNotifications(filteredNotifications);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
@@ -1374,6 +1398,11 @@ function StudentDashboard({ user }) {
         if (notifToArchive) {
           setArchivedNotifs([...archivedNotifs, notifToArchive]);
           setNotifications(notifications.filter(n => n._id !== notifId));
+          
+          // Persist archived notification ID to localStorage
+          const updatedArchivedIds = [...persistedArchivedNotifs, notifId];
+          setPersistedArchivedNotifs(updatedArchivedIds);
+          localStorage.setItem('archivedNotifications', JSON.stringify(updatedArchivedIds));
         }
       } catch (err) {
         console.error('Failed to archive', err);
@@ -1573,126 +1602,160 @@ function StudentDashboard({ user }) {
                 {notifs.map((notification, idx) => {
                   const category = getCategoryBadge(notification);
                   const isSelected = selectedNotifs.includes(notification._id);
+                  const isExpanded = expandedNotifs.includes(notification._id);
+
+                  const toggleExpand = () => {
+                    if (isExpanded) {
+                      setExpandedNotifs(expandedNotifs.filter(id => id !== notification._id));
+                    } else {
+                      setExpandedNotifs([...expandedNotifs, notification._id]);
+                    }
+                  };
 
                   return (
                     <div
                       key={notification._id || idx}
-                      className="d-flex align-items-start gap-2 p-2"
                       style={{
                         background: isSelected ? (isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)') : (isDarkMode ? (notification.read ? colors.surface : colors.surfaceHover) : (notification.read ? '#ffffff' : '#f8f9fa')),
                         borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer'
+                        transition: 'all 0.2s ease'
                       }}
                     >
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        className="form-check-input mt-1"
-                        checked={isSelected}
-                        onChange={() => {
-                          if (isSelected) {
-                            setSelectedNotifs(selectedNotifs.filter(id => id !== notification._id));
-                          } else {
-                            setSelectedNotifs([...selectedNotifs, notification._id]);
-                          }
-                        }}
-                        style={{ minWidth: '18px', marginTop: '2px' }}
-                      />
-
-                      {/* Icon */}
+                      {/* Main Item - Click to Expand */}
                       <div
-                        className="flex-shrink-0 rounded d-flex align-items-center justify-content-center"
-                        style={{
-                          width: 38,
-                          height: 38,
-                          minWidth: 38,
-                          background: category.bg
-                        }}
+                        className="d-flex align-items-start gap-2 p-2"
+                        onClick={toggleExpand}
+                        style={{ cursor: 'pointer' }}
                       >
-                        <category.icon style={{ color: category.color, fontSize: '16px' }} />
-                      </div>
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          className="form-check-input mt-1"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            if (isSelected) {
+                              setSelectedNotifs(selectedNotifs.filter(id => id !== notification._id));
+                            } else {
+                              setSelectedNotifs([...selectedNotifs, notification._id]);
+                            }
+                          }}
+                          style={{ minWidth: '18px', marginTop: '2px' }}
+                        />
 
-                      {/* Content */}
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div className="d-flex justify-content-between align-items-start gap-1 mb-1">
-                          <div style={{ minWidth: 0 }}>
-                            <div className="fw-semibold" style={{ fontSize: '0.9rem', lineHeight: '1.3' }}>
-                              {typeof notification.title === 'string' ? notification.title : 'Notification'}
+                        {/* Icon */}
+                        <div
+                          className="flex-shrink-0 rounded d-flex align-items-center justify-content-center"
+                          style={{
+                            width: 38,
+                            height: 38,
+                            minWidth: 38,
+                            background: category.bg
+                          }}
+                        >
+                          <category.icon style={{ color: category.color, fontSize: '16px' }} />
+                        </div>
+
+                        {/* Content - Title Only */}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div className="d-flex justify-content-between align-items-start gap-1 mb-1">
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div className="fw-semibold" style={{ fontSize: '0.9rem', lineHeight: '1.3', wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
+                                {typeof notification.title === 'string' ? notification.title : 'Notification'}
+                              </div>
+                              <div style={{ marginTop: '2px' }}>
+                                <span className="badge me-1" style={{ background: category.bg, color: category.color, fontSize: '0.65rem', padding: '2px 6px' }}>
+                                  {category.label}
+                                </span>
+                                {!notification.read && <span className="badge bg-primary" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>New</span>}
+                              </div>
                             </div>
-                            <div style={{ marginTop: '2px' }}>
-                              <span className="badge me-1" style={{ background: category.bg, color: category.color, fontSize: '0.65rem', padding: '2px 6px' }}>
-                                {category.label}
-                              </span>
-                              {!notification.read && <span className="badge bg-primary" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>New</span>}
-                            </div>
+                            {/* Expand/Collapse Arrow */}
+                            {/* Chevron commented out - toggle functionality still works */}
+                            {/* <div style={{ color: isDarkMode ? colors.text : '#6c757d' }}>
+                              {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                            </div> */}
                           </div>
                         </div>
-                        <p className="text-muted mb-1" style={{ fontSize: '0.85rem', lineHeight: '1.3' }}>
-                          {typeof notification.message === 'string' ? notification.message : '[Message]'}
-                        </p>
-                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>
-                          {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : 'Recently'}
-                        </small>
+
+                        {/* Actions */}
+                        <div className="d-flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="btn btn-sm d-flex align-items-center justify-content-center"
+                            onClick={() => {
+                              setSelectedNotification(notification);
+                              setShowNotificationModal(true);
+                            }}
+                            style={{
+                              minWidth: isMobileDevice ? '28px' : '32px',
+                              height: isMobileDevice ? '28px' : '32px',
+                              background: category.bg,
+                              border: `1px solid ${category.bg}`,
+                              color: category.color,
+                              fontSize: '12px'
+                            }}
+                            title="View"
+                          >
+                            <FaEye size={isMobileDevice ? 11 : 13} />
+                          </button>
+                          <button
+                            className="btn btn-sm d-flex align-items-center justify-content-center"
+                            onClick={() => markNotificationAsRead(notification._id)}
+                            disabled={markingReadIds.includes(notification._id)}
+                            style={{
+                              minWidth: isMobileDevice ? '28px' : '32px',
+                              height: isMobileDevice ? '28px' : '32px',
+                              background: category.bg,
+                              border: `1px solid ${category.bg}`,
+                              color: category.color,
+                              fontSize: '12px',
+                              opacity: markingReadIds.includes(notification._id) ? 0.6 : 1
+                            }}
+                            title={notification.read ? 'Mark unread' : 'Mark as read'}
+                          >
+                            {markingReadIds.includes(notification._id) ? (
+                              <FaSpinner size={isMobileDevice ? 11 : 13} className="fa-spin" />
+                            ) : (
+                              <FaCheckCircle size={isMobileDevice ? 11 : 13} />
+                            )}
+                          </button>
+                          <button
+                            className="btn btn-sm d-flex align-items-center justify-content-center"
+                            onClick={() => archiveNotification(notification._id)}
+                            style={{
+                              minWidth: isMobileDevice ? '28px' : '32px',
+                              height: isMobileDevice ? '28px' : '32px',
+                              background: category.bg,
+                              border: `1px solid ${category.bg}`,
+                              color: category.color,
+                              fontSize: '12px'
+                            }}
+                            title="Archive"
+                          >
+                            <FaArchive size={isMobileDevice ? 11 : 13} />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="d-flex gap-1 flex-shrink-0">
-                        <button
-                          className="btn btn-sm d-flex align-items-center justify-content-center"
-                          onClick={() => {
-                            setSelectedNotification(notification);
-                            setShowNotificationModal(true);
-                          }}
+                      {/* Expanded Content - Message Details */}
+                      {isExpanded && (
+                        <div
+                          className="px-2 pb-2"
                           style={{
-                            minWidth: '32px',
-                            height: '32px',
-                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
-                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
-                            color: isDarkMode ? colors.text : '#6c757d',
-                            fontSize: '12px'
+                            background: isDarkMode ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.02)',
+                            borderTop: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`
                           }}
-                          title="View"
                         >
-                          <FaEye size={13} />
-                        </button>
-                        <button
-                          className="btn btn-sm d-flex align-items-center justify-content-center"
-                          onClick={() => markNotificationAsRead(notification._id)}
-                          disabled={markingReadIds.includes(notification._id)}
-                          style={{
-                            minWidth: '32px',
-                            height: '32px',
-                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
-                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
-                            color: isDarkMode ? colors.text : '#6c757d',
-                            fontSize: '12px',
-                            opacity: markingReadIds.includes(notification._id) ? 0.6 : 1
-                          }}
-                          title={notification.read ? 'Mark unread' : 'Mark as read'}
-                        >
-                          {markingReadIds.includes(notification._id) ? (
-                            <FaSpinner size={13} className="fa-spin" />
-                          ) : (
-                            <FaCheckCircle size={13} />
-                          )}
-                        </button>
-                        <button
-                          className="btn btn-sm d-flex align-items-center justify-content-center"
-                          onClick={() => archiveNotification(notification._id)}
-                          style={{
-                            minWidth: '32px',
-                            height: '32px',
-                            background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
-                            border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
-                            color: isDarkMode ? colors.text : '#6c757d',
-                            fontSize: '12px'
-                          }}
-                          title="Archive"
-                        >
-                          <FaArchive size={13} />
-                        </button>
-                      </div>
+                          <div style={{ marginLeft: '50px' }}>
+                            <p className="text-muted mb-1" style={{ fontSize: '0.85rem', lineHeight: '1.5' }}>
+                              {typeof notification.message === 'string' ? notification.message : '[Message]'}
+                            </p>
+                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                              {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : 'Recently'}
+                            </small>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
