@@ -1690,8 +1690,7 @@ const LandingPage = () => {
                       <div>
                         <h6 className="mb-1 fw-bold">Modern Tech Stack</h6>
                         <small style={{ opacity: 0.9 }}>
-                          Work with React, Node.js, MongoDB and cutting-edge
-                          tools
+                          Work with React, Node.js, MongoDB, Java, Python, MySQL, Oracle and cutting-edge tools
                         </small>
                       </div>
                     </div>
@@ -1740,19 +1739,22 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                <div className="d-flex flex-wrap justify-content-center gap-3">
-                  <a href="#contact" className="btn btn-light btn-lg px-4">
+                <div className="d-flex justify-content-center gap-2 gap-md-3" style={{ flexWrap: 'nowrap', overflowX: 'auto', justifyContent: 'center' }}>
+                  <a href="#contact" className="btn btn-light btn-lg px-3 px-md-4" style={{ whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8em' }}>
                     <i className="fa-solid fa-envelope me-2"></i>
-                    Get In Touch
+                    <span className="d-none d-sm-inline">Get In Touch</span>
+                    <span className="d-sm-none">Touch</span>
                   </a>
                   <a
                     href="https://github.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-outline-light btn-lg px-4"
+                    className="btn btn-outline-light btn-lg px-3 px-md-4"
+                    style={{ whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8em' }}
                   >
                     <i className="fa-brands fa-github me-2"></i>
-                    View on GitHub
+                    <span className="d-none d-sm-inline">View on GitHub</span>
+                    <span className="d-sm-none">GitHub</span>
                   </a>
                 </div>
               </div>

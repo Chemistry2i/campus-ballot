@@ -25,16 +25,35 @@ body {
 /* Hero section adjustments to account for fixed navbar height so content centers
    correctly on mobile and desktop. We subtract the navbar height from 100vh. */
 .hero-section {
-  min-height: calc(100vh - 72px) !important; /* default navbar height */
+  min-height: 100vh !important;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding-top: 72px;
+  box-sizing: border-box;
 }
 
 @media (max-width: 991px) {
   .hero-section {
-    min-height: calc(100vh - 64px) !important; /* mobile navbar height */
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    min-height: 100vh !important;
+    padding-top: 64px;
+    padding-bottom: 1rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-section {
+    min-height: 100vh !important;
+    padding-top: 56px;
+    padding-bottom: 1rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 .register-container,

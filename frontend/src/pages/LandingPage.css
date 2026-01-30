@@ -178,12 +178,12 @@ html {
 }
 
 /* Fixed navbar adjustments */
-/* Only add top padding when the landing page navbar is present.
-   We add/remove the `has-fixed-navbar` class on <body> from LandingPage.jsx
-   so other routes (login/register) won't get an unwanted top gap. */
+/* Hero section handles all navbar spacing with its own padding.
+   The `has-fixed-navbar` class is used to identify when navbar is present,
+   but doesn't add extra padding since hero manages its own positioning. */
 body.has-fixed-navbar {
-  /* leave space for fixed navbar */
-  padding-top: 72px;
+  /* Hero section handles navbar spacing with responsive padding */
+  padding-top: 0;
 }
 
 .navbar.fixed-top {
