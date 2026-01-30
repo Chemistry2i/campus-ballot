@@ -9,24 +9,17 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo.jpg",
-      "type": "image/jpeg",
+      "src": "/android-chrome-192x192.png",
+      "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.jpg",
-      "type": "image/jpeg",
+      "src": "/android-chrome-512x512.png",
+      "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "utilities"],
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "type": "image/png",
-      "sizes": "540x720"
-    }
-  ]
+  "categories": ["education", "utilities"]
 }
