@@ -105,7 +105,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   async function fetchStats() {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -240,7 +240,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -274,14 +274,14 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       let res;
       try {
         res = await axios.get(
-          "https://api.campusballot.tech/api/admin/notifications",
+          "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/admin/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } catch (err) {
         res = await axios.get(
-          "https://api.campusballot.tech/api/notifications",
+          "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -334,7 +334,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     );
     try {
       await axios.put(
-        `https://api.campusballot.tech/api/notifications/${id}/read`,
+        `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -344,7 +344,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.put(
-          `https://api.campusballot.tech/api/admin/notifications/${id}/read`,
+          `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/admin/notifications/${id}/read`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -382,7 +382,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
 
     try {
       await axios.delete(
-        `https://api.campusballot.tech/api/notifications/${id}`,
+        `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications/${id}`,
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -395,7 +395,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.delete(
-          `https://api.campusballot.tech/api/admin/notifications/${id}`,
+          `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/admin/notifications/${id}`,
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -420,7 +420,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
       try {
         await axios.put(
-          "https://api.campusballot.tech/api/notifications/mark-all-read",
+          "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications/mark-all-read",
           {},
           {
             headers: { Authorization: `Bearer ${user?.token}` },
@@ -431,7 +431,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
         await Promise.all(
           unread.map((n) =>
             axios.put(
-              `https://api.campusballot.tech/api/notifications/${
+              `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications/${
                 n._id || n.id
               }/read`,
               {},

@@ -1,0 +1,25 @@
+/* Progress Indicator Component Styles */
+
+.progress-bar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #e0e7ff;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(11, 99, 181, 0.1);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0b63b5 0%, #004080 100%);
+  width: 0%;
+  transition: width 0.1s ease;
+  box-shadow: 0 0 10px rgba(11, 99, 181, 0.4);
+}
+
+/* Ensure content doesn't hide behind progress bar */
+body {
+  scroll-padding-top: 4px;
+}

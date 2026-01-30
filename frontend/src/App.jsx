@@ -25,6 +25,14 @@ import SimpleCandidateTest from './components/SimpleCandidateTest';
 import TestingRoutes from './components/TestingRoutes';
 import CandidateApplication from './pages/CandidateApplication';
 import { ObserverLayout, ObserverDashboardContent, ElectionMonitor } from './components/observer';
+// Legal Pages
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import EULA from './pages/EULA';
+import SecurityPolicy from './pages/SecurityPolicy';
+import Documentation from './pages/Documentation';
+import ContactSupport from './pages/ContactSupport';
+import TechnicalSupport from './pages/TechnicalSupport';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -135,6 +143,15 @@ function App() {
         
         {/* Public Routes - No Authentication Required */}
         <Route path="/candidates" element={<PublicCandidates />} />
+        
+        {/* Legal Pages - Public Routes */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/eula" element={<EULA />} />
+        <Route path="/security-policy" element={<SecurityPolicy />} />
+        <Route path="/documentation" element={<Documentation />} />
+        <Route path="/contact-support" element={<ContactSupport />} />
+        <Route path="/technical-support" element={<TechnicalSupport />} />
         
         <Route
           path="/admin/*"

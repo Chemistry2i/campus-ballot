@@ -42,7 +42,7 @@ const AgentHeader = ({ user, onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://api.campusballot.tech/api/notifications', {
+      const response = await axios.get('https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -61,7 +61,7 @@ const AgentHeader = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `https://api.campusballot.tech/api/notifications/${notificationId}/read`,
+        `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/notifications/${notificationId}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

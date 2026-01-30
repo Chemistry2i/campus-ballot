@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://api.campusballot.tech/api/auth/register",
+      "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/auth/register",
       form
     );
     Swal.fire({

@@ -1,0 +1,89 @@
+/* Print Button Component Styles */
+
+.print-button-container {
+  display: flex;
+  gap: 12px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+
+.btn-print,
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background-color: #0b63b5;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(11, 99, 181, 0.2);
+}
+
+.btn-print:hover,
+.btn-export-pdf:hover {
+  background-color: #083f7a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(11, 99, 181, 0.3);
+}
+
+.btn-print:active,
+.btn-export-pdf:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(11, 99, 181, 0.2);
+}
+
+.btn-print:focus,
+.btn-export-pdf:focus {
+  outline: 3px solid #0b63b5;
+  outline-offset: 2px;
+}
+
+/* Secondary style for export */
+.btn-export-pdf {
+  background-color: #eef6ff;
+  color: #0b63b5;
+  border: 2px solid #0b63b5;
+  box-shadow: 0 2px 8px rgba(11, 99, 181, 0.1);
+}
+
+.btn-export-pdf:hover {
+  background-color: #0b63b5;
+  color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .print-button-container {
+    gap: 10px;
+  }
+
+  .btn-print,
+  .btn-export-pdf {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .print-button-container {
+    flex-direction: column;
+  }
+
+  .btn-print,
+  .btn-export-pdf {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .print-button-container {
+    display: none;
+  }
+}

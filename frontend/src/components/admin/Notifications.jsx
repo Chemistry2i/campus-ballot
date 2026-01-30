@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from '../../contexts/ThemeContext';
 
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev";
 
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);

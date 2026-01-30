@@ -448,8 +448,8 @@ function Candidates({ user }) {
     setLoading(true);
     try {
       const url = query
-        ? `https://api.campusballot.tech/api/candidates/search?q=${encodeURIComponent(query)}`
-        : "https://api.campusballot.tech/api/candidates";
+        ? `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates/search?q=${encodeURIComponent(query)}`
+        : "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates";
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -463,7 +463,7 @@ function Candidates({ user }) {
 
   const approveCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
+      await axios.put(`https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates/${candidateId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate approved successfully', 'success');
@@ -475,7 +475,7 @@ function Candidates({ user }) {
 
   const disqualifyCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
+      await axios.put(`https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates/${candidateId}/disqualify`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate disqualified successfully', 'success');
@@ -497,7 +497,7 @@ function Candidates({ user }) {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
+        await axios.delete(`https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         Swal.fire('Success', 'Candidate deleted successfully', 'success');
@@ -511,10 +511,10 @@ function Candidates({ user }) {
   const fetchElectionsAndUsers = async () => {
     try {
       const [electionRes, userRes] = await Promise.all([
-        axios.get("https://api.campusballot.tech/api/elections", {
+        axios.get("https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/elections", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://api.campusballot.tech/api/users/all", {
+        axios.get("https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -592,7 +592,7 @@ function Candidates({ user }) {
       Object.entries(form).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
-      await axios.post("https://api.campusballot.tech/api/candidates", data, {
+      await axios.post("https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/candidates", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

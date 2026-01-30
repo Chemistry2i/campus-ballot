@@ -21,7 +21,7 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,

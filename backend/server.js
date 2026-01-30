@@ -66,17 +66,17 @@ app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'", "https://www.campusballot.tech", "https://api.campusballot.tech"],
+      defaultSrc: ["'self'", "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev", "https://api.campusballot.tech"],
       scriptSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net"
       ],
       styleSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
@@ -86,19 +86,19 @@ app.use(
         "'self'",
         "data:",
         "https://res.cloudinary.com",
-        "https://www.campusballot.tech",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       connectSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       fontSrc: [
         "'self'",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
-        "https://www.campusballot.tech",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       objectSrc: ["'none'"],
@@ -110,9 +110,9 @@ app.use(
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://www.campusballot.tech",
+    "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
     "https://api.campusballot.tech",
-    "https://www.campusballot.tech",
+    "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
@@ -236,8 +236,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://www.campusballot.tech",
-      "https://www.campusballot.tech",
+      "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
+      "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5173.app.github.dev",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],
