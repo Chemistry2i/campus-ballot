@@ -23,24 +23,24 @@ async function seedTestData() {
     // Create test elections
     const elections = await Election.insertMany([
       {
-        title: 'Student Council President 2024',
+        title: 'Student Council President 2026',
         description: 'Election for Student Council President',
-        startDate: new Date('2024-01-15'),
-        endDate: new Date('2024-01-30'),
+        startDate: new Date('2026-01-15'),
+        endDate: new Date('2026-01-30'),
   status: 'ongoing'
       },
       {
         title: 'Vice President Election',
         description: 'Election for Vice President position',
-        startDate: new Date('2024-02-01'),
-        endDate: new Date('2024-02-15'),
+        startDate: new Date('2026-02-01'),
+        endDate: new Date('2026-02-15'),
   status: 'ongoing'
       },
       {
         title: 'Secretary General Election',
         description: 'Election for Secretary General',
-        startDate: new Date('2024-03-01'),
-        endDate: new Date('2024-03-15'),
+        startDate: new Date('2026-03-01'),
+        endDate: new Date('2026-03-15'),
         status: 'completed'
       }
     ]);

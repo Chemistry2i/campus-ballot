@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemedTable from '../common/ThemedTable';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ElectionMonitor = () => {
   const { electionId } = useParams();
@@ -358,6 +360,8 @@ const StatisticsView = ({ data }) => {
 
 // Candidates View Component
 const CandidatesView = ({ data }) => {
+  const { isDarkMode } = useTheme();
+  
   if (!data.positions || data.positions.length === 0) {
     return (
       <div className="card border-0 shadow-sm">
@@ -384,47 +388,45 @@ const CandidatesView = ({ data }) => {
               </h5>
             </div>
             <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th><i className="fas fa-user me-2"></i>Name</th>
-                      <th><i className="fas fa-envelope me-2"></i>Email</th>
-                      <th><i className="fas fa-graduation-cap me-2"></i>Faculty</th>
-                      <th><i className="fas fa-book me-2"></i>Course</th>
-                      <th><i className="fas fa-calendar me-2"></i>Year</th>
-                      <th><i className="fas fa-info-circle me-2"></i>Status</th>
+              <ThemedTable striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th><i className="fas fa-user me-2"></i>Name</th>
+                    <th><i className="fas fa-envelope me-2"></i>Email</th>
+                    <th><i className="fas fa-graduation-cap me-2"></i>Faculty</th>
+                    <th><i className="fas fa-book me-2"></i>Course</th>
+                    <th><i className="fas fa-calendar me-2"></i>Year</th>
+                    <th><i className="fas fa-info-circle me-2"></i>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {position.candidates.map((candidate) => (
+                    <tr key={candidate.id}>
+                      <td className="fw-medium">{candidate.name}</td>
+                      <td>{candidate.email}</td>
+                      <td>
+                        <span className="badge bg-light text-dark">
+                          {candidate.faculty}
+                        </span>
+                      </td>
+                      <td>{candidate.course}</td>
+                      <td>
+                        <span className="badge bg-info">
+                          Year {candidate.yearOfStudy}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge bg-${
+                          candidate.status === 'approved' ? 'success' : 
+                          candidate.status === 'pending' ? 'warning' : 'secondary'
+                        }`}>
+                          {candidate.status}
+                        </span>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {position.candidates.map((candidate) => (
-                      <tr key={candidate.id}>
-                        <td className="fw-medium">{candidate.name}</td>
-                        <td>{candidate.email}</td>
-                        <td>
-                          <span className="badge bg-light text-dark">
-                            {candidate.faculty}
-                          </span>
-                        </td>
-                        <td>{candidate.course}</td>
-                        <td>
-                          <span className="badge bg-info">
-                            Year {candidate.yearOfStudy}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`badge bg-${
-                            candidate.status === 'approved' ? 'success' : 
-                            candidate.status === 'pending' ? 'warning' : 'secondary'
-                          }`}>
-                            {candidate.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </ThemedTable>
             </div>
           </div>
         </div>
@@ -435,6 +437,8 @@ const CandidatesView = ({ data }) => {
 
 // Audit Logs View Component
 const AuditLogsView = ({ logs }) => {
+  const { isDarkMode } = useTheme();
+  
   if (!logs || logs.length === 0) {
     return (
       <div className="card border-0 shadow-sm">
@@ -484,50 +488,48 @@ const AuditLogsView = ({ logs }) => {
         </div>
       </div>
       <div className="card-body p-0">
-        <div className="table-responsive">
-          <table className="table table-hover mb-0">
-            <thead className="table-light">
-              <tr>
-                <th style={{ width: '20%' }}>
-                  <i className="fas fa-clock me-2"></i>Timestamp
-                </th>
-                <th style={{ width: '20%' }}>
-                  <i className="fas fa-bolt me-2"></i>Action
-                </th>
-                <th style={{ width: '15%' }}>
-                  <i className="fas fa-user me-2"></i>User
-                </th>
-                <th>
-                  <i className="fas fa-info-circle me-2"></i>Details
-                </th>
+        <ThemedTable striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th style={{ width: '20%' }}>
+                <i className="fas fa-clock me-2"></i>Timestamp
+              </th>
+              <th style={{ width: '20%' }}>
+                <i className="fas fa-bolt me-2"></i>Action
+              </th>
+              <th style={{ width: '15%' }}>
+                <i className="fas fa-user me-2"></i>User
+              </th>
+              <th>
+                <i className="fas fa-info-circle me-2"></i>Details
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log, index) => (
+              <tr key={log._id || index}>
+                <td>
+                  <small className="text-muted">
+                    {new Date(log.timestamp).toLocaleString()}
+                  </small>
+                </td>
+                <td>
+                  <span className={`badge bg-${getActionBadgeColor(log.action)}`}>
+                    <i className={`fas ${getActionIcon(log.action)} me-1`}></i>
+                    {log.action}
+                  </span>
+                </td>
+                <td>
+                  <span className="text-muted">
+                    <i className="fas fa-user-circle me-1"></i>
+                    {log.userId?.name || 'System'}
+                  </span>
+                </td>
+                <td>{log.details}</td>
               </tr>
-            </thead>
-            <tbody>
-              {logs.map((log, index) => (
-                <tr key={log._id || index}>
-                  <td>
-                    <small className="text-muted">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </small>
-                  </td>
-                  <td>
-                    <span className={`badge bg-${getActionBadgeColor(log.action)}`}>
-                      <i className={`fas ${getActionIcon(log.action)} me-1`}></i>
-                      {log.action}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-muted">
-                      <i className="fas fa-user-circle me-1"></i>
-                      {log.userId?.name || 'System'}
-                    </span>
-                  </td>
-                  <td>{log.details}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </ThemedTable>
       </div>
     </div>
   );

@@ -432,7 +432,7 @@ const getAgentDashboard = asyncHandler(async (req, res) => {
       status: { $ne: 'removed' }
     })
       .populate('user', 'name email phone profilePicture studentId faculty course yearOfStudy')
-      .populate('candidate', 'name email')
+      .populate('candidate', 'name email photo symbol position party description')
       .populate('election', 'title')
       .sort({ createdAt: -1 });
 
@@ -470,6 +470,11 @@ const getAgentDashboard = asyncHandler(async (req, res) => {
       tasksActive: agent.tasksActive,
       candidateName: agent.candidate?.name || 'Unknown',
       candidateEmail: agent.candidate?.email || '',
+      candidatePhoto: agent.candidate?.photo || null,
+      candidateSymbol: agent.candidate?.symbol || null,
+      position: agent.candidate?.position || '',
+      party: agent.candidate?.party || '',
+      description: agent.candidate?.description || '',
       electionTitle: agent.election?.title || '',
       joinedDate: agent.createdAt,
       notes: agent.notes

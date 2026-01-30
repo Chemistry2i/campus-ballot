@@ -4,6 +4,7 @@ const Vote = require("../models/Vote");
 const User = require("../models/User");
 const Candidate = require("../models/Candidate");
 const Log = require("../models/Log");
+const Notification = require("../models/Notification");
 
 // Helper: Check if observer has access to election
 const hasElectionAccess = (observer, electionId) => {
@@ -14,6 +15,21 @@ const hasElectionAccess = (observer, electionId) => {
   return observer.observerInfo?.assignedElections?.some(
     id => id.toString() === electionId.toString()
   );
+};
+
+// Helper: Calculate actual election status based on dates
+const calculateElectionStatus = (election) => {
+  const now = new Date();
+  const startDate = new Date(election.startDate);
+  const endDate = new Date(election.endDate);
+
+  if (now < startDate) {
+    return 'upcoming';
+  } else if (now >= startDate && now <= endDate) {
+    return 'ongoing';
+  } else {
+    return 'completed';
+  }
 };
 
 // @desc    Get observer dashboard overview
@@ -35,10 +51,10 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
     .sort('-createdAt')
     .populate('positions.candidates', 'name status');
 
-  // Get counts
-  const activeElections = elections.filter(e => e.status === 'active').length;
-  const upcomingElections = elections.filter(e => e.status === 'upcoming').length;
-  const completedElections = elections.filter(e => e.status === 'completed').length;
+  // Get counts - use actual status calculation from dates
+  const activeElections = elections.filter(e => calculateElectionStatus(e) === 'ongoing').length;
+  const upcomingElections = elections.filter(e => calculateElectionStatus(e) === 'upcoming').length;
+  const completedElections = elections.filter(e => calculateElectionStatus(e) === 'completed').length;
 
   // Get voting statistics for all assigned elections
   const assignedElectionIds = elections.map(e => e._id);
@@ -174,7 +190,8 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     throw new Error("Access denied: Not assigned to this election");
   }
 
-  const election = await Election.findById(electionId);
+  const election = await Election.findById(electionId)
+    .populate('positions.candidates', 'name photo symbol position');
 
   if (!election) {
     res.status(404);
@@ -182,16 +199,12 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
   }
 
   // Get eligible voters count
-  const eligibleVotersQuery = { role: 'student', isVerified: true };
-  if (election.eligibility && election.eligibility.faculty) {
-    eligibleVotersQuery.faculty = election.eligibility.faculty;
-  }
-  if (election.eligibility && election.eligibility.yearOfStudy) {
-    eligibleVotersQuery.yearOfStudy = election.eligibility.yearOfStudy;
-  }
-  const eligibleVotersCount = await User.countDocuments(eligibleVotersQuery);
+  const eligibleVoters = await User.countDocuments({
+    role: 'student',
+    $or: [{ status: 'active' }, { status: 'pending' }]
+  });
 
-  // Get votes count (without revealing individual votes)
+  // Get votes count
   const votesCount = await Vote.countDocuments({ election: election._id });
 
   // Get unique voters count
@@ -199,11 +212,37 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
   const uniqueVotersCount = uniqueVoters.length;
 
   // Calculate turnout
-  const turnoutPercentage = eligibleVotersCount > 0 
-    ? ((uniqueVotersCount / eligibleVotersCount) * 100).toFixed(2)
+  const turnoutPercentage = eligibleVoters > 0 
+    ? ((uniqueVotersCount / eligibleVoters) * 100).toFixed(2)
     : 0;
 
-  // Get votes by position (aggregated, no individual data)
+  // Get votes by position with candidate details
+  const votesByCandidate = await Vote.aggregate([
+    { $match: { election: election._id } },
+    { $group: { 
+      _id: '$candidate',
+      position: { $first: '$position' },
+      totalVotes: { $sum: 1 }
+    }},
+    { $sort: { totalVotes: -1 } }
+  ]);
+
+  // Get candidate details and merge with vote counts
+  const candidatesWithVotes = await Promise.all(
+    votesByCandidate.map(async (voteData) => {
+      const candidate = await Candidate.findById(voteData._id).select('name photo symbol position');
+      return {
+        _id: voteData._id,
+        name: candidate?.name || 'Abstain',
+        photo: candidate?.photo,
+        symbol: candidate?.symbol,
+        position: voteData.position,
+        votes: voteData.totalVotes
+      };
+    })
+  );
+
+  // Get votes by position summary
   const votesByPosition = await Vote.aggregate([
     { $match: { election: election._id } },
     { $group: { 
@@ -212,33 +251,28 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     }}
   ]);
 
-  // Get candidate count
-  const candidatesCount = election.positions.reduce(
-    (total, pos) => total + (pos.candidates?.length || 0), 
-    0
-  );
-
   res.json({
     success: true,
     data: {
       election: {
         id: election._id,
         title: election.title,
-        status: election.status,
+        status: calculateElectionStatus(election),
         startDate: election.startDate,
-        endDate: election.endDate
+        endDate: election.endDate,
+        calculatedStatus: calculateElectionStatus(election)
       },
       statistics: {
-        eligibleVoters: eligibleVotersCount,
+        eligibleVoters,
         totalVotesCast: votesCount,
         uniqueVoters: uniqueVotersCount,
         turnoutPercentage: parseFloat(turnoutPercentage),
-        candidatesCount,
-        positionsCount: election.positions.length,
+        positionsCount: election.positions?.length || 0,
         votesByPosition: votesByPosition.map(v => ({
-          positionId: v._id,
+          position: v._id,
           totalVotes: v.totalVotes
-        }))
+        })),
+        topCandidates: candidatesWithVotes.slice(0, 10)
       }
     }
   });
@@ -437,11 +471,280 @@ const getAssignedElections = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get eligible voters for an election
+// @route   GET /api/observer/elections/:electionId/voters
+// @access  Private (Observer with access)
+const getElectionVoters = asyncHandler(async (req, res) => {
+  const { electionId } = req.params;
+  const observer = req.user;
+
+  // Check observer access to election
+  if (!hasElectionAccess(observer, electionId)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied to this election'
+    });
+  }
+
+  // Get election to verify it exists
+  const election = await Election.findById(electionId);
+  if (!election) {
+    return res.status(404).json({
+      success: false,
+      message: 'Election not found'
+    });
+  }
+
+  // Get votes for this election to count participating voters - use 'user' field not 'voter'
+  const votes = await Vote.find({ election: electionId })
+    .select('user')
+    .lean();
+
+  const votedUserIds = [...new Set(votes.map(v => v.user.toString()))];
+
+  // Get all students who should be eligible voters
+  const eligibleVoters = await User.find({
+    role: 'student',
+    $or: [
+      { status: 'active' },
+      { status: 'pending' }
+    ]
+  }).select('_id name email phoneNumber status registeredAt').lean();
+
+  // Mark who voted
+  const votersData = eligibleVoters.map(voter => ({
+    _id: voter._id,
+    name: voter.name,
+    email: voter.email,
+    phoneNumber: voter.phoneNumber || 'N/A',
+    status: voter.status,
+    registeredAt: voter.registeredAt,
+    hasVoted: votedUserIds.includes(voter._id.toString())
+  }));
+
+  // Get statistics
+  const totalEligible = votersData.length;
+  const totalVoted = votedUserIds.length;
+  const turnoutPercentage = totalEligible > 0 ? ((totalVoted / totalEligible) * 100).toFixed(2) : 0;
+
+  res.json({
+    success: true,
+    data: {
+      election: {
+        id: election._id,
+        title: election.title,
+        status: election.status
+      },
+      statistics: {
+        totalEligible,
+        totalVoted,
+        pendingVoters: totalEligible - totalVoted,
+        turnoutPercentage: parseFloat(turnoutPercentage)
+      },
+      voters: votersData.sort((a, b) => b.hasVoted - a.hasVoted)
+    }
+  });
+});
+
+// @desc    Get incidents for elections
+// @route   GET /api/observer/incidents
+// @access  Private (Observer)
+const getIncidents = asyncHandler(async (req, res) => {
+  const observer = req.user;
+  const { electionId, status } = req.query;
+
+  // Build query based on observer access
+  let logsQuery = {
+    $or: [
+      { type: 'election_incident' },
+      { type: 'system_alert' },
+      { type: 'security_issue' }
+    ]
+  };
+
+  if (electionId && hasElectionAccess(observer, electionId)) {
+    logsQuery.election = electionId;
+  } else if (observer.observerInfo?.accessLevel === 'election-specific') {
+    // Only get logs from assigned elections
+    logsQuery.election = { $in: observer.observerInfo.assignedElections || [] };
+  }
+
+  if (status) {
+    logsQuery.severity = status;
+  }
+
+  const incidents = await Log.find(logsQuery)
+    .populate('election', 'title status')
+    .populate('user', 'name email role')
+    .select('type severity description election user createdAt data')
+    .sort('-createdAt')
+    .lean();
+
+  // Format incidents with more detail
+  const formattedIncidents = incidents.map(incident => ({
+    _id: incident._id,
+    title: incident.description || 'Incident Report',
+    type: incident.type,
+    severity: incident.severity || 'low',
+    election: incident.election?.title || 'Unknown Election',
+    electionId: incident.election?._id,
+    description: incident.description,
+    reportedBy: incident.user?.name || 'System',
+    reportedByRole: incident.user?.role,
+    timestamp: incident.createdAt,
+    data: incident.data
+  }));
+
+  // Get statistics
+  const severityCount = {
+    critical: formattedIncidents.filter(i => i.severity === 'critical').length,
+    high: formattedIncidents.filter(i => i.severity === 'high').length,
+    medium: formattedIncidents.filter(i => i.severity === 'medium').length,
+    low: formattedIncidents.filter(i => i.severity === 'low').length
+  };
+
+  res.json({
+    success: true,
+    data: {
+      statistics: {
+        total: formattedIncidents.length,
+        ...severityCount
+      },
+      incidents: formattedIncidents
+    }
+  });
+});
+
+// @desc    Report an incident
+// @route   POST /api/observer/incidents
+// @access  Private (Observer)
+const reportIncident = asyncHandler(async (req, res) => {
+  const { electionId, title, description, severity, type } = req.body;
+  const observer = req.user;
+
+  // Validate required fields
+  if (!electionId || !title || !description || !severity) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide all required fields'
+    });
+  }
+
+  // Check observer access
+  if (!hasElectionAccess(observer, electionId)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied to this election'
+    });
+  }
+
+  // Create incident log
+  const incident = await Log.create({
+    type: type || 'election_incident',
+    severity,
+    description,
+    election: electionId,
+    user: observer._id,
+    data: {
+      title,
+      reportedAt: new Date()
+    }
+  });
+
+  const populatedIncident = await incident.populate([
+    { path: 'election', select: 'title status' },
+    { path: 'user', select: 'name email role' }
+  ]);
+
+  res.status(201).json({
+    success: true,
+    message: 'Incident reported successfully',
+    data: {
+      _id: populatedIncident._id,
+      title: populatedIncident.data?.title,
+      description: populatedIncident.description,
+      severity: populatedIncident.severity,
+      election: populatedIncident.election?.title,
+      timestamp: populatedIncident.createdAt
+    }
+  });
+});
+
+// @desc    Get notifications for observer
+// @route   GET /api/observer/notifications
+// @access  Private (Observer)
+const getNotifications = asyncHandler(async (req, res) => {
+  const observer = req.user;
+  const { limit = 50, skip = 0 } = req.query;
+
+  // Get notifications for this observer
+  const notifications = await Notification.find({
+    targetAudience: { $in: ['all', 'observers'] }
+  })
+    .select('title message type createdAt readBy')
+    .sort('-createdAt')
+    .limit(parseInt(limit))
+    .skip(parseInt(skip))
+    .lean();
+
+  // Mark which ones are read by this observer
+  const notificationsWithReadStatus = notifications.map(notif => ({
+    ...notif,
+    isRead: notif.readBy?.includes(observer._id.toString())
+  }));
+
+  // Get unread count
+  const unreadCount = await Notification.countDocuments({
+    targetAudience: { $in: ['all', 'observers'] },
+    readBy: { $ne: observer._id }
+  });
+
+  res.json({
+    success: true,
+    data: {
+      notifications: notificationsWithReadStatus,
+      unreadCount,
+      total: notificationsWithReadStatus.length
+    }
+  });
+});
+
+// @desc    Mark notification as read
+// @route   POST /api/observer/notifications/:notificationId/mark-read
+// @access  Private (Observer)
+const markNotificationAsRead = asyncHandler(async (req, res) => {
+  const { notificationId } = req.params;
+  const observer = req.user;
+
+  const notification = await Notification.findByIdAndUpdate(
+    notificationId,
+    { $addToSet: { readBy: observer._id } },
+    { new: true }
+  );
+
+  if (!notification) {
+    return res.status(404).json({
+      success: false,
+      message: 'Notification not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Notification marked as read'
+  });
+});
+
 module.exports = {
   getObserverDashboard,
   getElectionStatistics,
   getElectionAuditLogs,
   getTurnoutTrends,
   getElectionCandidates,
-  getAssignedElections
+  getAssignedElections,
+  getElectionVoters,
+  getIncidents,
+  reportIncident,
+  getNotifications,
+  markNotificationAsRead
 };

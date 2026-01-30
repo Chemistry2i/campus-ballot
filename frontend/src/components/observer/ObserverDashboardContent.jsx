@@ -5,6 +5,19 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { showWelcomeToast, showNetworkError } from '../../utils/sweetAlerts';
 import ObserverCharts from './ObserverCharts';
 
+// Helper function to calculate election status based on dates
+const calculateElectionStatus = (election) => {
+  if (!election.startDate || !election.endDate) return election.status || 'upcoming';
+  
+  const now = new Date();
+  const start = new Date(election.startDate);
+  const end = new Date(election.endDate);
+  
+  if (now < start) return 'upcoming';
+  if (now > end) return 'completed';
+  return 'ongoing';
+};
+
 const ObserverDashboardContent = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -519,11 +532,13 @@ const ObserverDashboardContent = () => {
                       {elections.map((election) => {
                         const statusColors = {
                           active: { bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', text: '#fff' },
+                          ongoing: { bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', text: '#fff' },
                           upcoming: { bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', text: '#fff' },
                           completed: { bg: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', text: '#fff' },
                           default: { bg: '#6b7280', text: '#fff' }
                         };
-                        const statusStyle = statusColors[election.status] || statusColors.default;
+                        const calculatedStatus = calculateElectionStatus(election);
+                        const statusStyle = statusColors[calculatedStatus] || statusColors.default;
                         
                         return (
                         <tr 
@@ -552,7 +567,7 @@ const ObserverDashboardContent = () => {
                                 fontWeight: 600
                               }}
                             >
-                              {election.status}
+                              {calculatedStatus}
                             </span>
                           </td>
                           <td style={{ 

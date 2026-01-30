@@ -339,7 +339,7 @@ const AgentDashboard = ({ user, onLogout }) => {
           }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <FaBookOpen style={{ marginRight: '0.25rem' }} />
-              v1.0.0 © 2025 VoteSys
+              v1.0.0 © 2026 VoteSys
             </div>
             <button
               onClick={handleLogout}

@@ -17,7 +17,7 @@ async function createCandidateUser() {
     // Create candidate user with primary role
     const candidateUser = new User({
       name: 'Candidate User',
-      studentId: 'CAND2024',
+      studentId: 'CAND2026',
       email: 'candidate@example.com',
       password: hashedPassword,
       role: 'candidate',  // PRIMARY ROLE: candidate

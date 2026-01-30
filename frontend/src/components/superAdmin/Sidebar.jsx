@@ -385,7 +385,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         >
           <div style={{ marginBottom: '0.5rem' }}>
             <i className="fa fa-book-open" style={{ marginRight: '0.25rem' }}></i>
-            v1.0.0 © 2025 VoteSys
+            v1.0.0 © 2026 VoteSys
           </div>
           <button
             onClick={() => {

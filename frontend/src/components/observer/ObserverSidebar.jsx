@@ -7,9 +7,12 @@ import { confirmLogout } from '../../utils/sweetAlerts';
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/observer/dashboard' },
   { label: 'All Elections', icon: 'fa-solid fa-ballot-check', to: '/observer/elections' },
+  { label: 'Monitor', icon: 'fa-solid fa-binoculars', to: '/observer/monitor' },
+  { label: 'Voters List', icon: 'fa-solid fa-users', to: '/observer/voters' },
   { label: 'Reports', icon: 'fa-solid fa-chart-line', to: '/observer/reports' },
   { label: 'Analytics', icon: 'fa-solid fa-chart-pie', to: '/observer/analytics' },
   { label: 'Activity Logs', icon: 'fa-solid fa-history', to: '/observer/logs' },
+  { label: 'Incidents', icon: 'fa-solid fa-triangle-exclamation', to: '/observer/incidents' },
   { label: 'Notifications', icon: 'fa-solid fa-bell', to: '/observer/notifications' },
   { label: 'Settings', icon: 'fa-solid fa-gear', to: '/observer/settings' },
 ];
@@ -19,11 +22,13 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [assignedElections, setAssignedElections] = useState([]);
+  const [profileImage, setProfileImage] = useState(user?.profilePicture || null);
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     if (user) {
       fetchAssignedElections();
+      setProfileImage(user?.profilePicture || null);
     }
   }, [user]);
 
@@ -36,6 +41,35 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       setAssignedElections(response.data.data || []);
     } catch (err) {
       console.error('Error fetching assigned elections:', err);
+    }
+  };
+
+  // Handle profile image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/observer/upload-profile-picture', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.profilePicture) {
+        setProfileImage(response.data.profilePicture);
+        // Update user in localStorage
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        currentUser.profilePicture = response.data.profilePicture;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
     }
   };
 
@@ -167,13 +201,17 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
               position: 'relative',
               overflow: 'hidden',
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              backgroundImage: user?.profilePicture ? `url(${user.profilePicture})` : 'none',
+              backgroundImage: profileImage ? `url(${profileImage})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               transition: 'all 0.3s ease',
               border: '3px solid rgba(255, 255, 255, 0.2)'
             }}
-            onClick={() => !collapsed && setShowDropdown(!showDropdown)}
+            onClick={() => {
+              if (!collapsed) {
+                setShowDropdown(!showDropdown);
+              }
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = isDarkMode 
@@ -189,7 +227,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
             tabIndex={0}
             aria-label="Profile photo"
           >
-            {!user?.profilePicture && initials}
+            {!profileImage && initials}
             
             {/* Online Status Indicator */}
             {!collapsed && (
@@ -205,6 +243,16 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 boxShadow: '0 2px 8px rgba(16, 185, 129, 0.6)',
               }} />
             )}
+
+            {/* Upload overlay (hidden) */}
+            <input
+              type="file"
+              id="profileImageUpload"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+              aria-label="Upload profile picture"
+            />
             
             {/* Dropdown */}
             {!collapsed && showDropdown && (
@@ -221,13 +269,43 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   color: colors.text,
                   borderRadius: 12,
                   boxShadow: isDarkMode ? '0 8px 24px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.15)',
-                  minWidth: 200,
+                  minWidth: 220,
                   zIndex: 200,
                   padding: '0.5rem 0',
                   border: `1px solid ${colors.border}`,
                   animation: 'slideDown 0.2s ease-out'
                 }}
               >
+                <button
+                  onClick={() => document.getElementById('profileImageUpload').click()}
+                  className="dropdown-item"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    background: 'none',
+                    border: 'none',
+                    color: colors.text,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    fontSize: '0.9rem',
+                    fontWeight: 500
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = colors.surfaceHover;
+                    e.currentTarget.style.paddingLeft = '1.5rem';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.paddingLeft = '1.25rem';
+                  }}
+                >
+                  <i className="fa-solid fa-camera" style={{ width: 16 }}></i>
+                  Change Photo
+                </button>
                 <Link
                   to="/observer/profile"
                   className="dropdown-item"
@@ -327,7 +405,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 color: colors.text,
                 letterSpacing: '0.3px'
               }}>
-                {user?.name || 'Observer'}
+                Welcome, {user?.name?.split(' ')[0] || 'Observer'}!
               </div>
               <div style={{ fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                 <span className="badge" style={{ 

@@ -59,6 +59,19 @@ const AgentCandidates = () => {
     );
   }
 
+  // Helper function to get image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    if (apiBase) {
+      return `${apiBase.replace(/\/$/, '')}${imageUrl}`;
+    }
+    return imageUrl;
+  };
+
   return (
     <div className="container-fluid p-4">
       {/* Header */}
@@ -99,15 +112,32 @@ const AgentCandidates = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2px solid rgba(255, 255, 255, 0.3)'
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    overflow: 'hidden'
                   }}
                 >
-                  <FaUserTie size={40} />
+                  {candidate.candidatePhoto ? (
+                    <img
+                      src={getImageUrl(candidate.candidatePhoto)}
+                      alt={candidate.candidateName}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<i class="fas fa-user" style="font-size: 40px;"></i>';
+                      }}
+                    />
+                  ) : (
+                    <FaUserTie size={40} />
+                  )}
                 </div>
                 <div>
                   <h4 className="mb-1 fw-bold">{candidate.candidateName}</h4>
                   <p className="mb-0" style={{ opacity: 0.9 }}>
-                    Your campaign candidate
+                    {candidate.position || 'Campaign Candidate'}
                   </p>
                 </div>
               </div>
@@ -186,7 +216,7 @@ const AgentCandidates = () => {
 
               <hr style={{ borderColor: colors.border, margin: '2rem 0' }} />
 
-              {/* Election Information */}
+              {/* Election Information & Campaign Symbol */}
               <div className="row g-4">
                 <div className="col-12 col-md-6">
                   <h6 className="fw-bold mb-3" style={{ color: colors.text }}>
@@ -212,6 +242,44 @@ const AgentCandidates = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Campaign Symbol if available */}
+              {candidate.candidateSymbol && (
+                <>
+                  <hr style={{ borderColor: colors.border, margin: '2rem 0' }} />
+                  <div className="row g-4">
+                    <div className="col-12">
+                      <h6 className="fw-bold mb-3" style={{ color: colors.text }}>
+                        Campaign Symbol
+                      </h6>
+                      <div
+                        style={{
+                          padding: '1rem',
+                          borderRadius: '8px',
+                          background: isDarkMode ? colors.background : '#f8f9fa',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minHeight: '150px'
+                        }}
+                      >
+                        <img
+                          src={getImageUrl(candidate.candidateSymbol)}
+                          alt="Campaign Symbol"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '150px',
+                            objectFit: 'contain'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

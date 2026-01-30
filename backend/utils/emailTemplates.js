@@ -76,7 +76,7 @@ const emailTemplates = {
             </div>
             <div class="footer">
               <p>This is an automated message. Please do not reply to this email.</p>
-              <p>© 2024 Campus Ballot. All rights reserved.</p>
+              <p>© 2026 Campus Ballot. All rights reserved.</p>
               <p><a href="#" class="footer-link">View Your Dashboard</a> | <a href="#" class="footer-link">Contact Support</a></p>
             </div>
           </div>
@@ -165,7 +165,7 @@ const emailTemplates = {
             </div>
             <div class="footer">
               <p>This is an automated message. Please do not reply to this email.</p>
-              <p>© 2024 Campus Ballot. All rights reserved.</p>
+              <p>© 2026 Campus Ballot. All rights reserved.</p>
               <p><a href="#" class="footer-link">View Your Dashboard</a> | <a href="#" class="footer-link">Contact Support</a></p>
             </div>
           </div>
@@ -254,7 +254,7 @@ const emailTemplates = {
             </div>
             <div class="footer">
               <p>This is an automated message. Please do not reply to this email.</p>
-              <p>© 2024 Campus Ballot. All rights reserved.</p>
+              <p>© 2026 Campus Ballot. All rights reserved.</p>
               <p><a href="#" class="footer-link">Contact Support</a> | <a href="#" class="footer-link">Election Guidelines</a></p>
             </div>
           </div>

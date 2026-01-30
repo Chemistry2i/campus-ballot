@@ -13,7 +13,7 @@ async function createTestUsers() {
     const testUsers = [
       {
         name: 'Candidate Test User',
-        studentId: 'CAND2024',
+        studentId: 'CAND2026',
         email: 'candidate@test.com',
         password: 'candidate123',
         role: 'candidate',
@@ -25,7 +25,7 @@ async function createTestUsers() {
       },
       {
         name: 'Agent Test User',
-        studentId: 'AGENT2024',
+        studentId: 'AGENT2026',
         email: 'agent@test.com',
         password: 'agent123',
         role: 'agent',
@@ -37,7 +37,7 @@ async function createTestUsers() {
       },
       {
         name: 'Student Test User',
-        studentId: 'STUD2024',
+        studentId: 'STUD2026',
         email: 'student@test.com',
         password: 'student123',
         role: 'student',
@@ -49,7 +49,7 @@ async function createTestUsers() {
       },
       {
         name: 'Admin Test User',
-        studentId: 'ADMIN2024',
+        studentId: 'ADMIN2026',
         email: 'admin@test.com',
         password: 'admin123',
         role: 'admin',
@@ -61,7 +61,7 @@ async function createTestUsers() {
       },
       {
         name: 'Student with Candidate Role',
-        studentId: 'STUCAND2024',
+        studentId: 'STUCAND2026',
         email: 'student.candidate@test.com',
         password: 'student123',
         role: 'student',
@@ -74,7 +74,7 @@ async function createTestUsers() {
       },
       {
         name: 'Student with Agent Role',
-        studentId: 'STUAGENT2024',
+        studentId: 'STUAGENT2026',
         email: 'student.agent@test.com',
         password: 'student123',
         role: 'student',

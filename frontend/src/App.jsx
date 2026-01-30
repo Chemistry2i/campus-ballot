@@ -24,7 +24,20 @@ import './styles/darkmode.css';
 import SimpleCandidateTest from './components/SimpleCandidateTest';
 import TestingRoutes from './components/TestingRoutes';
 import CandidateApplication from './pages/CandidateApplication';
-import { ObserverLayout, ObserverDashboardContent, ElectionMonitor } from './components/observer';
+import {
+  ObserverLayout,
+  ObserverDashboardContent,
+  ElectionMonitor,
+  ObserverVotersList,
+  ObserverMonitor,
+  ObserverIncidents,
+  ObserverElections,
+  ObserverReports,
+  ObserverAnalytics,
+  ObserverActivityLogs,
+  ObserverNotifications,
+  ObserverSettings
+} from './components/observer';
 // Legal Pages
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -232,7 +245,16 @@ function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<ObserverDashboardContent />} />
+          <Route path="elections" element={<ObserverElections />} />
           <Route path="elections/:electionId" element={<ElectionMonitor />} />
+          <Route path="voters" element={<ObserverVotersList />} />
+          <Route path="monitor" element={<ObserverMonitor />} />
+          <Route path="incidents" element={<ObserverIncidents />} />
+          <Route path="reports" element={<ObserverReports />} />
+          <Route path="analytics" element={<ObserverAnalytics />} />
+          <Route path="logs" element={<ObserverActivityLogs />} />
+          <Route path="notifications" element={<ObserverNotifications />} />
+          <Route path="settings" element={<ObserverSettings />} />
         </Route>
         <Route
           path="/test-routes"

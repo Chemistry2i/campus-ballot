@@ -139,6 +139,8 @@ const PublicCandidates = () => {
   const [materialsLoading, setMaterialsLoading] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   // Engagement state
   const [questions, setQuestions] = useState([]);
@@ -466,6 +468,16 @@ const PublicCandidates = () => {
     return matchesSearch && matchesElection && matchesPosition;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCandidates = filteredCandidates.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedElection, selectedPosition]);
+
   const getElectionStatus = (election) => {
     if (!election) return { label: 'Unknown', color: '#6b7280' };
     const now = new Date();
@@ -738,8 +750,9 @@ const PublicCandidates = () => {
             </p>
           </div>
         ) : (
-          <div className="row g-4" style={{ margin: 0 }}>
-            {filteredCandidates.map(candidate => {
+          <>
+            <div className="row g-4" style={{ margin: 0 }}>
+              {paginatedCandidates.map(candidate => {
               const status = getElectionStatus(candidate.election);
               return (
                 <div key={candidate._id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
@@ -882,7 +895,85 @@ const PublicCandidates = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-center align-items-center gap-2 py-4">
+                <button
+                  className="btn btn-sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    background: currentPage === 1 ? themeColors.border : themeColors.cardBg,
+                    border: `1px solid ${themeColors.border}`,
+                    color: currentPage === 1 ? themeColors.textSecondary : themeColors.text,
+                    borderRadius: '6px',
+                    padding: '0.5rem 0.75rem',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  ← Previous
+                </button>
+
+                {/* Page numbers */}
+                <div className="d-flex gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, idx) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = idx + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = idx + 1;
+                    } else if (currentPage > totalPages - 3) {
+                      pageNum = totalPages - 4 + idx;
+                    } else {
+                      pageNum = currentPage - 2 + idx;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{
+                          background: currentPage === pageNum ? '#3b82f6' : themeColors.cardBg,
+                          border: `1px solid ${currentPage === pageNum ? '#3b82f6' : themeColors.border}`,
+                          color: currentPage === pageNum ? '#fff' : themeColors.text,
+                          borderRadius: '6px',
+                          padding: '0.5rem 0.75rem',
+                          minWidth: '32px',
+                          cursor: 'pointer',
+                          fontWeight: currentPage === pageNum ? '600' : '400'
+                        }}
+                        className="btn btn-sm"
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  className="btn btn-sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    background: currentPage === totalPages ? themeColors.border : themeColors.cardBg,
+                    border: `1px solid ${themeColors.border}`,
+                    color: currentPage === totalPages ? themeColors.textSecondary : themeColors.text,
+                    borderRadius: '6px',
+                    padding: '0.5rem 0.75rem',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+
+            {/* Info text */}
+            <div className="text-center py-2" style={{ color: themeColors.textSecondary, fontSize: '0.9rem' }}>
+              Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredCandidates.length)} of {filteredCandidates.length} candidates
+            </div>
+          </>
         )}
       </div>
 

@@ -743,7 +743,7 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
           >
             <div style={{ marginBottom: '0.5rem' }}>
               <FontAwesomeIcon icon={faBookOpen} style={{ marginRight: '0.25rem' }} />
-              v1.0.0 © 2025 VoteSys
+              v1.0.0 © 2026 VoteSys
             </div>
             <button
               onClick={onLogout ? onLogout : () => navigate("/login")}
