@@ -1,6 +1,6 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaArrowLeft, FaScroll, FaCheckCircle, FaShield, FaLock, FaEnvelope } from 'react-icons/fa';
+import { FaArrowLeft, FaScroll, FaCheckCircle, FaShieldAlt, FaLock, FaEnvelope } from 'react-icons/fa';
 import ProgressIndicator from '../components/ProgressIndicator';
 import TableOfContents from '../components/TableOfContents';
 import PrintButton from '../components/PrintButton';
@@ -54,7 +54,7 @@ const EULA = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaShield /> License Grant</h2>
+          <h2><FaShieldAlt /> License Grant</h2>
           <p>
             Subject to the terms of this EULA, Campus Ballot grants End-Users a limited, non-exclusive, non-transferable license to use the Software for the purpose of participating in institutional elections and voting processes.
           </p>
@@ -90,7 +90,7 @@ const EULA = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaShield /> Intellectual Property Rights</h2>
+          <h2><FaShieldAlt /> Intellectual Property Rights</h2>
           <p>
             All intellectual property rights in and to the Software, including all copies, modifications, and derivative works, are owned by Campus Ballot or its licensors. This license does not transfer any ownership rights to the End-User.
           </p>
@@ -122,7 +122,7 @@ const EULA = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaShield /> No Warranty</h2>
+          <h2><FaShieldAlt /> No Warranty</h2>
           <div className="legal-highlight">
             <p>
               <strong>THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong>

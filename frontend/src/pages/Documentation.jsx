@@ -1,6 +1,6 @@
 import { Container, Accordion, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaArrowLeft, FaBook, FaUserPlus, FaSignInAlt, FaCheckCircle, FaTicketAlt, FaFileAlt, FaCog, FaHeadset, FaEnvelope } from 'react-icons/fa';
+import { FaArrowLeft, FaBook, FaUserPlus, FaSignInAlt, FaCheckCircle, FaCalendarAlt, FaFileAlt, FaCog, FaHeadset, FaEnvelope } from 'react-icons/fa';
 import ProgressIndicator from '../components/ProgressIndicator';
 import TableOfContents from '../components/TableOfContents';
 import PrintButton from '../components/PrintButton';
@@ -112,7 +112,7 @@ const Documentation = () => {
 
             <Accordion.Item eventKey="2">
               <Accordion.Header>
-                <FaTicketAlt className="me-2" /> How to Vote
+                <FaCalendarAlt className="me-2" /> How to Vote
               </Accordion.Header>
               <Accordion.Body>
                 <h4>Voting Instructions</h4>

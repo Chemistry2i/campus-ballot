@@ -1,6 +1,6 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaArrowLeft, FaLock, FaShieldAlt, FaKey, FaDatabase, FaEye, FaCheckCircle, FaAlertTriangle, FaEnvelope } from 'react-icons/fa';
+import { FaArrowLeft, FaLock, FaShieldAlt, FaKey, FaDatabase, FaEye, FaCheckCircle, FaExclamationTriangle, FaEnvelope } from 'react-icons/fa';
 import ProgressIndicator from '../components/ProgressIndicator';
 import TableOfContents from '../components/TableOfContents';
 import PrintButton from '../components/PrintButton';
@@ -193,7 +193,7 @@ const SecurityPolicy = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaAlertTriangle /> Incident Response</h2>
+          <h2><FaExclamationTriangle /> Incident Response</h2>
           <h3>Incident Response Plan</h3>
           <p>
             Campus Ballot maintains a comprehensive incident response program:

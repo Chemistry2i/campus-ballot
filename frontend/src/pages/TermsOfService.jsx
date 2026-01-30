@@ -1,6 +1,6 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaArrowLeft, FaFileContract, FaCheckCircle, FaUserTie, FaVoteYea, FaShield, FaScaleBalanced, FaEnvelope } from 'react-icons/fa';
+import { FaArrowLeft, FaFileContract, FaCheckCircle, FaUserTie, FaVoteYea, FaShieldAlt, FaGavel, FaEnvelope } from 'react-icons/fa';
 import ProgressIndicator from '../components/ProgressIndicator';
 import TableOfContents from '../components/TableOfContents';
 import PrintButton from '../components/PrintButton';
@@ -46,7 +46,7 @@ const TermsOfService = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaShield /> Use License</h2>
+          <h2><FaShieldAlt /> Use License</h2>
           <p>
             Subject to your compliance with these Terms of Service, Campus Ballot grants you a limited, non-exclusive, non-transferable license to use the Platform for lawful purposes. You are granted limited license rights to use the Platform solely for voting and participating in elections authorized by your institution.
           </p>
@@ -135,7 +135,7 @@ const TermsOfService = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaShield /> Disclaimer of Warranties</h2>
+          <h2><FaShieldAlt /> Disclaimer of Warranties</h2>
           <div className="legal-highlight">
             <p>
               <strong>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE"</strong> WITHOUT WARRANTY OF ANY KIND. CAMPUS BALLOT DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
@@ -147,7 +147,7 @@ const TermsOfService = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaScaleBalanced /> Limitation of Liability</h2>
+          <h2><FaGavel /> Limitation of Liability</h2>
           <p>
             IN NO EVENT SHALL CAMPUS BALLOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE PLATFORM, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
           </p>
@@ -177,7 +177,7 @@ const TermsOfService = () => {
         </div>
 
         <div className="legal-section">
-          <h2><FaScaleBalanced /> Governing Law</h2>
+          <h2><FaGavel /> Governing Law</h2>
           <p>
             These Terms of Service are governed by and construed in accordance with the laws of Uganda and the internal laws of that jurisdiction without regard to its conflict of law provisions.
           </p>
