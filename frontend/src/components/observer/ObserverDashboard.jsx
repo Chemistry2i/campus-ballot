@@ -11,6 +11,7 @@ const ObserverDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [user, setUser] = useState(null);
+  const [refreshInterval, setRefreshInterval] = useState(null);
   const { isDarkMode, colors, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -18,7 +19,16 @@ const ObserverDashboard = () => {
     fetchUserData();
     handleResize();
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    // Auto-refresh data every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleResize = () => {

@@ -8,16 +8,17 @@ const ObserverVotersList = () => {
   const [voters, setVoters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedElection, setSelectedElection] = useState('all');
+  const [selectedElection, setSelectedElection] = useState('');
   const [elections, setElections] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statistics, setStatistics] = useState(null);
 
   useEffect(() => {
     fetchElections();
   }, []);
 
   useEffect(() => {
-    if (selectedElection !== 'all') {
+    if (selectedElection) {
       fetchVoters();
     }
   }, [selectedElection]);
@@ -48,21 +49,26 @@ const ObserverVotersList = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Backend returns { success, data: { election, statistics, voters } }
-      setVoters(response.data.data?.voters || []);
+      const data = response.data.data;
+      setVoters(data?.voters || []);
+      setStatistics(data?.statistics || null);
       setError(null);
     } catch (err) {
       console.error('Error fetching voters:', err);
       setError('Failed to load voters list');
       setVoters([]);
+      setStatistics(null);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredVoters = voters.filter(voter =>
-    voter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (voter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     voter.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    voter.studentId?.toLowerCase().includes(searchTerm.toLowerCase())
+    voter.studentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    voter._id?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    searchTerm.length >= 0
   );
 
   return (
@@ -79,6 +85,7 @@ const ObserverVotersList = () => {
       {/* Filters */}
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-6">
+          <label className="form-label mb-2" style={{ color: colors.text }}>Select Election</label>
           <select
             className="form-select"
             value={selectedElection}
@@ -90,7 +97,7 @@ const ObserverVotersList = () => {
               borderRadius: '8px'
             }}
           >
-            <option value="all">Select Election</option>
+            <option value="">-- Select Election --</option>
             {elections.map(election => (
               <option key={election._id} value={election._id}>
                 {election.title}
@@ -99,10 +106,11 @@ const ObserverVotersList = () => {
           </select>
         </div>
         <div className="col-12 col-md-6">
+          <label className="form-label mb-2" style={{ color: colors.text }}>Search Voters</label>
           <input
             type="text"
             className="form-control"
-            placeholder="Search by name, email, or student ID..."
+            placeholder="Search by name, email, or ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -115,71 +123,71 @@ const ObserverVotersList = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-12 col-md-3">
-          <div
-            className="card p-3"
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px'
-            }}
-          >
-            <small className="text-muted">Total Voters</small>
-            <h5 className="fw-bold mt-2" style={{ color: colors.text }}>
-              {filteredVoters.length}
-            </h5>
+      {/* Statistics Cards */}
+      {statistics && (
+        <div className="row g-3 mb-4">
+          <div className="col-12 col-md-3">
+            <div
+              className="card p-3"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px'
+              }}
+            >
+              <small className="text-muted">Total Eligible Voters</small>
+              <h4 className="fw-bold mt-2" style={{ color: colors.text }}>
+                {statistics.totalEligible || 0}
+              </h4>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div
+              className="card p-3"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px'
+              }}
+            >
+              <small className="text-muted">Total Voted</small>
+              <h4 className="fw-bold mt-2" style={{ color: '#10b981' }}>
+                {statistics.totalVoted || 0}
+              </h4>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div
+              className="card p-3"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px'
+              }}
+            >
+              <small className="text-muted">Pending</small>
+              <h4 className="fw-bold mt-2" style={{ color: '#f59e0b' }}>
+                {statistics.pendingVoters || 0}
+              </h4>
+            </div>
+          </div>
+          <div className="col-12 col-md-3">
+            <div
+              className="card p-3"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px'
+              }}
+            >
+              <small className="text-muted">Turnout %</small>
+              <h4 className="fw-bold mt-2" style={{ color: '#3b82f6' }}>
+                {parseFloat(statistics.turnoutPercentage || 0).toFixed(1)}%
+              </h4>
+            </div>
           </div>
         </div>
-        <div className="col-12 col-md-3">
-          <div
-            className="card p-3"
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px'
-            }}
-          >
-            <small className="text-muted">Voted</small>
-            <h5 className="fw-bold mt-2" style={{ color: '#10b981' }}>
-              {filteredVoters.filter(v => v.hasVoted).length}
-            </h5>
-          </div>
-        </div>
-        <div className="col-12 col-md-3">
-          <div
-            className="card p-3"
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px'
-            }}
-          >
-            <small className="text-muted">Not Voted</small>
-            <h5 className="fw-bold mt-2" style={{ color: '#f59e0b' }}>
-              {filteredVoters.filter(v => !v.hasVoted).length}
-            </h5>
-          </div>
-        </div>
-        <div className="col-12 col-md-3">
-          <div
-            className="card p-3"
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px'
-            }}
-          >
-            <small className="text-muted">Turnout</small>
-            <h5 className="fw-bold mt-2" style={{ color: colors.text }}>
-              {filteredVoters.length > 0 
-                ? ((filteredVoters.filter(v => v.hasVoted).length / filteredVoters.length) * 100).toFixed(1) 
-                : '0'}%
-            </h5>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -193,62 +201,99 @@ const ObserverVotersList = () => {
           {error}
         </div>
       ) : (
-        <ThemedTable striped bordered hover responsive>
-          <thead style={{
-            background: isDarkMode ? '#334155' : '#f9fafb',
-            color: colors.text
-          }}>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Student ID</th>
-              <th>Faculty</th>
-              <th>Voted</th>
-              <th>Voted At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredVoters.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-4 text-muted">
-                  No voters found
-                </td>
-              </tr>
-            ) : (
-              filteredVoters.map(voter => (
-                <tr key={voter._id}>
-                  <td style={{ color: colors.text }}>{voter.name}</td>
-                  <td style={{ color: colors.text }}>{voter.email}</td>
-                  <td style={{ color: colors.text }}>{voter.studentId}</td>
-                  <td style={{ color: colors.text }}>{voter.faculty}</td>
-                  <td>
-                    <span
-                      className="badge"
-                      style={{
-                        background: voter.hasVoted ? '#10b98130' : '#ef444430',
-                        color: voter.hasVoted ? '#10b981' : '#ef4444'
-                      }}
-                    >
-                      {voter.hasVoted ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td style={{ color: colors.text }}>
-                    {voter.votedAt 
-                      ? new Date(voter.votedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : '-'
-                    }
-                  </td>
+        <div
+          className="card"
+          style={{
+            background: colors.surface,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px'
+          }}
+        >
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead style={{
+                background: isDarkMode ? colors.surfaceHover : '#f9fafb',
+                borderBottom: `2px solid ${colors.border}`
+              }}>
+                <tr>
+                  <th style={{ color: colors.text }}>Name</th>
+                  <th style={{ color: colors.text }}>Email</th>
+                  <th style={{ color: colors.text }}>Phone</th>
+                  <th style={{ color: colors.text }}>Status</th>
+                  <th style={{ color: colors.text }}>Registered</th>
+                  <th style={{ color: colors.text }}>Voted</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </ThemedTable>
+              </thead>
+              <tbody>
+                {filteredVoters.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-5" style={{ color: colors.textMuted }}>
+                      <i className="fas fa-inbox mb-3" style={{ fontSize: '2rem', display: 'block' }}></i>
+                      {searchTerm ? 'No matching voters found' : 'No voters to display'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredVoters.map((voter, idx) => (
+                    <tr key={voter._id} style={{ borderColor: colors.border }}>
+                      <td style={{ color: colors.text }}>
+                        <div className="d-flex align-items-center">
+                          <div
+                            className="rounded-circle d-flex align-items-center justify-content-center text-white me-2"
+                            style={{
+                              width: '35px',
+                              height: '35px',
+                              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                              fontSize: '0.875rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {voter.name?.charAt(0).toUpperCase()}
+                          </div>
+                          {voter.name}
+                        </div>
+                      </td>
+                      <td style={{ color: colors.text }}>{voter.email}</td>
+                      <td style={{ color: colors.textSecondary }}>{voter.phoneNumber || 'N/A'}</td>
+                      <td>
+                        <span
+                          className="badge"
+                          style={{
+                            background: voter.status === 'active' ? '#10b98130' : '#f5a0a030',
+                            color: voter.status === 'active' ? '#10b981' : '#f59e0b'
+                          }}
+                        >
+                          {voter.status}
+                        </span>
+                      </td>
+                      <td style={{ color: colors.textSecondary, fontSize: '0.875rem' }}>
+                        {voter.registeredAt
+                          ? new Date(voter.registeredAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })
+                          : '-'
+                        }
+                      </td>
+                      <td>
+                        <span
+                          className="badge"
+                          style={{
+                            background: voter.hasVoted ? '#10b98130' : '#ef444430',
+                            color: voter.hasVoted ? '#10b981' : '#ef4444'
+                          }}
+                        >
+                          <i className={`fas fa-${voter.hasVoted ? 'check' : 'times'} me-1`}></i>
+                          {voter.hasVoted ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

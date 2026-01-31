@@ -291,7 +291,7 @@ const StatisticsView = ({ data }) => {
                 </div>
                 <div className="flex-grow-1 ms-3">
                   <h6 className="text-muted mb-1">Total Candidates</h6>
-                  <h2 className="mb-0 fw-bold">{statistics.candidatesCount.toLocaleString()}</h2>
+                  <h2 className="mb-0 fw-bold">{(statistics.candidatesCount || 0).toLocaleString()}</h2>
                 </div>
               </div>
             </div>
