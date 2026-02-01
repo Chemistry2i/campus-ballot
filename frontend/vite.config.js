@@ -13,12 +13,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev',
+        target: 'https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev',
+        target: 'https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       }

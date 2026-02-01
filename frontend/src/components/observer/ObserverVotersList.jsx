@@ -12,6 +12,11 @@ const ObserverVotersList = () => {
   const [elections, setElections] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statistics, setStatistics] = useState(null);
+  const [pagination, setPagination] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     fetchElections();
@@ -19,9 +24,16 @@ const ObserverVotersList = () => {
 
   useEffect(() => {
     if (selectedElection) {
+      setCurrentPage(1); // Reset to page 1 when election changes
       fetchVoters();
     }
   }, [selectedElection]);
+
+  useEffect(() => {
+    if (selectedElection) {
+      fetchVoters();
+    }
+  }, [currentPage, limit, searchTerm, sortBy, sortOrder]);
 
   const fetchElections = async () => {
     try {
@@ -45,31 +57,36 @@ const ObserverVotersList = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/observer/elections/${selectedElection}/voters`, {
+      
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+        search: searchTerm,
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
+      
+      const response = await axios.get(`/api/observer/elections/${selectedElection}/voters?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Backend returns { success, data: { election, statistics, voters } }
+      
       const data = response.data.data;
       setVoters(data?.voters || []);
       setStatistics(data?.statistics || null);
+      setPagination(data?.pagination || null);
       setError(null);
     } catch (err) {
       console.error('Error fetching voters:', err);
       setError('Failed to load voters list');
       setVoters([]);
       setStatistics(null);
+      setPagination(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredVoters = voters.filter(voter =>
-    (voter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    voter.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    voter.studentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    voter._id?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    searchTerm.length >= 0
-  );
+
 
   return (
     <div className="container-fluid p-4">
@@ -84,7 +101,7 @@ const ObserverVotersList = () => {
 
       {/* Filters */}
       <div className="row g-3 mb-4">
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-4">
           <label className="form-label mb-2" style={{ color: colors.text }}>Select Election</label>
           <select
             className="form-select"
@@ -105,14 +122,17 @@ const ObserverVotersList = () => {
             ))}
           </select>
         </div>
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-4">
           <label className="form-label mb-2" style={{ color: colors.text }}>Search Voters</label>
           <input
             type="text"
             className="form-control"
             placeholder="Search by name, email, or ID..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to page 1 when searching
+            }}
             style={{
               background: colors.surface,
               color: colors.text,
@@ -120,6 +140,46 @@ const ObserverVotersList = () => {
               borderRadius: '8px'
             }}
           />
+        </div>
+        <div className="col-12 col-md-2">
+          <label className="form-label mb-2" style={{ color: colors.text }}>Sort By</label>
+          <select
+            className="form-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              background: colors.surface,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px'
+            }}
+          >
+            <option value="name">Name</option>
+            <option value="email">Email</option>
+            <option value="createdAt">Registration Date</option>
+          </select>
+        </div>
+        <div className="col-12 col-md-2">
+          <label className="form-label mb-2" style={{ color: colors.text }}>Per Page</label>
+          <select
+            className="form-select"
+            value={limit}
+            onChange={(e) => {
+              setLimit(e.target.value);
+              setCurrentPage(1); // Reset to page 1 when changing limit
+            }}
+            style={{
+              background: colors.surface,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px'
+            }}
+          >
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
         </div>
       </div>
 
@@ -216,24 +276,50 @@ const ObserverVotersList = () => {
                 borderBottom: `2px solid ${colors.border}`
               }}>
                 <tr>
-                  <th style={{ color: colors.text }}>Name</th>
-                  <th style={{ color: colors.text }}>Email</th>
+                  <th style={{ color: colors.text, cursor: 'pointer' }} onClick={() => {
+                    setSortBy('name');
+                    setSortOrder(sortBy === 'name' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }}>
+                    Name 
+                    {sortBy === 'name' && (
+                      <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
+                    )}
+                  </th>
+                  <th style={{ color: colors.text, cursor: 'pointer' }} onClick={() => {
+                    setSortBy('email');
+                    setSortOrder(sortBy === 'email' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }}>
+                    Email
+                    {sortBy === 'email' && (
+                      <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
+                    )}
+                  </th>
+                  <th style={{ color: colors.text }}>Student ID</th>
+                  <th style={{ color: colors.text }}>Faculty</th>
                   <th style={{ color: colors.text }}>Phone</th>
                   <th style={{ color: colors.text }}>Status</th>
-                  <th style={{ color: colors.text }}>Registered</th>
+                  <th style={{ color: colors.text, cursor: 'pointer' }} onClick={() => {
+                    setSortBy('createdAt');
+                    setSortOrder(sortBy === 'createdAt' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }}>
+                    Registered
+                    {sortBy === 'createdAt' && (
+                      <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} ms-1`}></i>
+                    )}
+                  </th>
                   <th style={{ color: colors.text }}>Voted</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredVoters.length === 0 ? (
+                {voters.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-5" style={{ color: colors.textMuted }}>
+                    <td colSpan="8" className="text-center py-5" style={{ color: colors.textMuted }}>
                       <i className="fas fa-inbox mb-3" style={{ fontSize: '2rem', display: 'block' }}></i>
                       {searchTerm ? 'No matching voters found' : 'No voters to display'}
                     </td>
                   </tr>
                 ) : (
-                  filteredVoters.map((voter, idx) => (
+                  voters.map((voter, idx) => (
                     <tr key={voter._id} style={{ borderColor: colors.border }}>
                       <td style={{ color: colors.text }}>
                         <div className="d-flex align-items-center">
@@ -253,16 +339,18 @@ const ObserverVotersList = () => {
                         </div>
                       </td>
                       <td style={{ color: colors.text }}>{voter.email}</td>
-                      <td style={{ color: colors.textSecondary }}>{voter.phoneNumber || 'N/A'}</td>
+                      <td style={{ color: colors.textSecondary }}>{voter.studentId || 'N/A'}</td>
+                      <td style={{ color: colors.textSecondary }}>{voter.faculty || 'N/A'}</td>
+                      <td style={{ color: colors.textSecondary }}>{voter.phone || 'N/A'}</td>
                       <td>
                         <span
                           className="badge"
                           style={{
-                            background: voter.status === 'active' ? '#10b98130' : '#f5a0a030',
-                            color: voter.status === 'active' ? '#10b981' : '#f59e0b'
+                            background: voter.accountStatus === 'active' ? '#10b98130' : '#f5a0a030',
+                            color: voter.accountStatus === 'active' ? '#10b981' : '#f59e0b'
                           }}
                         >
-                          {voter.status}
+                          {voter.accountStatus}
                         </span>
                       </td>
                       <td style={{ color: colors.textSecondary, fontSize: '0.875rem' }}>
@@ -293,6 +381,95 @@ const ObserverVotersList = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="d-flex justify-content-between align-items-center mt-4">
+          <div style={{ color: colors.text }}>
+            Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, pagination.totalVoters)} of {pagination.totalVoters} voters
+          </div>
+          
+          <nav>
+            <ul className="pagination mb-0">
+              <li className={`page-item ${!pagination.hasPrev ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={!pagination.hasPrev}
+                  style={{
+                    background: colors.surface,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text
+                  }}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+              </li>
+              
+              {/* Page numbers */}
+              {[...Array(pagination.totalPages)].map((_, index) => {
+                const pageNum = index + 1;
+                const isActive = pageNum === currentPage;
+                
+                // Show first 2, last 2, current and adjacent pages
+                const showPage = pageNum === 1 || 
+                                pageNum === pagination.totalPages || 
+                                Math.abs(pageNum - currentPage) <= 1;
+                
+                if (!showPage && pageNum !== 2 && pageNum !== pagination.totalPages - 1) {
+                  // Show ellipsis
+                  if (pageNum === 3 && currentPage > 4) {
+                    return (
+                      <li key={pageNum} className="page-item disabled">
+                        <span className="page-link" style={{ background: colors.surface, border: `1px solid ${colors.border}`, color: colors.textMuted }}>...</span>
+                      </li>
+                    );
+                  }
+                  if (pageNum === pagination.totalPages - 2 && currentPage < pagination.totalPages - 3) {
+                    return (
+                      <li key={pageNum} className="page-item disabled">
+                        <span className="page-link" style={{ background: colors.surface, border: `1px solid ${colors.border}`, color: colors.textMuted }}>...</span>
+                      </li>
+                    );
+                  }
+                  return null;
+                }
+                
+                return (
+                  <li key={pageNum} className={`page-item ${isActive ? 'active' : ''}`}>
+                    <button 
+                      className="page-link"
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{
+                        background: isActive ? '#007bff' : colors.surface,
+                        border: `1px solid ${isActive ? '#007bff' : colors.border}`,
+                        color: isActive ? 'white' : colors.text
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  </li>
+                );
+              })}
+              
+              <li className={`page-item ${!pagination.hasNext ? 'disabled' : ''}`}>
+                <button 
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={!pagination.hasNext}
+                  style={{
+                    background: colors.surface,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text
+                  }}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
       )}
     </div>

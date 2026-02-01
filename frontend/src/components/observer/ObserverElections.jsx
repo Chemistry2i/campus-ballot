@@ -21,6 +21,7 @@ const ObserverElections = () => {
       const response = await axios.get('/api/observer/assigned-elections', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       const electionsList = response.data.data?.elections || [];
       setElections(electionsList);
     } catch (err) {
@@ -207,7 +208,77 @@ const ObserverElections = () => {
           </div>
         </div>
       ) : filteredElections.length > 0 ? (
-        <ThemedTable columns={columns} data={filteredElections} />
+        <div 
+          className="card"
+          style={{
+            background: colors.surface,
+            border: `1px solid ${colors.border}`
+          }}
+        >
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead style={{ 
+                background: isDarkMode ? colors.surfaceHover : '#f9fafb',
+                borderBottom: `2px solid ${colors.border}`
+              }}>
+                <tr>
+                  <th style={{ color: colors.text, padding: '12px' }}>Election Title</th>
+                  <th style={{ color: colors.text, padding: '12px' }}>Status</th>
+                  <th style={{ color: colors.text, padding: '12px' }}>Start Date</th>
+                  <th style={{ color: colors.text, padding: '12px' }}>End Date</th>
+                  <th style={{ color: colors.text, padding: '12px' }}>Positions</th>
+                  <th style={{ color: colors.text, padding: '12px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredElections.map((election) => (
+                  <tr key={election._id} style={{ borderColor: colors.border }}>
+                    <td style={{ color: colors.text, fontWeight: '500', padding: '12px' }}>
+                      {election.title}
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      {getStatusBadge(election.status)}
+                    </td>
+                    <td style={{ color: colors.text, padding: '12px' }}>
+                      {new Date(election.startDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td style={{ color: colors.text, padding: '12px' }}>
+                      {new Date(election.endDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td style={{ color: colors.textSecondary, padding: '12px' }}>
+                      {Array.isArray(election.positions) ? election.positions.length : 0} position(s)
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <button 
+                        className="btn btn-sm btn-secondary"
+                        disabled
+                        style={{
+                          background: '#6c757d',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          opacity: 0.6,
+                          cursor: 'not-allowed'
+                        }}
+                      >
+                        <i className="fas fa-eye me-1"></i>
+                        Monitor
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
         <div
           className="alert alert-info"
@@ -217,6 +288,7 @@ const ObserverElections = () => {
             color: colors.text
           }}
         >
+          <i className="fas fa-info-circle me-2"></i>
           No elections found for the selected filter.
         </div>
       )}

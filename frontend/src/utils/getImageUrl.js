@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev${imagePath}`;
+  return `https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev${imagePath}`;
 }
 
 export default getImageUrl;

@@ -198,10 +198,11 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     throw new Error("Election not found");
   }
 
-  // Get eligible voters count
+  // Get eligible voters count - students with active accounts who are verified
   const eligibleVoters = await User.countDocuments({
     role: 'student',
-    $or: [{ status: 'active' }, { status: 'pending' }]
+    accountStatus: 'active',
+    isVerified: true
   });
 
   // Get votes count
@@ -251,6 +252,12 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     }}
   ]);
 
+  // Get total candidates count for this election (only approved candidates)
+  const candidatesCount = await Candidate.countDocuments({ 
+    election: election._id,
+    status: 'approved'
+  });
+
   res.json({
     success: true,
     data: {
@@ -268,6 +275,7 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
         uniqueVoters: uniqueVotersCount,
         turnoutPercentage: parseFloat(turnoutPercentage),
         positionsCount: election.positions?.length || 0,
+        candidatesCount,
         votesByPosition: votesByPosition.map(v => ({
           position: v._id,
           totalVotes: v.totalVotes
@@ -462,11 +470,26 @@ const getAssignedElections = asyncHandler(async (req, res) => {
     .select('title description status startDate endDate positions')
     .sort('-startDate');
 
+  // Calculate actual status based on dates and add more details
+  const electionsWithCalculatedStatus = elections.map(election => {
+    const calculatedStatus = calculateElectionStatus(election);
+    return {
+      _id: election._id,
+      title: election.title,
+      description: election.description,
+      status: calculatedStatus, // Use calculated status
+      storedStatus: election.status, // Keep original for reference
+      startDate: election.startDate,
+      endDate: election.endDate,
+      positions: election.positions
+    };
+  });
+
   res.json({
     success: true,
     data: {
       accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
-      elections
+      elections: electionsWithCalculatedStatus
     }
   });
 });
@@ -476,6 +499,7 @@ const getAssignedElections = asyncHandler(async (req, res) => {
 // @access  Private (Observer with access)
 const getElectionVoters = asyncHandler(async (req, res) => {
   const { electionId } = req.params;
+  const { page = 1, limit = 50, search = '', sortBy = 'name', sortOrder = 'asc' } = req.query;
   const observer = req.user;
 
   // Check observer access to election
@@ -502,30 +526,69 @@ const getElectionVoters = asyncHandler(async (req, res) => {
 
   const votedUserIds = [...new Set(votes.map(v => v.user.toString()))];
 
-  // Get all students who should be eligible voters
-  const eligibleVoters = await User.find({
+  // Build search query for students
+  let studentQuery = {
     role: 'student',
-    $or: [
-      { status: 'active' },
-      { status: 'pending' }
-    ]
-  }).select('_id name email phoneNumber status registeredAt').lean();
+    accountStatus: 'active',
+    isVerified: true
+  };
+
+  // Add search functionality
+  if (search && search.trim() !== '') {
+    const searchRegex = new RegExp(search.trim(), 'i');
+    studentQuery.$or = [
+      { name: searchRegex },
+      { email: searchRegex },
+      { studentId: searchRegex }
+    ];
+  }
+
+  // Get total count for pagination
+  const totalVoters = await User.countDocuments(studentQuery);
+
+  // Build sort object
+  let sortObj = {};
+  if (sortBy === 'name') {
+    sortObj.name = sortOrder === 'desc' ? -1 : 1;
+  } else if (sortBy === 'email') {
+    sortObj.email = sortOrder === 'desc' ? -1 : 1;
+  } else if (sortBy === 'createdAt') {
+    sortObj.createdAt = sortOrder === 'desc' ? -1 : 1;
+  } else {
+    sortObj.name = 1; // Default sort
+  }
+
+  // Get paginated students who should be eligible voters
+  const eligibleVoters = await User.find(studentQuery)
+    .select('_id name email phone accountStatus createdAt studentId faculty course yearOfStudy')
+    .sort(sortObj)
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .lean();
 
   // Mark who voted
   const votersData = eligibleVoters.map(voter => ({
     _id: voter._id,
     name: voter.name,
     email: voter.email,
-    phoneNumber: voter.phoneNumber || 'N/A',
-    status: voter.status,
-    registeredAt: voter.registeredAt,
+    phone: voter.phone || 'N/A',
+    studentId: voter.studentId,
+    faculty: voter.faculty,
+    course: voter.course,
+    yearOfStudy: voter.yearOfStudy,
+    accountStatus: voter.accountStatus,
+    registeredAt: voter.createdAt,
     hasVoted: votedUserIds.includes(voter._id.toString())
   }));
 
-  // Get statistics
-  const totalEligible = votersData.length;
+  // Get overall statistics (not just for current page)
+  const totalEligibleAll = await User.countDocuments({
+    role: 'student',
+    accountStatus: 'active',
+    isVerified: true
+  });
   const totalVoted = votedUserIds.length;
-  const turnoutPercentage = totalEligible > 0 ? ((totalVoted / totalEligible) * 100).toFixed(2) : 0;
+  const turnoutPercentage = totalEligibleAll > 0 ? ((totalVoted / totalEligibleAll) * 100).toFixed(2) : 0;
 
   res.json({
     success: true,
@@ -536,12 +599,20 @@ const getElectionVoters = asyncHandler(async (req, res) => {
         status: election.status
       },
       statistics: {
-        totalEligible,
+        totalEligible: totalEligibleAll,
         totalVoted,
-        pendingVoters: totalEligible - totalVoted,
+        pendingVoters: totalEligibleAll - totalVoted,
         turnoutPercentage: parseFloat(turnoutPercentage)
       },
-      voters: votersData.sort((a, b) => b.hasVoted - a.hasVoted)
+      voters: votersData,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalVoters / limit),
+        totalVoters,
+        limit: parseInt(limit),
+        hasNext: page * limit < totalVoters,
+        hasPrev: page > 1
+      }
     }
   });
 });
