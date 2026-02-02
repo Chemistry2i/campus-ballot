@@ -19,6 +19,7 @@ import CandidateComparison from '../components/student/CandidateComparison';
 import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
 import RoleSwitcher from '../components/common/RoleSwitcher';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
+import { getDepartmentFromCourse } from '../utils/academicStructure';
 
 // Set axios base URL
 axios.defaults.baseURL = "https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev";
@@ -74,9 +75,10 @@ import useSocket from '../hooks/useSocket';
 import getImageUrl from '../utils/getImageUrl';
 import ElectionCard from '../components/student/ElectionCard';
 
-function StudentDashboard({ user }) {
+function StudentDashboard({ user: initialUser }) {
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const [user, setUser] = useState(initialUser);
   const { toasts, removeToast, success, error, info, warning } = useToast();
   const [elections, setElections] = useState([]);
   const [myVotes, setMyVotes] = useState([]);
@@ -128,7 +130,7 @@ function StudentDashboard({ user }) {
   const [profileFormData, setProfileFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    department: user?.department || '',
+    department: user?.department || getDepartmentFromCourse(user?.course) || '',
     yearOfStudy: user?.yearOfStudy || '',
     bio: user?.bio || '',
     profilePicture: user?.profilePicture || null
@@ -142,6 +144,30 @@ function StudentDashboard({ user }) {
   const [notifFilter, setNotifFilter] = useState('all'); // 'all', 'unread', 'read'
   const [notifSort, setNotifSort] = useState('newest'); // 'newest', 'oldest'
   const [selectedNotifs, setSelectedNotifs] = useState([]);
+
+  // Update department when user data or course changes
+  useEffect(() => {
+    if (user?.course) {
+      const autoDepartment = getDepartmentFromCourse(user.course);
+      setProfileFormData(prev => ({
+        ...prev,
+        department: user.department || autoDepartment || prev.department
+      }));
+      
+      // Auto-save department if missing in database
+      if (!user.department && autoDepartment) {
+        axios.put('/api/users/me/profile', {
+          department: autoDepartment
+        }).then(() => {
+          // Update local user object
+          const updatedUser = { ...user, department: autoDepartment };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }).catch(err => {
+          console.error('Failed to auto-update department:', err);
+        });
+      }
+    }
+  }, [user?.course, user?.department]);
   const [showArchived, setShowArchived] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [archivedNotifs, setArchivedNotifs] = useState([]);
@@ -167,6 +193,58 @@ function StudentDashboard({ user }) {
     const savedArchivedIds = JSON.parse(localStorage.getItem('archivedNotifications') || '[]');
     setPersistedArchivedNotifs(savedArchivedIds);
   }, []);
+
+  // Fetch latest user data from server on mount and auto-update department
+  useEffect(() => {
+    const fetchAndUpdateUserData = async () => {
+      try {
+        const res = await axios.get('/api/users/me/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (res.data) {
+          let updatedUser = res.data;
+          
+          // If department is missing or empty string, calculate and save it
+          if ((!res.data.department || res.data.department.trim() === '') && res.data.course) {
+            const autoDepartment = getDepartmentFromCourse(res.data.course);
+            if (autoDepartment) {
+              console.log('Auto-updating department to:', autoDepartment);
+              
+              // Save to backend
+              await axios.put('/api/users/me/profile', {
+                department: autoDepartment
+              }, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              
+              // Update user data with department
+              updatedUser = { ...res.data, department: autoDepartment };
+            }
+          }
+          
+          // Update localStorage with fresh user data
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          // Update component user state
+          setUser(updatedUser);
+          
+          // Update profile form data
+          setProfileFormData(prev => ({
+            ...prev,
+            department: updatedUser.department || getDepartmentFromCourse(updatedUser.course) || ''
+          }));
+          
+          console.log('User data updated with department:', updatedUser.department);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user data:', err);
+      }
+    };
+    
+    fetchAndUpdateUserData();
+    // eslint-disable-next-line
+  }, []); // Run only once on mount
 
   useEffect(() => {
     fetchElections();
@@ -2016,11 +2094,7 @@ function StudentDashboard({ user }) {
                                     : 'Unknown Election')}
                             </h6>
                             <p className="mb-0 text-muted">
-                              <strong>Voted for:</strong> {typeof vote.candidateName === 'string' ? vote.candidateName :
-                                (typeof vote.candidate === 'string' ? vote.candidate :
-                                  (vote.candidate && typeof vote.candidate === 'object') ?
-                                    (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
-                                    : 'Unknown Candidate')}
+                              <strong>Voted for:</strong> <span className="text-success fw-semibold">Confidential</span>
                             </p>
                           </div>
                         </div>
@@ -4055,19 +4129,15 @@ function StudentDashboard({ user }) {
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Department</label>
-                          <select 
-                            className="form-select" 
+                          <input 
+                            type="text"
+                            className="form-control" 
                             name="department"
-                            value={profileFormData.department}
-                            onChange={handleProfileInputChange}
-                          >
-                            <option value="">Select Department</option>
-                            <option value="Computer Science">Computer Science</option>
-                            <option value="Engineering">Engineering</option>
-                            <option value="Business">Business</option>
-                            <option value="Arts">Arts</option>
-                            <option value="Science">Science</option>
-                          </select>
+                            value={profileFormData.department || 'Not Available'}
+                            readOnly
+                            style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
+                          />
+                          <small className="text-muted">Auto-populated from your course</small>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Phone Number</label>
@@ -4105,6 +4175,8 @@ function StudentDashboard({ user }) {
                             value={profileFormData.bio}
                             onChange={handleProfileInputChange}
                             placeholder="Tell us about yourself..."
+                            disabled
+                            style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed" }}
                           ></textarea>
                         </div>
                       </div>

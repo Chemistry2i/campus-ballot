@@ -106,6 +106,11 @@ const userSchema = new mongoose.Schema({
         },
         trim: true,
     },
+    department: {
+        type: String,
+        trim: true,
+        default: null
+    },
     yearOfStudy: {
         type: String,
         trim: true,
