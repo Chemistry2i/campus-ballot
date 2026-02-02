@@ -7,13 +7,23 @@ import {
   FaEnvelope,
   FaPhone,
   FaIdCard,
-  FaTasks
+  FaTasks,
+  FaImages,
+  FaFileAlt,
+  FaDownload,
+  FaEye,
+  FaChartBar,
+  FaTrophy,
+  FaUsers
 } from 'react-icons/fa';
 
 const AgentCandidates = () => {
   const { isDarkMode, colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [candidate, setCandidate] = useState(null);
+  const [materials, setMaterials] = useState([]);
+  const [loadingMaterials, setLoadingMaterials] = useState(false);
+  const [activeTab, setActiveTab] = useState('info');
 
   useEffect(() => {
     fetchCandidateData();
@@ -30,11 +40,51 @@ const AgentCandidates = () => {
 
       if (response.data?.agent) {
         setCandidate(response.data.agent);
+        if (response.data.agent.candidateId) {
+          fetchCandidateMaterials(response.data.agent.candidateId);
+        }
       }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching candidate data:', error);
       setLoading(false);
+    }
+  };
+
+  const fetchCandidateMaterials = async (candidateId) => {
+    setLoadingMaterials(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/candidates/${candidateId}/materials`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMaterials(response.data || []);
+    } catch (error) {
+      console.error('Error fetching materials:', error);
+      setMaterials([]);
+    } finally {
+      setLoadingMaterials(false);
+    }
+  };
+
+  const handleDownloadMaterial = async (material) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/candidates/${candidate.candidateId}/materials/${material._id}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', material.originalName || material.title);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading material:', error);
     }
   };
 
@@ -80,20 +130,70 @@ const AgentCandidates = () => {
           <FaUserTie className="me-2" />
           My Candidate
         </h3>
-        <p className="text-muted mb-0">Manage and monitor your assigned candidate's information</p>
+        <p className="text-muted mb-0">Manage and monitor your assigned candidate's information and campaign materials</p>
       </div>
 
-      {/* Candidate Card */}
-      <div className="row">
-        <div className="col-12 col-lg-8">
-          <div
-            className="card"
+      {/* Tabs */}
+      <ul className="nav nav-tabs mb-4" style={{ borderColor: colors.border }}>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'info' ? 'active' : ''}`}
+            onClick={() => setActiveTab('info')}
             style={{
-              background: isDarkMode ? colors.surface : '#fff',
-              border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              color: activeTab === 'info' ? colors.primary : colors.text,
+              borderColor: activeTab === 'info' ? colors.primary : 'transparent',
+              background: activeTab === 'info' ? (isDarkMode ? colors.surface : '#fff') : 'transparent'
             }}
           >
+            <FaUserTie className="me-2" />
+            Candidate Info
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'materials' ? 'active' : ''}`}
+            onClick={() => setActiveTab('materials')}
+            style={{
+              color: activeTab === 'materials' ? colors.primary : colors.text,
+              borderColor: activeTab === 'materials' ? colors.primary : 'transparent',
+              background: activeTab === 'materials' ? (isDarkMode ? colors.surface : '#fff') : 'transparent'
+            }}
+          >
+            <FaImages className="me-2" />
+            Campaign Materials
+            {materials.length > 0 && (
+              <span className="badge bg-primary ms-2">{materials.length}</span>
+            )}
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'stats' ? 'active' : ''}`}
+            onClick={() => setActiveTab('stats')}
+            style={{
+              color: activeTab === 'stats' ? colors.primary : colors.text,
+              borderColor: activeTab === 'stats' ? colors.primary : 'transparent',
+              background: activeTab === 'stats' ? (isDarkMode ? colors.surface : '#fff') : 'transparent'
+            }}
+          >
+            <FaChartBar className="me-2" />
+            Statistics
+          </button>
+        </li>
+      </ul>
+
+      {/* Tab Content */}
+      {activeTab === 'info' && (
+        <div className="row">
+          <div className="col-12 col-lg-8">
+            <div
+              className="card"
+              style={{
+                background: isDarkMode ? colors.surface : '#fff',
+                border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                borderRadius: '12px'
+              }}
+            >
             <div
               className="card-header p-4"
               style={{
@@ -281,11 +381,11 @@ const AgentCandidates = () => {
                 </>
               )}
             </div>
+            </div>
           </div>
-        </div>
 
-        {/* Statistics Sidebar */}
-        <div className="col-12 col-lg-4">
+          {/* Statistics Sidebar */}
+          <div className="col-12 col-lg-4">
           <div
             className="card mb-3"
             style={{
@@ -378,7 +478,340 @@ const AgentCandidates = () => {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
+
+      {/* Materials Tab */}
+      {activeTab === 'materials' && (
+        <div className="row">
+          <div className="col-12">
+            {loadingMaterials ? (
+              <div className="text-center py-5">
+                <div className="spinner-border" role="status" style={{ color: colors.primary }}>
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : materials.length === 0 ? (
+              <div
+                className="card"
+                style={{
+                  background: isDarkMode ? colors.surface : '#fff',
+                  border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                  borderRadius: '12px'
+                }}
+              >
+                <div className="card-body text-center py-5">
+                  <FaImages size={60} style={{ color: colors.textSecondary, opacity: 0.3 }} />
+                  <p className="mt-3 text-muted">No campaign materials uploaded yet</p>
+                </div>
+              </div>
+            ) : (
+              <div className="row g-4">
+                {materials.map((material, index) => (
+                  <div key={index} className="col-12 col-md-6 col-lg-4">
+                    <div
+                      className="card h-100"
+                      style={{
+                        background: isDarkMode ? colors.surface : '#fff',
+                        border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                        borderRadius: '12px',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = isDarkMode
+                          ? '0 10px 30px rgba(0, 0, 0, 0.5)'
+                          : '0 10px 30px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      {/* Material Image/Preview */}
+                      <div
+                        style={{
+                          height: '200px',
+                          background: isDarkMode ? colors.background : '#f8f9fa',
+                          borderRadius: '12px 12px 0 0',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {material.file?.endsWith('.pdf') ? (
+                          <FaFileAlt size={60} style={{ color: '#ef4444' }} />
+                        ) : (
+                          <img
+                            src={getImageUrl(material.file)}
+                            alt={material.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><i class="fas fa-image" style="font-size: 60px; color: #6b7280;"></i></div>';
+                            }}
+                          />
+                        )}
+
+                        {/* Category Badge */}
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '20px',
+                            background: 'rgba(59, 130, 246, 0.9)',
+                            color: '#fff',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            textTransform: 'capitalize'
+                          }}
+                        >
+                          {material.category}
+                        </span>
+                      </div>
+
+                      <div className="card-body p-3">
+                        <h6
+                          className="mb-2"
+                          style={{
+                            color: colors.text,
+                            fontWeight: 600,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {material.title}
+                        </h6>
+                        {material.description && (
+                          <p
+                            className="mb-3"
+                            style={{
+                              fontSize: '0.85rem',
+                              color: colors.textSecondary,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical'
+                            }}
+                          >
+                            {material.description}
+                          </p>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm flex-grow-1"
+                            style={{
+                              background: colors.primary,
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '0.5rem'
+                            }}
+                            onClick={() => window.open(getImageUrl(material.file), '_blank')}
+                          >
+                            <FaEye className="me-1" />
+                            View
+                          </button>
+                          <button
+                            className="btn btn-sm"
+                            style={{
+                              background: isDarkMode ? colors.surface : '#f8f9fa',
+                              color: colors.text,
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '8px',
+                              padding: '0.5rem'
+                            }}
+                            onClick={() => handleDownloadMaterial(material)}
+                          >
+                            <FaDownload />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Stats Tab */}
+      {activeTab === 'stats' && (
+        <div className="row g-4">
+          <div className="col-12">
+            <div
+              className="card"
+              style={{
+                background: isDarkMode ? colors.surface : '#fff',
+                border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                borderRadius: '12px'
+              }}
+            >
+              <div className="card-body p-4">
+                <h5 className="mb-4" style={{ color: colors.text, fontWeight: 600 }}>
+                  <FaChartBar className="me-2" />
+                  Campaign Performance
+                </h5>
+
+                <div className="row g-4">
+                  {/* Tasks Overview */}
+                  <div className="col-12 col-md-4">
+                    <div
+                      style={{
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                        color: '#fff',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <FaTasks size={40} style={{ opacity: 0.9, marginBottom: '1rem' }} />
+                      <h2 className="mb-1">{candidate.tasksActive || 0}</h2>
+                      <p className="mb-0" style={{ opacity: 0.9 }}>Active Tasks</p>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-4">
+                    <div
+                      style={{
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: '#fff',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <FaTrophy size={40} style={{ opacity: 0.9, marginBottom: '1rem' }} />
+                      <h2 className="mb-1">{candidate.tasksCompleted || 0}</h2>
+                      <p className="mb-0" style={{ opacity: 0.9 }}>Completed Tasks</p>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-4">
+                    <div
+                      style={{
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                        color: '#fff',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <FaUsers size={40} style={{ opacity: 0.9, marginBottom: '1rem' }} />
+                      <h2 className="mb-1">{materials.length}</h2>
+                      <p className="mb-0" style={{ opacity: 0.9 }}>Campaign Materials</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Task Completion Rate */}
+                <div className="mt-4">
+                  <h6 className="mb-3" style={{ color: colors.text }}>Task Completion Rate</h6>
+                  <div className="progress" style={{ height: '30px', borderRadius: '10px' }}>
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${
+                          candidate.tasksActive + candidate.tasksCompleted > 0
+                            ? ((candidate.tasksCompleted || 0) /
+                                ((candidate.tasksActive || 0) + (candidate.tasksCompleted || 0))) *
+                              100
+                            : 0
+                        }%`,
+                        background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {candidate.tasksActive + candidate.tasksCompleted > 0
+                        ? Math.round(
+                            ((candidate.tasksCompleted || 0) /
+                              ((candidate.tasksActive || 0) + (candidate.tasksCompleted || 0))) *
+                              100
+                          )
+                        : 0}
+                      %
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Stats */}
+                <div className="row g-3 mt-3">
+                  <div className="col-12 col-md-6">
+                    <div
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '10px',
+                        background: isDarkMode ? colors.background : '#f8f9fa',
+                        border: `1px solid ${colors.border}`
+                      }}
+                    >
+                      <small className="text-muted d-block mb-1">Role Status</small>
+                      <span
+                        style={{
+                          padding: '0.35rem 0.7rem',
+                          borderRadius: '20px',
+                          background: candidate.role === 'coordinator' ? '#8b5cf630' : '#3b82f630',
+                          color: candidate.role === 'coordinator' ? '#8b5cf6' : '#3b82f6',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {candidate.role}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-6">
+                    <div
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '10px',
+                        background: isDarkMode ? colors.background : '#f8f9fa',
+                        border: `1px solid ${colors.border}`
+                      }}
+                    >
+                      <small className="text-muted d-block mb-1">Campaign Status</small>
+                      <span
+                        style={{
+                          padding: '0.35rem 0.7rem',
+                          borderRadius: '20px',
+                          background: candidate.status === 'active' ? '#10b98130' : '#6b728030',
+                          color: candidate.status === 'active' ? '#10b981' : '#6b7280',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {candidate.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -38,6 +38,51 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+// Helper function to generate analytics from tasks
+const generateTaskAnalytics = (tasks) => {
+  if (!tasks || tasks.length === 0) {
+    return [
+      { week: 'Week 1', tasks: 0, completed: 0, pending: 0 },
+      { week: 'Week 2', tasks: 0, completed: 0, pending: 0 },
+      { week: 'Week 3', tasks: 0, completed: 0, pending: 0 },
+      { week: 'Week 4', tasks: 0, completed: 0, pending: 0 }
+    ];
+  }
+
+  // Group tasks by week based on due date
+  const now = new Date();
+  const fourWeeksAgo = new Date(now.getTime() - (28 * 24 * 60 * 60 * 1000));
+  
+  const weekData = {};
+  for (let i = 0; i < 4; i++) {
+    weekData[`Week ${i + 1}`] = { tasks: 0, completed: 0, pending: 0 };
+  }
+
+  tasks.forEach(task => {
+    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+    if (!dueDate || dueDate < fourWeeksAgo) return;
+
+    const weekDiff = Math.floor((now - dueDate) / (7 * 24 * 60 * 60 * 1000));
+    const weekIndex = Math.abs(weekDiff);
+    
+    if (weekIndex < 4) {
+      const weekKey = `Week ${4 - weekIndex}`;
+      weekData[weekKey].tasks++;
+      
+      if (task.status === 'completed') {
+        weekData[weekKey].completed++;
+      } else {
+        weekData[weekKey].pending++;
+      }
+    }
+  });
+
+  return Object.entries(weekData).map(([week, data]) => ({
+    week,
+    ...data
+  }));
+};
+
 const AgentDashboard = () => {
   const { isDarkMode, colors } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -103,20 +148,18 @@ const AgentDashboard = () => {
           completedTasks: statsResponse.data?.tasksCompleted || 0,
           role: statsResponse.data?.role || 'agent',
           status: statsResponse.data?.status || 'inactive',
-          voterOutreach: Math.floor(Math.random() * 500) + 100,
-          engagementRate: Math.floor(Math.random() * 30) + 45,
-          campaignEfficiency: Math.floor(Math.random() * 20) + 75
+          voterOutreach: statsResponse.data?.voterOutreach || 0,
+          engagementRate: statsResponse.data?.engagementRate || 0,
+          campaignEfficiency: statsResponse.data?.campaignEfficiency || 0
         }
       });
       
-      // Generate mock analytics data
-      const mockAnalytics = [
-        { week: 'Week 1', tasks: 12, completed: 8, outreach: 120 },
-        { week: 'Week 2', tasks: 15, completed: 13, outreach: 180 },
-        { week: 'Week 3', tasks: 10, completed: 10, outreach: 150 },
-        { week: 'Week 4', tasks: 18, completed: 16, outreach: 220 }
-      ];
-      setAnalyticsData(mockAnalytics);
+      // Generate analytics data from tasks
+      if (dashboardResponse.data?.tasks) {
+        const tasksByWeek = generateTaskAnalytics(dashboardResponse.data.tasks);
+        setAnalyticsData(tasksByWeek);
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -184,14 +227,12 @@ const AgentDashboard = () => {
         }
       });
       
-      // Generate mock analytics data
-      const mockAnalytics = [
-        { week: 'Week 1', tasks: 12, completed: 8, outreach: 120 },
-        { week: 'Week 2', tasks: 15, completed: 13, outreach: 180 },
-        { week: 'Week 3', tasks: 10, completed: 10, outreach: 150 },
-        { week: 'Week 4', tasks: 18, completed: 16, outreach: 220 }
-      ];
-      setAnalyticsData(mockAnalytics);
+      // Generate analytics data from error fallback tasks
+      if (dashboardData.tasks) {
+        const tasksByWeek = generateTaskAnalytics(dashboardData.tasks);
+        setAnalyticsData(tasksByWeek);
+      }
+      
       setLoading(false);
     }
   };

@@ -35,6 +35,10 @@ import VoterOutreach from '../components/agent/VoterOutreach';
 import AgentCandidates from '../components/agent/AgentCandidates';
 import AgentAnalytics from '../components/agent/AgentAnalytics';
 
+// Import candidate components for reuse in agent dashboard
+import CampaignMaterials from '../components/candidacy/CampaignMaterials';
+import VoterEngagement from '../components/candidacy/VoterEngagement';
+
 const AgentDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -59,17 +63,17 @@ const AgentDashboard = ({ user, onLogout }) => {
 
   const menuItems = [
     { path: '/agent', icon: FaHome, label: 'Dashboard', exact: true },
-    { path: '/agent/tasks', icon: FaTasks, label: 'Tasks' },
     { path: '/agent/candidates', icon: FaUserTie, label: 'My Candidates' },
-    { path: '/agent/outreach', icon: FaRoute, label: 'Voter Outreach' },
+    { path: '/agent/analytics', icon: FaChartLine, label: 'AgentAnalytics' },
     { path: '/agent/materials', icon: FaFileAlt, label: 'Campaign Materials' },
     { path: '/agent/engagement', icon: FaHandshake, label: 'Voter Engagement' },
+    { path: '/agent/outreach', icon: FaRoute, label: 'Voter Outreach' },
+    { path: '/agent/tasks', icon: FaTasks, label: 'Tasks' },
     { path: '/agent/communication', icon: FaComment, label: 'Communication' },
     { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
     { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
     { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
     { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
-    { path: '/agent/analytics', icon: FaChartLine, label: 'AgentAnalytics' },
     { path: '/agent/help', icon: FaQuestionCircle, label: 'Help & Support' }
   ];
 
@@ -486,6 +490,8 @@ const AgentDashboard = ({ user, onLogout }) => {
             <Route path="/candidates" element={<AgentCandidates />} />
             <Route path="/outreach" element={<VoterOutreach />} />
             <Route path="/analytics" element={<AgentAnalytics />} />
+            <Route path="/materials" element={<CampaignMaterials />} />
+            <Route path="/engagement" element={<VoterEngagement />} />
           </Routes>
         </main>
       </div>

@@ -8,8 +8,23 @@ import {
   FaClock,
   FaUsers,
   FaChartBar,
-  FaCalendar
+  FaCalendar,
+  FaTrophy,
+  FaBullseye
 } from 'react-icons/fa';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 const AgentAnalytics = () => {
   const { isDarkMode, colors } = useTheme();
@@ -80,6 +95,22 @@ const AgentAnalytics = () => {
       trend: 'Under your support'
     }
   ];
+
+  // Prepare chart data
+  const taskChartData = [
+    {
+      name: 'Tasks',
+      Active: stats?.tasksActive || 0,
+      Completed: stats?.tasksCompleted || 0
+    }
+  ];
+
+  const pieChartData = [
+    { name: 'Completed', value: stats?.tasksCompleted || 0 },
+    { name: 'Active', value: stats?.tasksActive || 0 }
+  ];
+
+  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
   return (
     <div className="container-fluid p-4">
@@ -206,8 +237,8 @@ const AgentAnalytics = () => {
 
       {/* Detailed Analytics Section */}
       <div className="row g-3">
-        {/* Task Breakdown */}
-        <div className="col-12 col-lg-6">
+        {/* Task Breakdown with Chart */}
+        <div className="col-12 col-lg-8">
           <div
             className="card"
             style={{
@@ -225,18 +256,44 @@ const AgentAnalytics = () => {
             >
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
                 <FaChartBar className="me-2" />
-                Task Breakdown
+                Task Performance Overview
               </h5>
             </div>
             <div className="card-body p-4">
+              {/* Bar Chart */}
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={taskChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
+                  <XAxis dataKey="name" stroke={colors.text} />
+                  <YAxis stroke={colors.text} />
+                  <Tooltip 
+                    contentStyle={{
+                      background: isDarkMode ? colors.surface : '#fff',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="Active" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="Completed" fill="#10b981" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+
+              <hr style={{ borderColor: colors.border, margin: '1.5rem 0' }} />
+
+              {/* Progress Bars */}
               <div className="mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span style={{ color: colors.text }}>Active Tasks</span>
+                  <span style={{ color: colors.text }}>
+                    <FaTasks className="me-2" style={{ color: '#3b82f6' }} />
+                    Active Tasks
+                  </span>
                   <span className="fw-bold" style={{ color: '#3b82f6' }}>
                     {stats?.tasksActive || 0}
                   </span>
                 </div>
-                <div className="progress">
+                <div className="progress" style={{ height: '12px', borderRadius: '10px' }}>
                   <div
                     className="progress-bar"
                     style={{
@@ -244,7 +301,8 @@ const AgentAnalytics = () => {
                         stats && stats.tasksActive + stats.tasksCompleted > 0
                           ? (stats.tasksActive / (stats.tasksActive + stats.tasksCompleted)) * 100 + '%'
                           : '0%',
-                      background: '#3b82f6'
+                      background: 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+                      borderRadius: '10px'
                     }}
                   />
                 </div>
@@ -252,12 +310,15 @@ const AgentAnalytics = () => {
 
               <div>
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span style={{ color: colors.text }}>Completed Tasks</span>
+                  <span style={{ color: colors.text }}>
+                    <FaCheckCircle className="me-2" style={{ color: '#10b981' }} />
+                    Completed Tasks
+                  </span>
                   <span className="fw-bold" style={{ color: '#10b981' }}>
                     {stats?.tasksCompleted || 0}
                   </span>
                 </div>
-                <div className="progress">
+                <div className="progress" style={{ height: '12px', borderRadius: '10px' }}>
                   <div
                     className="progress-bar"
                     style={{
@@ -265,7 +326,8 @@ const AgentAnalytics = () => {
                         stats && stats.tasksActive + stats.tasksCompleted > 0
                           ? (stats.tasksCompleted / (stats.tasksActive + stats.tasksCompleted)) * 100 + '%'
                           : '0%',
-                      background: '#10b981'
+                      background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                      borderRadius: '10px'
                     }}
                   />
                 </div>
@@ -274,8 +336,58 @@ const AgentAnalytics = () => {
           </div>
         </div>
 
-        {/* Agent Information */}
-        <div className="col-12 col-lg-6">
+        {/* Pie Chart and Agent Info */}
+        <div className="col-12 col-lg-4">
+          <div
+            className="card mb-3"
+            style={{
+              background: isDarkMode ? colors.surface : '#fff',
+              border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+              borderRadius: '12px'
+            }}
+          >
+            <div
+              className="card-header"
+              style={{
+                background: isDarkMode ? colors.surfaceHover : '#f8f9fa',
+                borderBottom: `1px solid ${colors.border}`
+              }}
+            >
+              <h6 className="mb-0 fw-bold" style={{ color: colors.text }}>
+                Task Distribution
+              </h6>
+            </div>
+            <div className="card-body p-3">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={70}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{
+                      background: isDarkMode ? colors.surface : '#fff',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Agent Information */}
           <div
             className="card"
             style={{
