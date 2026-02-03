@@ -175,7 +175,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       >
         {/* Header with Profile */}
         <div className="sidebar-header text-center" style={{ 
-          padding: collapsed ? '1rem 0' : '1.5rem 1rem 1rem', 
+          padding: collapsed ? '2rem 0' : '3rem 1rem 2rem', 
           position: 'relative', 
           flexShrink: 0,
           borderBottom: `1px solid ${colors.border}`,
@@ -332,10 +332,9 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
 
         {/* Navigation Menu */}
         <nav className="sidebar-nav" style={{ 
-          padding: '1rem 0.5rem', 
+          padding: '2rem 0.5rem', 
           overflowY: 'auto',
-          overflowX: 'hidden',
-          flex: 1
+          overflowX: 'hidden'
         }}>
           {/* Main Navigation */}
           {navItems.map(item => {
@@ -351,7 +350,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   gap: collapsed ? 0 : '0.75rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   padding: collapsed ? '0.5rem' : '0.6rem 1rem',
-                  margin: '0.1rem 0',
+                  margin: '0.15rem 0',
                   textDecoration: 'none',
                   color: isActive ? '#fff' : colors.text,
                   background: isActive 
@@ -396,7 +395,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
           {!collapsed && assignedElections.length > 0 && (
             <>
               <div style={{ 
-                padding: '0.75rem 1rem 0.25rem 1rem', 
+                padding: '1rem 1rem 0.5rem 1rem', 
                 fontSize: '0.7rem', 
                 fontWeight: 700, 
                 color: colors.textMuted,
@@ -422,7 +421,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                       alignItems: 'center',
                       gap: '0.75rem',
                       padding: '0.6rem 1rem 0.6rem 1.5rem',
-                      margin: '0.1rem 0',
+                      margin: '0.15rem 0',
                       textDecoration: 'none',
                       color: isActive ? '#fff' : colors.text,
                       background: isActive 
@@ -485,15 +484,18 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
             </>
           )}
         </nav>
+        
+        {/* Spacer to push footer to bottom */}
+        <div style={{ flex: 1 }}></div>
 
-        {/* Footer */
+        {/* Footer */}
         <div className="sidebar-footer" style={{ 
-          padding: '0.75rem 1rem',
+          padding: '2.5rem 1rem',
           borderTop: `1px solid ${colors.border}`, 
           flexShrink: 0,
           background: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(16, 185, 129, 0.02)',
           textAlign: 'center',
-          minHeight: 'auto'
+          minHeight: '100px'
         }}>
           {!collapsed && (
             <div>
