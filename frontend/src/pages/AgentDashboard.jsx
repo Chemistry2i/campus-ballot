@@ -69,11 +69,11 @@ const AgentDashboard = ({ user, onLogout }) => {
     { path: '/agent/engagement', icon: FaHandshake, label: 'Voter Engagement' },
     { path: '/agent/outreach', icon: FaRoute, label: 'Voter Outreach' },
     { path: '/agent/tasks', icon: FaTasks, label: 'Tasks' },
-    { path: '/agent/communication', icon: FaComment, label: 'Communication' },
-    { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
-    { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
+    // { path: '/agent/communication', icon: FaComment, label: 'Communication' },
+    // { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
+    // { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
     { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
-    { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
+    // { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/agent/help', icon: FaQuestionCircle, label: 'Help & Support' }
   ];
 
@@ -134,204 +134,222 @@ const AgentDashboard = ({ user, onLogout }) => {
           flexDirection: 'column',
           overflow: 'hidden',
           flexShrink: 0,
-          padding:'10px 0px'
+          padding:'0px 10px'
         }}
       >
-        <div style={{ padding: isMobile ? '1rem' : '0.5rem', flex: 1, overflowY: 'auto', margin: 0 }}>
-          {/* Header with collapse button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? '1rem' : '0.5rem' }}>
+        <div style={{ 
+          padding: isMobile ? '1rem' : '0.5rem', 
+          flex: 1, 
+          overflowY: 'auto', 
+          margin: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            {/* Header with collapse button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? '1rem' : '0.5rem' }}>
+              {!sidebarCollapsed && (
+                <h4 className="fw-bold mb-0" style={{ 
+                  color: colors.text,
+                  fontSize: 'clamp(1.1rem, 2vw, 1.3rem)',
+                  marginTop: 'clamp(0.5rem, 2vw, 1rem)'
+                }}>
+                {/* 
+                  <FaUserTie style={{ marginRight: '0.5rem', color: '#8b5cf6' }} />
+                  Agent Portal
+                */}
+                  
+                </h4>
+              )}
+              {isMobile ? (
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '6px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: colors.text,
+                    marginLeft: 'auto'
+                  }}
+                  title="Close menu"
+                >
+                  <FaTimes size={14} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  style={{
+                    background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '6px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: colors.text,
+                    marginLeft: sidebarCollapsed ? 'auto' : '0',
+                    marginRight: sidebarCollapsed ? 'auto' : '0'
+                  }}
+                  title="Toggle sidebar"
+                >
+                  {sidebarCollapsed ? <FaChevronRight size={14} /> : <FaChevronLeft size={14} />}
+                </button>
+              )}
+            </div>
+
+            {/* User Info - Profile Picture */}
             {!sidebarCollapsed && (
-              <h4 className="fw-bold mb-0" style={{ 
-                color: colors.text,
-                fontSize: 'clamp(1.1rem, 2vw, 1.3rem)',
-                marginTop: 'clamp(0.5rem, 2vw, 1rem)'
-              }}>
-              {/* 
-                <FaUserTie style={{ marginRight: '0.5rem', color: '#8b5cf6' }} />
-                Agent Portal
-              */}
-                
-              </h4>
-            )}
-            {isMobile ? (
-              <button
-                onClick={() => setSidebarOpen(false)}
+              <div
                 style={{
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: colors.text,
-                  marginLeft: 'auto'
+                  marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
+                  padding: 'clamp(0.75rem, 2vw, 1rem)',
+                  background: `linear-gradient(135deg, ${isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)'}, ${isDarkMode ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)'})`,
+                  borderRadius: 'clamp(8px, 1.5vw, 12px)',
+                  border: `1px solid ${isDarkMode ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)'}`
                 }}
-                title="Close menu"
               >
-                <FaTimes size={14} />
-              </button>
-            ) : (
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                style={{
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: colors.text,
-                  marginLeft: sidebarCollapsed ? 'auto' : '0',
-                  marginRight: sidebarCollapsed ? 'auto' : '0'
-                }}
-                title="Toggle sidebar"
-              >
-                {sidebarCollapsed ? <FaChevronRight size={14} /> : <FaChevronLeft size={14} />}
-              </button>
+                <div
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '2rem',
+                    margin: '0 auto clamp(0.5rem, 1vw, 0.75rem)',
+                    overflow: 'hidden',
+                    border: `3px solid rgba(139, 92, 246, 0.4)`,
+                    boxShadow: '0 6px 16px rgba(139, 92, 246, 0.25)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(139, 92, 246, 0.35)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.25)';
+                  }}
+                >
+                  {user?.profilePicture ? (
+                    <img 
+                      src={user.profilePicture} 
+                      alt={user?.name} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) {
+                          e.target.nextSibling.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                    {user?.name?.charAt(0) || 'A'}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <div className="fw-semibold" style={{ 
+                    color: colors.text,
+                    fontSize: 'clamp(0.9rem, 1.5vw, 1rem)',
+                    marginBottom: '0.25rem'
+                  }}>
+                    {user?.name || 'Campaign Agent'}
+                  </div>
+                  <small style={{ 
+                    color: colors.textSecondary,
+                    fontSize: 'clamp(0.75rem, 1.3vw, 0.8rem)',
+                    display: 'block',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {user?.email}
+                  </small>
+                  <span style={{
+                    display: 'inline-block',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    color: '#8b5cf6',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '12px',
+                    fontSize: '0.7rem',
+                    fontWeight: 600
+                  }}>
+                    👥 Campaign Agent
+                  </span>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* User Info - Profile Picture */}
-          {!sidebarCollapsed && (
-            <div
-              style={{
-                marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
-                padding: 'clamp(0.75rem, 2vw, 1rem)',
-                background: `linear-gradient(135deg, ${isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)'}, ${isDarkMode ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)'})`,
-                borderRadius: 'clamp(8px, 1.5vw, 12px)',
-                border: `1px solid ${isDarkMode ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)'}`
-              }}
-            >
-              <div
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: '2rem',
-                  margin: '0 auto clamp(0.5rem, 1vw, 0.75rem)',
-                  overflow: 'hidden',
-                  border: `3px solid rgba(139, 92, 246, 0.4)`,
-                  boxShadow: '0 6px 16px rgba(139, 92, 246, 0.25)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(139, 92, 246, 0.35)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 92, 246, 0.25)';
-                }}
-              >
-                {user?.profilePicture ? (
-                  <img 
-                    src={user.profilePicture} 
-                    alt={user?.name} 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover'
+          {/* Menu Items - Centered */}
+          <div style={{ 
+            flex: 1, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'center',
+            padding: '1rem 0'
+          }}>
+            <nav>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path, item.exact);
+                
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: sidebarCollapsed ? '0' : 'clamp(0.5rem, 1vw, 0.75rem)',
+                      padding: sidebarCollapsed ? '0.5rem' : 'clamp(0.5rem, 1vw, 0.75rem)',
+                      marginBottom: '0.25rem',
+                      borderRadius: 'clamp(6px, 1vw, 8px)',
+                      textDecoration: 'none',
+                      color: active ? '#8b5cf6' : colors.text,
+                      background: active 
+                        ? (isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)')
+                        : 'transparent',
+                      borderLeft: active ? '3px solid #8b5cf6' : '3px solid transparent',
+                      fontWeight: active ? 600 : 400,
+                      fontSize: 'clamp(0.75rem, 1vw, 0.85rem)',
+                      justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                      transition: 'all 0.2s ease'
                     }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      if (e.target.nextSibling) {
-                        e.target.nextSibling.style.display = 'flex';
+                    onMouseEnter={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : '#f3f4f6';
                       }
                     }}
-                  />
-                ) : null}
-                <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
-                  {user?.name?.charAt(0) || 'A'}
-                </span>
-              </div>
-              <div className="text-center">
-                <div className="fw-semibold" style={{ 
-                  color: colors.text,
-                  fontSize: 'clamp(0.9rem, 1.5vw, 1rem)',
-                  marginBottom: '0.25rem'
-                }}>
-                  {user?.name || 'Campaign Agent'}
-                </div>
-                <small style={{ 
-                  color: colors.textSecondary,
-                  fontSize: 'clamp(0.75rem, 1.3vw, 0.8rem)',
-                  display: 'block',
-                  marginBottom: '0.5rem'
-                }}>
-                  {user?.email}
-                </small>
-                <span style={{
-                  display: 'inline-block',
-                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                  color: '#8b5cf6',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '12px',
-                  fontSize: '0.7rem',
-                  fontWeight: 600
-                }}>
-                  👥 Campaign Agent
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Menu Items */}
-          <nav style={{ marginBottom: 'auto' }}>
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path, item.exact);
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: sidebarCollapsed ? '0' : 'clamp(0.5rem, 1vw, 0.75rem)',
-                    padding: sidebarCollapsed ? '0.5rem' : 'clamp(0.5rem, 1vw, 0.75rem)',
-                    marginBottom: '0.25rem',
-                    borderRadius: 'clamp(6px, 1vw, 8px)',
-                    textDecoration: 'none',
-                    color: active ? '#8b5cf6' : colors.text,
-                    background: active 
-                      ? (isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)')
-                      : 'transparent',
-                    borderLeft: active ? '3px solid #8b5cf6' : '3px solid transparent',
-                    fontWeight: active ? 600 : 400,
-                    fontSize: 'clamp(0.75rem, 1vw, 0.85rem)',
-                    justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : '#f3f4f6';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.background = 'transparent';
-                    }
-                  }}
-                >
-                  <Icon size={18} />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </nav>
+                    onMouseLeave={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                  >
+                    <Icon size={18} />
+                    {!sidebarCollapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
         {/* Sidebar Footer */}
@@ -420,44 +438,15 @@ const AgentDashboard = ({ user, onLogout }) => {
         marginLeft: isMobile ? '0' : (sidebarCollapsed ? '70px' : '280px'),
         transition: 'margin-left 0.3s ease'
       }}>
-        {/* Mobile Menu Button */}
-        {isMobile && (
-          <div style={{
-            padding: '0.5rem 0.75rem',
-            background: isDarkMode ? colors.surface : '#fff',
-            borderBottom: `1px solid ${colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            margin: 0
-          }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: colors.text,
-                cursor: 'pointer',
-                padding: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.25rem',
-                borderRadius: '6px',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-            >
-              {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-            </button>
-            <span style={{ fontSize: '0.9rem', color: colors.textSecondary }}>
-              {sidebarOpen ? 'Close Menu' : 'Open Menu'}
-            </span>
-          </div>
-        )}
-        
-        <AgentHeader user={user} onLogout={onLogout} />
+        <AgentHeader 
+          user={user} 
+          onLogout={onLogout} 
+          isMobile={isMobile}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          isDarkMode={isDarkMode}
+          colors={colors}
+        />
         
         <main style={{ 
           flex: 1,

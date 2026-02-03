@@ -11,6 +11,8 @@ const ObserverVotersList = () => {
   const [selectedElection, setSelectedElection] = useState('');
   const [elections, setElections] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState('all'); // 'all', 'name', 'email', 'studentId', 'faculty'
+  const [showSearchTips, setShowSearchTips] = useState(false);
   const [statistics, setStatistics] = useState(null);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +36,7 @@ const ObserverVotersList = () => {
     if (selectedElection) {
       fetchVoters();
     }
-  }, [currentPage, limit, searchTerm, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentPage, limit, searchTerm, sortBy, sortOrder, searchField]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchElections = async () => {
     try {
@@ -63,6 +65,7 @@ const ObserverVotersList = () => {
         page: currentPage.toString(),
         limit: limit.toString(),
         search: searchTerm,
+        searchField: searchField,
         sortBy: sortBy,
         sortOrder: sortOrder
       });
@@ -99,6 +102,7 @@ const ObserverVotersList = () => {
       const token = localStorage.getItem('token');
       
       const params = new URLSearchParams({
+        searchField: searchField,
         search: searchTerm,
         sortBy: sortBy,
         sortOrder: sortOrder,
@@ -132,6 +136,20 @@ const ObserverVotersList = () => {
       alert('Failed to export voters list');
     } finally {
       setExportLoading(false);
+    }
+  };
+
+  // Clear search functionality
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchField('all');
+    setCurrentPage(1); // Reset to page 1 when clearing search
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyPress = (e) => {
+    if (e.key === 'Escape') {
+      clearSearch();
     }
   };
 
@@ -218,23 +236,94 @@ const ObserverVotersList = () => {
           </select>
         </div>
         <div className="col-12 col-md-4">
-          <label className="form-label mb-2" style={{ color: colors.text }}>Search Voters</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by name, email, or ID..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to page 1 when searching
-            }}
-            style={{
-              background: colors.surface,
-              color: colors.text,
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px'
-            }}
-          />
+          <label className="form-label mb-2" style={{ color: colors.text }}>
+            Search Voters 
+            <small className="text-muted ms-1">(Press Esc to clear)</small>
+          </label>
+          <div className="input-group position-relative">
+            <select 
+              className="form-select" 
+              style={{
+                maxWidth: '140px',
+                background: colors.surface,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px 0 0 8px'
+              }}
+              value={searchField}
+              onChange={(e) => setSearchField(e.target.value)}
+              title="Select which field to search in"
+            >
+              <option value="all">All Fields</option>
+              <option value="name">Name</option>
+              <option value="email">Email</option>
+              <option value="studentId">Student ID</option>
+              <option value="faculty">Faculty</option>
+            </select>
+            <input
+              type="text"
+              className="form-control"
+              placeholder={
+                searchField === 'all' 
+                  ? 'Search by name, email, ID, or faculty...' 
+                  : `Search by ${searchField}...`
+              }
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to page 1 when searching
+              }}
+              onKeyDown={handleKeyPress}
+              onFocus={() => setShowSearchTips(true)}
+              onBlur={() => setTimeout(() => setShowSearchTips(false), 200)}
+              style={{
+                background: colors.surface,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '0'
+              }}
+            />
+            <button 
+              className="btn btn-outline-secondary"
+              onClick={clearSearch}
+              title="Clear search"
+              style={{
+                borderColor: colors.border,
+                borderRadius: '0 8px 8px 0',
+                background: colors.surface,
+                color: colors.text
+              }}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            
+            {/* Search Tips Dropdown */}
+            {showSearchTips && !searchTerm && (
+              <div 
+                className="position-absolute"
+                style={{
+                  top: '100%',
+                  left: '140px',
+                  right: '0px',
+                  zIndex: 1000,
+                  background: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '0 0 8px 8px',
+                  borderTop: 'none',
+                  padding: '10px',
+                  boxShadow: isDarkMode ? '0 4px 8px rgba(0, 0, 0, 0.3)' : '0 4px 8px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <small style={{ color: colors.textMuted }}>
+                  <strong>Search Tips:</strong><br />
+                  • Use partial names: "john" finds "John Doe"<br />
+                  • Email domains: "@gmail.com"<br />
+                  • Faculty codes: "CS", "ENG", etc.<br />
+                  • Student IDs: "2021" finds all 2021 students
+                </small>
+              </div>
+            )}
+          </div>
         </div>
         <div className="col-12 col-md-2">
           <label className="form-label mb-2" style={{ color: colors.text }}>Sort By</label>
@@ -277,6 +366,45 @@ const ObserverVotersList = () => {
           </select>
         </div>
       </div>
+
+      {/* Search Results Indicator */}
+      {searchTerm && (
+        <div className="row mb-3">
+          <div className="col-12">
+            <div 
+              className="alert alert-info d-flex justify-content-between align-items-center"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+                marginBottom: '1rem'
+              }}
+            >
+              <div>
+                <i className="fas fa-search me-2"></i>
+                Searching for "<strong>{searchTerm}</strong>" 
+                {searchField !== 'all' && (
+                  <span> in <strong>{searchField}</strong></span>
+                )}
+                {pagination && (
+                  <span> - Found {pagination.totalVoters} result(s)</span>
+                )}
+              </div>
+              <button 
+                className="btn btn-sm btn-outline-secondary"
+                onClick={clearSearch}
+                style={{
+                  borderColor: colors.border,
+                  color: colors.text
+                }}
+              >
+                <i className="fas fa-times me-1"></i>
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistics Cards */}
       {statistics && (
@@ -484,8 +612,30 @@ const ObserverVotersList = () => {
                 {voters.length === 0 ? (
                   <tr>
                     <td colSpan="8" className="text-center py-5" style={{ color: colors.textMuted }}>
-                      <i className="fas fa-inbox mb-3" style={{ fontSize: '2rem', display: 'block' }}></i>
-                      {searchTerm ? 'No matching voters found' : 'No voters to display'}
+                      <i className="fas fa-search mb-3" style={{ fontSize: '2rem', display: 'block' }}></i>
+                      {searchTerm ? (
+                        <div>
+                          <strong>No matching voters found</strong>
+                          <p className="mb-2">Try adjusting your search criteria:</p>
+                          <ul className="list-unstyled">
+                            <li>• Check spelling</li>
+                            <li>• Try different search field</li>
+                            <li>• Use partial names or emails</li>
+                          </ul>
+                          <button 
+                            className="btn btn-sm btn-primary mt-2"
+                            onClick={clearSearch}
+                          >
+                            <i className="fas fa-times me-1"></i>
+                            Clear Search
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <strong>No voters to display</strong>
+                          <p>Please select an election to view eligible voters</p>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ) : (

@@ -47,5 +47,5 @@ export default function useSocket() {
     return socketRef.current;
   };
 
-  return { socketRef, joinRoom, leaveRoom };
+  return { socketRef, joinRoom, leaveRoom, reconnectWithToken };
 }

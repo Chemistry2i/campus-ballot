@@ -313,7 +313,7 @@ const AgentDashboard = () => {
         }}
       >
         <div className="row align-items-center">
-          <div className="col-12 col-md-7 mb-3 mb-md-0">
+          <div className="col-12">
             <h2 
               className="fw-bold mb-2" 
               style={{
@@ -325,7 +325,7 @@ const AgentDashboard = () => {
               Campaign Agent Dashboard
             </h2>
             <p 
-              className="mb-0" 
+              className="mb-3" 
               style={{ 
                 opacity: 0.95,
                 fontSize: window.innerWidth < 480 ? '0.9rem' : window.innerWidth < 768 ? '0.95rem' : '1rem',
@@ -334,21 +334,17 @@ const AgentDashboard = () => {
             >
               Support your candidates, manage campaign activities, and track progress across all elections.
             </p>
-          </div>
-          <div className="col-12 col-md-5 text-center text-md-end mt-2 mt-md-0">
-            <div className="d-flex flex-column align-items-center align-items-md-end gap-2">
-              <span style={{ 
-                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
-                opacity: 0.9 
-              }}>
-                📋 Manage All Campaigns
-              </span>
-              <span style={{ 
-                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
-                opacity: 0.9 
-              }}>
-                👥 {dashboardData.stats.totalCandidates} Candidate{dashboardData.stats.totalCandidates !== 1 ? 's' : ''}
-              </span>
+            
+            {/* Info Badges - Below paragraph */}
+            <div className="d-flex gap-3 flex-wrap" style={{ fontSize: window.innerWidth < 480 ? '0.8rem' : '0.9rem' }}>
+              <div className="d-flex align-items-center gap-2">
+                <span>📋</span>
+                <span style={{ opacity: 0.9 }}>Manage All Campaigns</span>
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <span>👥</span>
+                <span style={{ opacity: 0.9 }}>{dashboardData.stats.totalCandidates} Candidate{dashboardData.stats.totalCandidates !== 1 ? 's' : ''}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -367,7 +363,7 @@ const AgentDashboard = () => {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="col-12 col-sm-6 col-lg-4 col-xl">
+            <div key={index} className="col-6 col-sm-6 col-lg-4 col-xl">
               <div
                 className="card h-100"
                 style={{
@@ -387,18 +383,19 @@ const AgentDashboard = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-2 p-md-3">
-                  <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <div className="card-body p-2 p-md-3 text-center">
+                  <div className="d-flex flex-column align-items-center gap-2 mb-2">
                     <div
                       className="d-flex align-items-center justify-content-center"
                       style={{
-                        width: window.innerWidth < 480 ? '40px' : '45px',
-                        height: window.innerWidth < 480 ? '40px' : '45px',
-                        borderRadius: '12px',
-                        backgroundColor: stat.bgColor
+                        width: window.innerWidth < 480 ? '50px' : '55px',
+                        height: window.innerWidth < 480 ? '50px' : '55px',
+                        borderRadius: '50%',
+                        backgroundColor: stat.bgColor,
+                        margin: '0 auto'
                       }}
                     >
-                      <Icon size={window.innerWidth < 480 ? 18 : 22} color={stat.color} />
+                      <Icon size={window.innerWidth < 480 ? 20 : 24} color={stat.color} />
                     </div>
                   </div>
                   <h3 

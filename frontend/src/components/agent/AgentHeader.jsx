@@ -13,11 +13,14 @@ import {
   FaCog,
   FaCircle,
   FaChevronRight,
-  FaHome
+  FaHome,
+  FaBars
 } from 'react-icons/fa';
 
-const AgentHeader = ({ user, onLogout }) => {
-  const { isDarkMode, colors } = useTheme();
+const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, isDarkMode: parentIsDarkMode, colors: parentColors }) => {
+  const { isDarkMode: hookIsDarkMode, colors: hookColors } = useTheme();
+  const isDarkMode = parentIsDarkMode !== undefined ? parentIsDarkMode : hookIsDarkMode;
+  const colors = parentColors || hookColors;
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -108,16 +111,50 @@ const AgentHeader = ({ user, onLogout }) => {
     <header style={{
       background: isDarkMode ? colors.surface : '#ffffff',
       borderBottom: `1px solid ${colors.border}`,
-      padding: 'clamp(0.75rem, 2vw, 1.25rem)',
+      padding: isMobile ? 'clamp(0.5rem, 2vw, 0.75rem)' : 'clamp(0.75rem, 2vw, 1.25rem)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
       boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.05)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'clamp(0.5rem, 2vw, 1.5rem)', flexWrap: 'wrap' }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        gap: 'clamp(0.5rem, 2vw, 1.5rem)', 
+        flexWrap: (window.innerWidth <= 480) ? 'nowrap' : 'wrap',
+        overflow: 'hidden'
+      }}>
+        
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+              border: 'none',
+              color: colors.text,
+              cursor: 'pointer',
+              padding: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.1rem',
+              borderRadius: '8px',
+              transition: 'all 0.2s',
+              width: '40px',
+              height: '40px',
+              marginRight: '0.75rem'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#e5e7eb'}
+            onMouseLeave={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'}
+          >
+            {sidebarOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
+          </button>
+        )}
         
         {/* Left Section - Breadcrumbs & Time (Hidden on mobile) */}
-        {window.innerWidth >= 768 && (
+        {!isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, minWidth: '200px' }}>
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {getBreadcrumbs().map((crumb, index) => (
@@ -161,7 +198,13 @@ const AgentHeader = ({ user, onLogout }) => {
         )}
 
         {/* Right Section - Actions (Right Aligned) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 1.5vw, 1rem)', marginLeft: 'auto' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: window.innerWidth <= 480 ? '0.5rem' : 'clamp(0.5rem, 1.5vw, 1rem)', 
+          marginLeft: 'auto',
+          flexShrink: 0
+        }}>
           
           {/* Role Switcher */}
           <RoleSwitcher user={user} isDarkMode={isDarkMode} colors={colors} />
@@ -174,7 +217,8 @@ const AgentHeader = ({ user, onLogout }) => {
               background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
               borderRadius: '20px',
               padding: '0.5rem 1rem',
-              minWidth: 'clamp(200px, 30vw, 300px)'
+              minWidth: window.innerWidth <= 768 ? 'clamp(150px, 40vw, 250px)' : 'clamp(200px, 30vw, 300px)',
+              maxWidth: window.innerWidth <= 480 ? '200px' : 'none'
             }}>
               <FaSearch size={14} style={{ color: colors.textSecondary, marginRight: '0.5rem' }} />
               <input
