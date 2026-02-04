@@ -210,7 +210,7 @@ const AgentDashboard = ({ user, onLogout }) => {
             {!sidebarCollapsed && (
               <div
                 style={{
-                  marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
+                  marginBottom: 'clamp(0.5rem, 1vw, 0.75rem)',
                   padding: 'clamp(0.75rem, 2vw, 1rem)',
                   background: `linear-gradient(135deg, ${isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)'}, ${isDarkMode ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)'})`,
                   borderRadius: 'clamp(8px, 1.5vw, 12px)',
@@ -297,13 +297,42 @@ const AgentDashboard = ({ user, onLogout }) => {
             )}
           </div>
 
+          {/* Agent Status Card */}
+          {!sidebarCollapsed && (
+            <div style={{
+              marginBottom: 'clamp(0.5rem, 1vw, 0.75rem)',
+              padding: 'clamp(0.5rem, 1vw, 0.75rem)',
+              background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+              borderRadius: 'clamp(6px, 1vw, 8px)',
+              border: `1px solid rgba(16, 185, 129, 0.2)`
+            }}>
+              <div className="text-center">
+                <div style={{ 
+                  fontSize: 'clamp(0.7rem, 1.2vw, 0.75rem)', 
+                  color: '#10b981',
+                  fontWeight: '600',
+                  marginBottom: 'clamp(0.125rem, 0.5vw, 0.25rem)'
+                }}>
+                  🟢 Agent Active
+                </div>
+                <div style={{ 
+                  fontSize: 'clamp(0.65rem, 1.1vw, 0.7rem)', 
+                  color: colors.textSecondary,
+                  lineHeight: '1.2'
+                }}>
+                  Managing campaigns & outreach
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Menu Items - Centered */}
           <div style={{ 
             flex: 1, 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'center',
-            padding: '1rem 0'
+            padding: '0.5rem 0'
           }}>
             <nav>
               {menuItems.map((item) => {
@@ -319,7 +348,7 @@ const AgentDashboard = ({ user, onLogout }) => {
                       alignItems: 'center',
                       gap: sidebarCollapsed ? '0' : 'clamp(0.5rem, 1vw, 0.75rem)',
                       padding: sidebarCollapsed ? '0.5rem' : 'clamp(0.5rem, 1vw, 0.75rem)',
-                      marginBottom: '0.25rem',
+                      marginBottom: isMobile ? '0.35rem' : '0.25rem',
                       borderRadius: 'clamp(6px, 1vw, 8px)',
                       textDecoration: 'none',
                       color: active ? '#8b5cf6' : colors.text,
@@ -353,75 +382,37 @@ const AgentDashboard = ({ user, onLogout }) => {
         </div>
 
         {/* Sidebar Footer */}
-        {!isMobile && (
-          <div style={{ 
-            padding: '1rem 1.5rem',
-            marginTop: 'auto',
-            borderTop: `1px solid ${colors.border}`,
-            background: colors.surface,
-            color: colors.textMuted,
-            fontSize: '0.75rem',
-            textAlign: 'center',
-          }}>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <FaBookOpen style={{ marginRight: '0.25rem' }} />
-              v1.0.0 © 2026 VoteSys
-            </div>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#dc2626',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                padding: '0.25rem',
-              }}
-            >
-              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
-              Logout
-            </button>
+        <div style={{ 
+          padding: '0.75rem 1rem',
+          borderTop: `1px solid ${colors.border}`,
+          background: colors.surface,
+          color: colors.textMuted,
+          fontSize: '0.75rem',
+          textAlign: 'center',
+        }}>
+          <div style={{ marginBottom: '0.5rem' }}>
+            <FaBookOpen style={{ marginRight: '0.25rem' }} />
+            v1.0.0 © 2026 VoteSys
           </div>
-        )}
-        
-        {isMobile && (
-          <div style={{ 
-            padding: '1rem 1.5rem',
-            marginTop: 'auto',
-            borderTop: `1px solid ${colors.border}`,
-            background: colors.surface,
-            color: colors.textMuted,
-            fontSize: '0.75rem',
-            textAlign: 'center',
-          }}>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <FaBookOpen style={{ marginRight: '0.25rem' }} />
-              v1.0.0 © 2026 VoteSys
-            </div>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#dc2626',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                padding: '0.25rem',
-              }}
-            >
-              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
-              Logout
-            </button>
-          </div>
-        )}
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#dc2626',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              padding: '0.25rem',
+            }}
+          >
+            <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}

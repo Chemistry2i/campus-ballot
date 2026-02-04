@@ -127,8 +127,8 @@ const CandidateDashboard = ({ user, onLogout }) => {
           top: 0
         }}
       >
-        <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
-          <div className="d-flex align-items-center justify-content-end" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
+        <div style={{ padding: '1.5rem' }}>
+          <div className="d-flex align-items-center justify-content-end" style={{ marginBottom: '1rem' }}>
             <button
               className="btn btn-sm"
               onClick={() => setSidebarOpen(false)}
@@ -137,29 +137,29 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                 border: `1px solid ${colors.border}`,
                 borderRadius: '5px',
-                width: isMobile ? '40px' : '32px',
-                height: isMobile ? '40px' : '32px',
+                width: '35px',
+                height: '35px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <IoCloseOutline size={isMobile ? 24 : 20} strokeWidth={1} />
+              <IoCloseOutline size={24} strokeWidth={1} />
             </button>
           </div>
 
           {/* Candidate Profile */}
           <div style={{
-            marginBottom: isMobile ? '0.75rem' : '1rem',
-            padding: isMobile ? '0.75rem' : '1rem',
+            marginBottom: '1rem',
+            padding: '1rem',
             background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-            borderRadius: isMobile ? '8px' : '12px',
+            borderRadius: '12px',
             border: `1px solid rgba(59, 130, 246, 0.2)`
           }}>
             <div
               style={{
-                width: isMobile ? '60px' : '80px',
-                height: isMobile ? '60px' : '80px',
+                width: '80px',
+                height: '80px',
                 borderRadius: '50%',
                 background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                 display: 'flex',
@@ -167,11 +167,11 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 justifyContent: 'center',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '1.5rem' : '2rem',
-                margin: `0 auto ${isMobile ? '0.75rem' : '1rem'}`,
+                fontSize: '2rem',
+                margin: '0 auto 1rem',
                 overflow: 'hidden',
-                border: `${isMobile ? '2px' : '3px'} solid rgba(59, 130, 246, 0.3)`,
-                boxShadow: isMobile ? '0 2px 8px rgba(59, 130, 246, 0.15)' : '0 4px 12px rgba(59, 130, 246, 0.2)'
+                border: '3px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
               }}
             >
               {user?.profilePicture ? (
@@ -192,14 +192,14 @@ const CandidateDashboard = ({ user, onLogout }) => {
             <div className="text-center">
               <div className="fw-bold" style={{ 
                 color: colors.text, 
-                fontSize: isMobile ? '0.95rem' : '1.1rem', 
+                fontSize: '1.1rem', 
                 marginBottom: '0.25rem',
                 lineHeight: '1.2'
               }}>
                 {user?.name || 'Candidate'}
               </div>
               <div style={{ 
-                fontSize: isMobile ? '0.75rem' : '0.85rem', 
+                fontSize: '0.85rem', 
                 color: '#3b82f6',
                 fontWeight: '500',
                 marginBottom: '0.25rem'
@@ -207,7 +207,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 🏆 Candidate
               </div>
               <div style={{ 
-                fontSize: isMobile ? '0.7rem' : '0.75rem', 
+                fontSize: '0.75rem', 
                 color: colors.textSecondary,
                 wordBreak: 'break-word',
                 lineHeight: '1.2'
@@ -219,23 +219,23 @@ const CandidateDashboard = ({ user, onLogout }) => {
 
           {/* Campaign Status */}
           <div style={{
-            marginBottom: isMobile ? '0.5rem' : '0.75rem',
-            padding: isMobile ? '0.5rem' : '0.75rem',
+            marginBottom: '0.75rem',
+            padding: '0.75rem',
             background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
-            borderRadius: isMobile ? '6px' : '8px',
+            borderRadius: '8px',
             border: `1px solid rgba(16, 185, 129, 0.2)`
           }}>
             <div className="text-center">
               <div style={{ 
-                fontSize: isMobile ? '0.7rem' : '0.75rem', 
+                fontSize: '0.75rem', 
                 color: '#10b981',
                 fontWeight: '600',
-                marginBottom: isMobile ? '0.125rem' : '0.25rem'
+                marginBottom: '0.25rem'
               }}>
                 🟢 Campaign Active
               </div>
               <div style={{ 
-                fontSize: isMobile ? '0.65rem' : '0.7rem', 
+                fontSize: '0.7rem', 
                 color: colors.textSecondary,
                 lineHeight: '1.2'
               }}>
@@ -254,16 +254,16 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: isMobile ? '0.6rem 0.75rem' : '0.75rem 1rem',
-                  marginBottom: isMobile ? '0.25rem' : '0.5rem',
-                  borderRadius: isMobile ? '6px' : '8px',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '0.5rem',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   color: colors.text,
                   background: window.location.pathname === item.path
                     ? colors.primary
                     : 'transparent',
                   transition: 'all 0.2s',
-                  fontSize: isMobile ? '0.875rem' : '0.875rem'
+                  fontSize: '0.875rem'
                 }}
                 onMouseEnter={(e) => {
                   if (window.location.pathname !== item.path) {
@@ -283,75 +283,38 @@ const CandidateDashboard = ({ user, onLogout }) => {
           </nav>
 
           {/* Sidebar Footer */}
-          {!isMobile && (
-            <div style={{ 
-              padding: '1rem 1.5rem',
-              marginTop: 'auto',
-              borderTop: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.textMuted,
-              fontSize: '0.75rem',
-              textAlign: 'center',
-            }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <FaBookOpen style={{ marginRight: '0.25rem' }} />
-                v1.0.0 © 2026 VoteSys
-              </div>
-              <button
-                onClick={handleLogout}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#dc2626',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  padding: '0.25rem',
-                }}
-              >
-                <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
-                Logout
-              </button>
+          <div style={{ 
+            padding: '1rem 1.5rem',
+            marginTop: 'auto',
+            borderTop: `1px solid ${colors.border}`,
+            background: colors.surface,
+            color: colors.textMuted,
+            fontSize: '0.75rem',
+            textAlign: 'center',
+          }}>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FaBookOpen style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2026 VoteSys
             </div>
-          )}
-          
-          {isMobile && (
-            <div style={{ 
-              padding: '1rem 1.5rem',
-              marginTop: 'auto',
-              borderTop: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.textMuted,
-              fontSize: '0.75rem',
-              textAlign: 'center',
-            }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <FaBookOpen style={{ marginRight: '0.25rem' }} />
-                v1.0.0 © 2026 VoteSys
-              </div>
-              <button
-                onClick={handleLogout}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#dc2626',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  padding: '0.25rem',
-                }}
-              >
-                <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
-                Logout
-              </button>
-            </div>
-          )}
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
@@ -371,7 +334,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
           style={{
             background: isDarkMode ? colors.surface : '#fff',
             borderBottom: `1px solid ${colors.border}`,
-            padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
+            padding: '1rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -379,22 +342,22 @@ const CandidateDashboard = ({ user, onLogout }) => {
             top: 0,
             zIndex: 100,
             width: '100%',
-            gap: isMobile ? '0.5rem' : '1rem',
+            gap: '1rem',
             flexWrap: 'wrap'
           }}
         >
-          <div className="d-flex align-items-center" style={{ gap: isMobile ? '0.5rem' : '1rem' }}>
+          <div className="d-flex align-items-center" style={{ gap: '1rem' }}>
             <button
               className="btn btn-sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               style={{ 
                 color: colors.text,
-                padding: isMobile ? '0.4rem' : '0.5rem'
+                padding: '0.5rem'
               }}
             >
-              <FaBars size={isMobile ? 18 : 20} />
+              <FaBars size={20} />
             </button>
-            <h5 className="mb-0 d-none d-md-block" style={{ color: colors.text, fontSize: isMobile ? '1rem' : '1.25rem' }}>
+            <h5 className="mb-0 d-none d-md-block" style={{ color: colors.text, fontSize: '1.25rem' }}>
               Campaign Management
             </h5>
             <h6 className="mb-0 d-md-none" style={{ color: colors.text }}>
@@ -402,11 +365,11 @@ const CandidateDashboard = ({ user, onLogout }) => {
             </h6>
           </div>
           
-          <div className="d-flex align-items-center" style={{ gap: isMobile ? '0.5rem' : '0.75rem', flexWrap: 'wrap' }}>
+          <div className="d-flex align-items-center" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
             {/* Welcome message - hide on very small screens */}
             <span className="d-none d-sm-inline" style={{ 
               color: colors.text, 
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
+              fontSize: '0.9rem',
               whiteSpace: 'nowrap'
             }}>
               Welcome, {user?.name?.split(' ')[0] || 'Candidate'}!
@@ -423,12 +386,12 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
                 color: isDarkMode ? '#f59e0b' : '#3b82f6',
                 border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                borderRadius: isMobile ? '6px' : '8px',
-                padding: isMobile ? '0.4rem 0.6rem' : '0.5rem 0.75rem',
+                borderRadius: '8px',
+                padding: '0.5rem 0.75rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: isMobile ? '0.4rem' : '0.5rem',
-                fontSize: isMobile ? '0.75rem' : '0.875rem',
+                gap: '0.5rem',
+                fontSize: '0.875rem',
                 fontWeight: '500',
                 transition: 'all 0.2s ease',
                 minHeight: '36px'
@@ -441,7 +404,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)';
               }}
             >
-              {isDarkMode ? <FaSun size={isMobile ? 12 : 14} /> : <FaMoon size={isMobile ? 12 : 14} />}
+              {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
               <span className="d-none d-sm-inline">
                 {isDarkMode ? 'Light' : 'Dark'}
               </span>
@@ -452,8 +415,8 @@ const CandidateDashboard = ({ user, onLogout }) => {
               <div
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 style={{
-                  width: isMobile ? '36px' : '40px',
-                  height: isMobile ? '36px' : '40px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '50%',
                   background: user?.profilePicture ? 'transparent' : '#3b82f6',
                   display: 'flex',
@@ -461,7 +424,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                   justifyContent: 'center',
                   color: '#fff',
                   fontWeight: 'bold',
-                  fontSize: isMobile ? '0.875rem' : '1rem',
+                  fontSize: '1rem',
                   overflow: 'hidden',
                   flexShrink: 0,
                   cursor: 'pointer',
@@ -507,7 +470,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                       top: '100%',
                       right: 0,
                       marginTop: '0.5rem',
-                      width: isMobile ? '160px' : '180px',
+                      width: '180px',
                       background: isDarkMode ? colors.surface : '#fff',
                       border: `1px solid ${colors.border}`,
                       borderRadius: '10px',
@@ -577,7 +540,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
 
         {/* Routes */}
         <div style={{ 
-          padding: isMobile ? '1rem' : '1.5rem',
+          padding: '1.5rem',
           width: '100%',
           maxWidth: '100%',
           overflow: 'hidden',

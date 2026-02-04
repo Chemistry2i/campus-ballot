@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FaUser } from 'react-icons/fa';
+import { FaUser, FaBookOpen, FaSignOutAlt } from 'react-icons/fa';
 import axios from 'axios';
 import { confirmLogout } from '../../utils/sweetAlerts';
 import getImageUrl from '../../utils/getImageUrl';
@@ -489,34 +489,48 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
         <div style={{ flex: 1 }}></div>
 
         {/* Footer */}
-        <div className="sidebar-footer" style={{ 
-          padding: '2.5rem 1rem',
-          borderTop: `1px solid ${colors.border}`, 
-          flexShrink: 0,
-          background: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(16, 185, 129, 0.02)',
-          textAlign: 'center',
-          minHeight: '100px'
-        }}>
-          {!collapsed && (
-            <div>
-              <div style={{ 
-                fontSize: '0.65rem', 
-                color: colors.textMuted,
-                opacity: 0.7,
-                marginBottom: '0.5rem'
-              }}>
-                Campus Ballot Observer v2.1.0
-              </div>
-              <div style={{ 
-                fontSize: '0.6rem', 
-                color: colors.textMuted,
-                opacity: 0.6
-              }}>
-                © 2026 All Rights Reserved
-              </div>
+        {!collapsed && (
+          <div
+            style={{
+              padding: '1rem 1.5rem',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.75rem',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FaBookOpen style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2026 VoteSys
             </div>
-          )}
-        </div>
+            <button
+              onClick={async () => {
+                const confirmed = await confirmLogout();
+                if (confirmed) {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  navigate('/login');
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+              Logout
+            </button>
+          </div>
+        )}
 
         {/* CSS Animations */}
         <style>{`
