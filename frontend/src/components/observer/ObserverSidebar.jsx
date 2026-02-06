@@ -29,12 +29,81 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [userOrganization, setUserOrganization] = useState('');
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     if (user) {
       fetchAssignedElections();
       setProfileImage(user?.profilePicture || null);
+      
+      // Debug: Log user object structure
+      console.log('Observer user data in sidebar:', {
+        user: user,
+        observerInfo: user?.observerInfo,
+        organization: user?.organization,
+        observerOrganization: user?.observerOrganization,
+        organizationName: user?.organizationName,
+        roles: user?.roles
+      });
+      
+      // Set organization with better fallback logic
+      const organization = user?.observerInfo?.organization || 
+                          user?.organization || 
+                          user?.observerOrganization ||
+                          user?.orgName ||
+                          user?.companyName ||
+                          (user?.roles?.includes('observer') && user?.organizationName) ||
+                          '';
+      setUserOrganization(organization);
+      
+      // If no organization found in user object, try fetching from API
+      if (!organization) {
+        console.log('No organization found in user object, fetching from API...');
+        // Fetch user organization if not available
+        const fetchUserOrgData = async () => {
+          try {
+            const token = localStorage.getItem('token');
+            
+            // Try multiple endpoints to get organization data
+            let response;
+            try {
+              response = await axios.get('/api/users/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            } catch (profileErr) {
+              console.warn('Profile endpoint failed, trying observer endpoint:', profileErr.message);
+              // Fallback to observer-specific endpoint
+              response = await axios.get('/api/observer/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+            }
+            
+            if (response.data?.user) {
+              const userData = response.data.user;
+              console.log('Fetched user data from API:', userData);
+              const fetchedOrg = userData?.observerInfo?.organization || 
+                                userData?.organization || 
+                                userData?.observerOrganization ||
+                                userData?.orgName ||
+                                userData?.companyName ||
+                                (userData?.roles?.includes('observer') && userData?.organizationName) ||
+                                '';
+              console.log('Setting organization from API:', fetchedOrg);
+              setUserOrganization(fetchedOrg);
+            } else if (response.data?.organization) {
+              // If organization data is directly in response
+              console.log('Setting organization directly from response:', response.data.organization);
+              setUserOrganization(response.data.organization);
+            }
+          } catch (err) {
+            console.error('Error fetching user organization:', err);
+          }
+        };
+        fetchUserOrgData();
+      } else {
+        console.log('Organization found in user object:', organization);
+      }
     }
   }, [user]);
 
@@ -324,7 +393,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 fontWeight: 500
               }}>
                 <i className="fa-solid fa-building me-1" style={{ fontSize: '0.7rem' }}></i>
-                Org: {user?.observerInfo?.organization || user?.organization || 'Independent Observer'}
+                Org: {userOrganization || 'Independent Observer'}
               </div>
             </>
           )}

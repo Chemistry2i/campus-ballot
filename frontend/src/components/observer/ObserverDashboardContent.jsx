@@ -111,21 +111,21 @@ const ObserverDashboardContent = () => {
                 backdropFilter: 'blur(10px)'
               }}
             >
-              <i className="fa-solid fa-eye" style={{ fontSize: '1.8rem' }}></i>
+              <i className="fa-solid fa-eye" style={{ fontSize: '1.8rem', color: '#fff' }}></i>
             </div>
             <div>
-              <h2 className="mb-1 fw-bold">Welcome back!</h2>
-              <p className="mb-0 opacity-90">Monitor elections with transparency and oversight</p>
+              <h2 className="mb-1 fw-bold" style={{ color: '#fff' }}>Welcome back!</h2>
+              <p className="mb-0 opacity-90" style={{ color: '#fff' }}>Monitor elections with transparency and oversight</p>
             </div>
           </div>
           <div className="d-flex gap-4 mt-3 flex-wrap">
             <div className="d-flex align-items-center gap-2">
-              <i className="fa-solid fa-shield-halved"></i>
-              <span className="small">{overview.accessLevel === 'full' ? 'Full System Access' : 'Assigned Elections'}</span>
+              <i className="fa-solid fa-shield-halved" style={{ color: '#fff !important' }}></i>
+              <span className="small" style={{ color: '#fff !important', fontWeight: '500', opacity: 1 }}>{overview.accessLevel === 'full' ? 'Full System Access' : 'Assigned Elections'}</span>
             </div>
             <div className="d-flex align-items-center gap-2">
-              <i className="fa-solid fa-clock"></i>
-              <span className="small">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <i className="fa-solid fa-clock" style={{ color: '#fff !important' }}></i>
+              <span className="small" style={{ color: '#fff !important', fontWeight: '500', opacity: 1 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
           </div>
         </div>
@@ -135,7 +135,8 @@ const ObserverDashboardContent = () => {
             bottom: '-20px',
             right: '-20px',
             fontSize: '8rem',
-            opacity: 0.1
+            opacity: 0.1,
+            color: '#fff'
           }}
         >
           <i className="fa-solid fa-eye"></i>
@@ -626,8 +627,8 @@ const ObserverDashboardContent = () => {
                                 e.currentTarget.style.boxShadow = '0 0.125rem 0.5rem rgba(16, 185, 129, 0.25)';
                               }}
                             >
-                              <i className="fas fa-eye me-2"></i>
-                              Monitor
+                              <i className="fas fa-eye me-2" style={{ color: '#fff' }}></i>
+                              <span style={{ color: '#fff' }}>Monitor</span>
                             </Link>
                           </td>
                         </tr>

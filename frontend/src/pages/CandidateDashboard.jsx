@@ -455,7 +455,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                   justifyContent: 'space-between',
                   width: '100%',
                   padding: '0.6rem 0.8rem',
-                  marginBottom: '0.8rem',
+                  marginBottom: '0.75rem',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   border: 'none',

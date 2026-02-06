@@ -322,7 +322,7 @@ const AgentDashboard = () => {
               }}
             >
               <FaUserTie className="me-2" />
-              Campaign Agent Dashboard
+              {window.innerWidth < 768 ? 'Agent Dashboard' : 'Campaign Agent Dashboard'}
             </h2>
             <p 
               className="mb-3" 
@@ -338,12 +338,12 @@ const AgentDashboard = () => {
             {/* Info Badges - Below paragraph */}
             <div className="d-flex gap-3 flex-wrap" style={{ fontSize: window.innerWidth < 480 ? '0.8rem' : '0.9rem' }}>
               <div className="d-flex align-items-center gap-2">
-                <span>📋</span>
-                <span style={{ opacity: 0.9 }}>Manage All Campaigns</span>
+                <FaTasks style={{ color: '#fff', fontSize: '1rem' }} />
+                <span style={{ opacity: 0.9, color: '#fff' }}>Manage All Campaigns</span>
               </div>
               <div className="d-flex align-items-center gap-2">
-                <span>👥</span>
-                <span style={{ opacity: 0.9 }}>{dashboardData.stats.totalCandidates} Candidate{dashboardData.stats.totalCandidates !== 1 ? 's' : ''}</span>
+                <FaUsers style={{ color: '#fff', fontSize: '1rem' }} />
+                <span style={{ opacity: 0.9, color: '#fff' }}>{dashboardData.stats.totalCandidates} Candidate{dashboardData.stats.totalCandidates !== 1 ? 's' : ''}</span>
               </div>
             </div>
           </div>
