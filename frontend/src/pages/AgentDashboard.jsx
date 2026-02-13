@@ -447,23 +447,23 @@ const AgentDashboard = ({ user, onLogout }) => {
           {/* Agent Status Card - Desktop Only */}
           {!sidebarCollapsed && (
             <div style={{
-              marginBottom: '0.6rem',
-              padding: '0.5rem',
+              marginBottom: '0.75rem',
+              padding: '0.75rem',
               background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
-              borderRadius: '7px',
+              borderRadius: '8px',
               border: `1px solid rgba(16, 185, 129, 0.2)`
             }}>
               <div className="text-center">
                 <div style={{ 
-                  fontSize: '0.7rem', 
+                  fontSize: '0.75rem', 
                   color: '#10b981',
                   fontWeight: '600',
-                  marginBottom: '0.15rem'
+                  marginBottom: '0.25rem'
                 }}>
                   🟢 Agent Active
                 </div>
                 <div style={{ 
-                  fontSize: '0.65rem', 
+                  fontSize: '0.7rem', 
                   color: colors.textSecondary,
                   lineHeight: '1.2'
                 }}>
