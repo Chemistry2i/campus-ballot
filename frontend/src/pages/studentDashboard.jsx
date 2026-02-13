@@ -2559,6 +2559,7 @@ function StudentDashboard({ user: initialUser }) {
                height: '100%',
                flexShrink: 0,
                overflowX: 'hidden',
+               overflowY: 'hidden',
                margin: 0,
                padding: 0,
                background: isDarkMode ? colors.surface : '#fff',

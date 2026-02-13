@@ -329,7 +329,7 @@ const AgentDashboard = ({ user, onLogout }) => {
         <div style={{ 
           padding: '0.8rem', 
           flex: 1, 
-          overflowY: 'auto', 
+          overflowY: 'hidden', 
           margin: 0,
           display: 'flex',
           flexDirection: 'column'

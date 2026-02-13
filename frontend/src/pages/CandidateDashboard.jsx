@@ -324,7 +324,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
         <div style={{ 
           padding: '0.8rem',
           flex: 1,
-          overflowY: 'auto',
+          overflowY: 'hidden',
           display: 'flex',
           flexDirection: 'column',
         }}>
