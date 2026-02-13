@@ -307,7 +307,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
       <div
         className="d-none d-lg-flex"
         style={{
-          width: sidebarOpen ? '280px' : '0',
+          width: sidebarOpen ? '220px' : '0',
           background: isDarkMode ? colors.surface : '#fff',
           borderRight: `1px solid ${colors.border}`,
           transition: 'width 0.3s ease',
@@ -524,7 +524,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
         style={{
           flex: 1,
           width: '100%',
-          marginLeft: window.innerWidth > 992 ? (sidebarOpen ? '280px' : '0') : '0',
+          marginLeft: window.innerWidth > 992 ? (sidebarOpen ? '220px' : '0') : '0',
           transition: 'margin-left 0.3s ease',
           minHeight: '100vh',
           overflow: 'auto'

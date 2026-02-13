@@ -311,7 +311,7 @@ const AgentDashboard = ({ user, onLogout }) => {
       <div
         className="d-none d-lg-flex"
         style={{
-          width: sidebarCollapsed ? '70px' : '280px',
+          width: sidebarCollapsed ? '70px' : '220px',
           background: isDarkMode ? colors.surface : '#fff',
           borderRight: `1px solid ${colors.border}`,
           transition: 'width 0.3s ease',
@@ -566,7 +566,7 @@ const AgentDashboard = ({ user, onLogout }) => {
         width: isMobile ? '100%' : 'auto',
         margin: 0,
         padding: 0,
-        marginLeft: window.innerWidth > 992 ? (sidebarCollapsed ? '70px' : '280px') : '0',
+        marginLeft: window.innerWidth > 992 ? (sidebarCollapsed ? '70px' : '220px') : '0',
         transition: 'margin-left 0.3s ease'
       }}>
         <AgentHeader 

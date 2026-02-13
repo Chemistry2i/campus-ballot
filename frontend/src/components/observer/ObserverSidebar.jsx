@@ -248,8 +248,8 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       <aside
         className={`observer-sidebar shadow-sm${collapsed ? ' collapsed' : ''}`}
         style={{
-          minWidth: collapsed ? 64 : 280,
-          width: collapsed ? 64 : 280,
+          minWidth: collapsed ? 64 : 220,
+          width: collapsed ? 64 : 220,
           height: '100vh',
           position: 'fixed',
           left: isMobile && collapsed ? -280 : 0,

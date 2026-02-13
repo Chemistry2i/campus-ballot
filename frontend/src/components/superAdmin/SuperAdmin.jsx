@@ -21,7 +21,7 @@ import '../../styles/darkmode.css';
 import axios from 'axios';
 
 // Responsive sidebar state is managed here and passed to Sidebar
-const SIDEBAR_WIDTH = 280;
+const SIDEBAR_WIDTH = 220;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
 const SuperAdmin = ({ user, onLogout }) => {

@@ -34,7 +34,7 @@ import ThemeToggle from '../components/admin/ThemeToggle';
 import '../styles/darkmode.css';
 
 // Responsive sidebar state managed here and passed to Sidebar
-const SIDEBAR_WIDTH = 280;
+const SIDEBAR_WIDTH = 220;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
 function AdminDashboardContent({ user: initialUser, onLogout }) {

@@ -158,7 +158,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   // For similarity with Users management in admin dashboard:
   // Add pagination, status filter, and improved table styling
 
-  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_WIDTH = 220;
   const SIDEBAR_COLLAPSED_WIDTH = 64;
   const mainMarginLeft = isMobile
     ? 0

@@ -109,7 +109,7 @@ const ObserverDashboard = () => {
         style={{
           marginLeft: isMobile ? 0 : (sidebarCollapsed ? 64 : 280),
           transition: 'margin-left 0.3s',
-          width: isMobile ? '100vw' : (sidebarCollapsed ? 'calc(100vw - 64px)' : 'calc(100vw - 280px)'),
+          width: isMobile ? '100vw' : (sidebarCollapsed ? 'calc(100vw - 64px)' : 'calc(100vw - 220px)'),
           minHeight: '100vh',
           background: colors.background
         }}

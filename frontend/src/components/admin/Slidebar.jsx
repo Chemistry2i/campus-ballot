@@ -33,7 +33,7 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   const [logCount, setLogCount] = useState(0);
   const { isDarkMode, colors } = useTheme();
 
-  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_WIDTH = 220;
   const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   useEffect(() => {

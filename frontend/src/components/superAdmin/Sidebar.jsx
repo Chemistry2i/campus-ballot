@@ -58,7 +58,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
   const location = useLocation();
   const navigate = useNavigate();
   const { isDarkMode, colors } = useTheme();
-  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_WIDTH = 220;
   const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   const initials = user?.name

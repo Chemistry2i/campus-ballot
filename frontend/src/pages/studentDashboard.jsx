@@ -2553,9 +2553,9 @@ function StudentDashboard({ user: initialUser }) {
         {/* Sidebar for large screens */}
         <div className="shadow-sm border-end d-none d-lg-block"
              style={{
-               width: '280px',
-               minWidth: '280px',
-               maxWidth: '280px',
+               width: '220px',
+               minWidth: '220px',
+               maxWidth: '220px',
                height: '100%',
                flexShrink: 0,
                overflowX: 'hidden',
