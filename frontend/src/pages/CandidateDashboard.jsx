@@ -350,16 +350,16 @@ const CandidateDashboard = ({ user, onLogout }) => {
 
           {/* Candidate Profile */}
           <div style={{
-            marginBottom: '0.8rem',
-            padding: '0.7rem',
+            marginBottom: '0.9rem',
+            padding: '0.85rem',
             background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-            borderRadius: '10px',
+            borderRadius: '11px',
             border: `1px solid rgba(59, 130, 246, 0.2)`
           }}>
             <div
               style={{
-                width: '60px',
-                height: '60px',
+                width: '70px',
+                height: '70px',
                 borderRadius: '50%',
                 background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                 display: 'flex',
@@ -367,10 +367,10 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 justifyContent: 'center',
                 color: '#fff',
                 fontWeight: 'bold',
-                fontSize: '1.6rem',
-                margin: '0 auto 0.6rem', 
+                fontSize: '1.8rem',
+                margin: '0 auto 0.8rem', 
                 overflow: 'hidden',
-                border: '2px solid rgba(59, 130, 246, 0.3)',
+                border: '2.5px solid rgba(59, 130, 246, 0.3)',
                 boxShadow: '0 3px 10px rgba(59, 130, 246, 0.2)'
               }}
             >
@@ -392,22 +392,22 @@ const CandidateDashboard = ({ user, onLogout }) => {
             <div className="text-center">
               <div className="fw-bold" style={{ 
                 color: colors.text, 
-                fontSize: '0.95rem', 
-                marginBottom: '0.15rem',
+                fontSize: '1rem', 
+                marginBottom: '0.2rem',
                 lineHeight: '1.2'
               }}>
                 {user?.name || 'Candidate'}
               </div>
               <div style={{ 
-                fontSize: '0.75rem', 
+                fontSize: '0.8rem', 
                 color: '#3b82f6',
                 fontWeight: '500',
-                marginBottom: '0.15rem'
+                marginBottom: '0.2rem'
               }}>
                 🏆 Candidate
               </div>
               <div style={{ 
-                fontSize: '0.7rem', 
+                fontSize: '0.72rem', 
                 color: colors.textSecondary,
                 wordBreak: 'break-word',
                 lineHeight: '1.2'

@@ -372,17 +372,17 @@ const AgentDashboard = ({ user, onLogout }) => {
           {!isMobile && !sidebarCollapsed && (
             <div
               style={{
-                marginBottom: '0.6rem',
-                padding: '0.6rem',
+                marginBottom: '0.8rem',
+                padding: '0.8rem',
                 background: `linear-gradient(135deg, ${isDarkMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)'}, ${isDarkMode ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)'})`,
-                borderRadius: '10px',
+                borderRadius: '11px',
                 border: `1px solid ${isDarkMode ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)'}`
               }}
             >
                 <div
                   style={{
-                    width: '60px',
-                    height: '60px',
+                    width: '70px',
+                    height: '70px',
                     borderRadius: '50%',
                     background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
                     display: 'flex',
@@ -390,10 +390,10 @@ const AgentDashboard = ({ user, onLogout }) => {
                     justifyContent: 'center',
                     color: '#fff',
                     fontWeight: 'bold',
-                    fontSize: '1.6rem',
-                    margin: '0 auto 0.6rem',
+                    fontSize: '1.8rem',
+                    margin: '0 auto 0.8rem',
                     overflow: 'hidden',
-                    border: `2px solid rgba(139, 92, 246, 0.3)`,
+                    border: `2.5px solid rgba(139, 92, 246, 0.3)`,
                     boxShadow: '0 3px 10px rgba(139, 92, 246, 0.2)'
                   }}
                 >
@@ -421,21 +421,21 @@ const AgentDashboard = ({ user, onLogout }) => {
                 <div className="text-center">
                   <div className="fw-bold" style={{ 
                     color: colors.text,
-                    fontSize: '0.95rem',
-                    marginBottom: '0.15rem'
+                    fontSize: '1rem',
+                    marginBottom: '0.2rem'
                   }}>
                     {user?.name || 'Campaign Agent'}
                   </div>
                   <div style={{ 
-                    fontSize: '0.75rem', 
+                    fontSize: '0.8rem', 
                     color: '#8b5cf6',
                     fontWeight: '500',
-                    marginBottom: '0.15rem'
+                    marginBottom: '0.2rem'
                   }}>
                     👥 Campaign Agent
                   </div>
                   <div style={{ 
-                    fontSize: '0.7rem', 
+                    fontSize: '0.72rem', 
                     color: colors.textSecondary
                   }}>
                     {user?.email}
