@@ -827,8 +827,14 @@ function Logs({ user }) {
               ) : (
                 <>
                   {/* Desktop Table View */}
+                  <style>{`
+                    .logs-table-compact, .logs-table-compact th, .logs-table-compact td {
+                      font-size: 0.8rem !important;
+                      padding: 0.35rem 0.5rem !important;
+                    }
+                  `}</style>
                   <div className="d-none d-lg-block">
-                    <ThemedTable striped bordered hover responsive style={{ fontSize: '0.8rem' }}>
+                    <ThemedTable striped bordered hover responsive className="logs-table-compact">
                       <thead>
                         <tr>
                             <th className="fw-bold" 
