@@ -828,38 +828,38 @@ function Logs({ user }) {
                 <>
                   {/* Desktop Table View */}
                   <div className="d-none d-lg-block">
-                    <ThemedTable striped bordered hover responsive>
+                    <ThemedTable striped bordered hover responsive style={{ fontSize: '0.92rem' }}>
                       <thead>
                         <tr>
                           <th className="fw-bold" 
-                              style={{ cursor: 'pointer', minWidth: '180px' }}
+                              style={{ cursor: 'pointer', minWidth: '180px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}
                               onClick={() => handleSort('createdAt')}>
                             <FontAwesomeIcon icon={getSortIcon('createdAt')} className="me-2" />
                             Timestamp
                           </th>
                           <th className="fw-bold"
-                              style={{ cursor: 'pointer', minWidth: '100px' }}
+                              style={{ cursor: 'pointer', minWidth: '100px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}
                               onClick={() => handleSort('status')}>
                             <FontAwesomeIcon icon={getSortIcon('status')} className="me-2" />
                             Status
                           </th>
                           <th className="fw-bold"
-                              style={{ cursor: 'pointer', minWidth: '120px' }}
+                              style={{ cursor: 'pointer', minWidth: '120px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}
                               onClick={() => handleSort('action')}>
                             <FontAwesomeIcon icon={getSortIcon('action')} className="me-2" />
                             Action
                           </th>
-                          <th className="fw-bold" style={{ minWidth: '100px' }}>Entity Type</th>
-                          <th className="fw-bold" style={{ minWidth: '200px' }}>Details</th>
-                          <th className="fw-bold" style={{ minWidth: '100px' }}>User</th>
-                          <th className="fw-bold" style={{ minWidth: '120px' }}>IP Address</th>
-                          <th className="fw-bold text-center" style={{ minWidth: '100px' }}>Actions</th>
+                          <th className="fw-bold" style={{ minWidth: '100px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>Entity Type</th>
+                          <th className="fw-bold" style={{ minWidth: '200px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>Details</th>
+                          <th className="fw-bold" style={{ minWidth: '100px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>User</th>
+                          <th className="fw-bold" style={{ minWidth: '120px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>IP Address</th>
+                          <th className="fw-bold text-center" style={{ minWidth: '100px', fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {currentLogs.map((log) => (
                           <tr key={log._id}>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               <div>
                                 <small className="fw-bold">{formatDateTime(log.createdAt || log.timestamp)}</small>
                                 <br />
@@ -869,8 +869,8 @@ function Logs({ user }) {
                                 </small>
                               </div>
                             </td>
-                            <td>{getLevelBadge(log)}</td>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>{getLevelBadge(log)}</td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               <div className="d-flex align-items-center">
                                 <FontAwesomeIcon 
                                   icon={getActionIcon(log.action)} 
@@ -879,17 +879,17 @@ function Logs({ user }) {
                                 <span className="fw-bold">{log.action}</span>
                               </div>
                             </td>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               <span className="badge bg-secondary">
                                 {log.entityType}
                               </span>
                             </td>
-                            <td>
-                              <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.93rem' }}>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.92rem' }}>
                                 {log.action === 'vote' ? 'voted' : (log.details || 'No details')}
                               </span>
                             </td>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               {log.user ? (
                                 <span className="badge bg-info">
                                   <FontAwesomeIcon icon={faUserTie} className="me-1" />
@@ -899,12 +899,12 @@ function Logs({ user }) {
                                 <span className="text-muted">System</span>
                               )}
                             </td>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               <small className="text-muted font-monospace">
                                 {log.ipAddress || 'N/A'}
                               </small>
                             </td>
-                            <td>
+                            <td style={{ fontSize: '0.92rem', padding: '0.45rem 0.6rem' }}>
                               <div className="d-flex justify-content-center gap-1">
                                 <button
                                   className="btn btn-sm btn-outline-primary"
