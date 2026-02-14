@@ -185,9 +185,9 @@ const ObserverDashboardContent = () => {
               border: `1px solid ${colors.border}`,
               color: colors.text,
               borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
-              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem)',
+              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem !important)',
               transition: 'all 0.2s',
-              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
             }}
           >
             <i className={`fas fa-chevron-${showStats ? 'up' : 'down'}`}></i>
@@ -227,7 +227,7 @@ const ObserverDashboardContent = () => {
                       }}>{overview.totalElections}</h2>
                       <p className="mb-0" style={{ 
                         color: colors.textMuted, 
-                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)' 
+                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)' 
                       }}>Total Elections</p>
                     </div>
                   </div>
@@ -261,7 +261,7 @@ const ObserverDashboardContent = () => {
                       }}>{overview.activeElections}</h2>
                       <p className="mb-0" style={{ 
                         color: colors.textMuted, 
-                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)' 
+                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)' 
                       }}>Active Elections</p>
                     </div>
                   </div>
@@ -295,7 +295,7 @@ const ObserverDashboardContent = () => {
                       }}>{overview.upcomingElections}</h2>
                       <p className="mb-0" style={{ 
                         color: colors.textMuted, 
-                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)' 
+                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)' 
                       }}>Upcoming</p>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ const ObserverDashboardContent = () => {
                       }}>{overview.completedElections}</h2>
                       <p className="mb-0" style={{ 
                         color: colors.textMuted, 
-                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)' 
+                        fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)' 
                       }}>Completed</p>
                     </div>
                   </div>
@@ -382,9 +382,9 @@ const ObserverDashboardContent = () => {
               border: `1px solid ${colors.border}`,
               color: colors.text,
               borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
-              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem)',
+              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem !important)',
               transition: 'all 0.2s',
-              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
             }}
           >
             <i className={`fas fa-chevron-${showCharts ? 'up' : 'down'}`}></i>
@@ -440,9 +440,9 @@ const ObserverDashboardContent = () => {
               border: `1px solid ${colors.border}`,
               color: colors.text,
               borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
-              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem)',
+              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 0.84rem !important)',
               transition: 'all 0.2s',
-              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+              fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
             }}
           >
             <i className={`fas fa-chevron-${showElections ? 'up' : 'down'}`}></i>
@@ -478,7 +478,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-trophy me-2" style={{ color: '#10b981' }}></i>Election
                         </th>
@@ -487,7 +487,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-info-circle me-2" style={{ color: '#10b981' }}></i>Status
                         </th>
@@ -496,7 +496,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-calendar-alt me-2" style={{ color: '#10b981' }}></i>Start Date
                         </th>
@@ -505,7 +505,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-calendar-check me-2" style={{ color: '#10b981' }}></i>End Date
                         </th>
@@ -514,7 +514,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-users me-2" style={{ color: '#10b981' }}></i>Positions
                         </th>
@@ -523,7 +523,7 @@ const ObserverDashboardContent = () => {
                           borderColor: colors.border, 
                           fontWeight: 600, 
                           padding: 'clamp(0.75rem, 2vw, 1rem)',
-                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                          fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
                         }}>
                           <i className="fas fa-cog me-2" style={{ color: '#10b981' }}></i>Actions
                         </th>

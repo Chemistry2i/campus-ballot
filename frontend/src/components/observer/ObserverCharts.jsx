@@ -247,7 +247,7 @@ const ObserverCharts = ({ dashboardData }) => {
               }}>
                 <i className="fas fa-chart-pie" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
               </div>
-              <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem, 1.8vw, 0.95rem)' }}>Election Status</span>
+              <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem !important, 1.8vw, 0.95rem)' }}>Election Status</span>
             </h6>
           </div>
           <div className="card-body" style={{ padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
@@ -283,7 +283,7 @@ const ObserverCharts = ({ dashboardData }) => {
                 }}>
                   <i className="fas fa-chart-line" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
                 </div>
-                <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem, 1.8vw, 0.95rem)' }}>
+                <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem !important, 1.8vw, 0.95rem)' }}>
                   Hourly Voting Activity
                 </span>
               </div>
@@ -331,7 +331,7 @@ const ObserverCharts = ({ dashboardData }) => {
               }}>
                 <i className="fas fa-chart-bar" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
               </div>
-              <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem, 1.8vw, 0.95rem)' }}>
+              <span style={{ fontWeight: 600, fontSize: 'clamp(0.84rem !important, 1.8vw, 0.95rem)' }}>
                 {positionStats.length > 0 ? 'Candidates by Position' : 'Candidates Distribution'}
               </span>
             </h6>

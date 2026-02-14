@@ -298,7 +298,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 justifyContent: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                fontSize: 'clamp(0.75rem, 1.5vw, 0.84rem)',
+                fontSize: 'clamp(0.75rem, 1.5vw, 0.84rem !important)',
                 fontWeight: 'bold',
                 boxShadow: '0 0.125rem 0.5rem rgba(0,0,0,0.1)',
                 zIndex: 10

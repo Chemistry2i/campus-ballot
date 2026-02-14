@@ -267,7 +267,7 @@ const ObserverReports = () => {
                         <h6 style={{ color: colors.text, marginBottom: '4px' }}>
                           {option.label}
                         </h6>
-                        <p style={{ color: colors.textSecondary, fontSize: '0.84rem', marginBottom: 0 }}>
+                        <p style={{ color: colors.textSecondary, fontSize: '0.84rem !important', marginBottom: 0 }}>
                           {option.description}
                         </p>
                       </div>

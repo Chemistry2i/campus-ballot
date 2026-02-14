@@ -254,7 +254,7 @@ const ObserverDashboard = () => {
                     </div>
                     <div className="flex-grow-1 ms-3">
                       <h2 className="mb-0 fw-bold" style={{ color: colors.text }}>{overview.totalElections}</h2>
-                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem' }}>Total Elections</p>
+                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem !important' }}>Total Elections</p>
                     </div>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ const ObserverDashboard = () => {
                     </div>
                     <div className="flex-grow-1 ms-3">
                       <h2 className="mb-0 fw-bold" style={{ color: colors.text }}>{overview.activeElections}</h2>
-                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem' }}>Active Elections</p>
+                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem !important' }}>Active Elections</p>
                     </div>
                   </div>
                 </div>
@@ -304,7 +304,7 @@ const ObserverDashboard = () => {
                     </div>
                     <div className="flex-grow-1 ms-3">
                       <h2 className="mb-0 fw-bold" style={{ color: colors.text }}>{overview.upcomingElections}</h2>
-                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem' }}>Upcoming</p>
+                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem !important' }}>Upcoming</p>
                     </div>
                   </div>
                 </div>
@@ -329,7 +329,7 @@ const ObserverDashboard = () => {
                     </div>
                     <div className="flex-grow-1 ms-3">
                       <h2 className="mb-0 fw-bold" style={{ color: colors.text }}>{overview.completedElections}</h2>
-                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem' }}>Completed</p>
+                      <p className="mb-0" style={{ color: colors.textMuted, fontSize: '0.84rem !important' }}>Completed</p>
                     </div>
                   </div>
                 </div>

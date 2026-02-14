@@ -245,13 +245,13 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 boxShadow: '0 0.25rem 0.75rem rgba(16, 185, 129, 0.3)',
                 transition: 'transform 0.2s'
               }}>
-                <i className={`fas fa-${pageInfo.icon}`} style={{ color: '#fff', fontSize: 'clamp(0.84rem, 2vw, 1rem)' }}></i>
+                <i className={`fas fa-${pageInfo.icon}`} style={{ color: '#fff', fontSize: 'clamp(0.84rem !important, 2vw, 1rem)' }}></i>
               </div>
               <div>
                 <h4 className="mb-0" style={{ 
                   color: colors.text,
                   fontWeight: 700,
-                  fontSize: isMobile ? 'clamp(0.84rem, 3vw, 1rem)' : 'clamp(1rem, 2.5vw, 1.3rem)',
+                  fontSize: isMobile ? 'clamp(0.84rem !important, 3vw, 1rem)' : 'clamp(1rem, 2.5vw, 1.3rem)',
                   letterSpacing: '-0.02em',
                   lineHeight: 1.2
                 }}>
@@ -386,7 +386,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <h6 className="mb-0" style={{ color: colors.text, fontWeight: 600, fontSize: 'clamp(0.84rem, 2vw, 0.95rem)' }}>
+                  <h6 className="mb-0" style={{ color: colors.text, fontWeight: 600, fontSize: 'clamp(0.84rem !important, 2vw, 0.95rem)' }}>
                     Notifications
                   </h6>
                   {unreadCount > 0 && (
@@ -419,7 +419,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                         key={notif._id} 
                         onClick={() => markAsRead(notif._id)}
                         style={{
-                          padding: 'clamp(0.75rem, 2vw, 0.84rem) clamp(0.84rem, 2vw, 1rem)',
+                          padding: 'clamp(0.75rem, 2vw, 0.84rem !important) clamp(0.84rem !important, 2vw, 1rem)',
                           borderBottom: `1px solid ${colors.border}`,
                           cursor: 'pointer',
                           transition: 'all 0.2s',
@@ -475,7 +475,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 </div>
                 {notifications.length > 0 && (
                   <div style={{
-                    padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                    padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                     textAlign: 'center'
                   }}>
                     <button 
@@ -513,7 +513,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.6rem, 1.5vw, 0.75rem)',
                 transition: 'all 0.2s',
                 fontWeight: 600,
-                fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem)'
+                fontSize: 'clamp(0.8rem, 1.5vw, 0.84rem !important)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(16, 185, 129, 0.15)';
@@ -534,7 +534,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
             <span className="badge" style={{ 
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: '#fff',
-              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.7rem, 1.5vw, 0.84rem)',
+              padding: 'clamp(0.4rem, 1vw, 0.5rem) clamp(0.7rem, 1.5vw, 0.84rem !important)',
               fontSize: 'clamp(0.7rem, 1.4vw, 0.75rem)',
               fontWeight: 600,
               borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -670,7 +670,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                     }}
                     style={{
                       width: '100%',
-                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -694,7 +694,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                     }}
                     style={{
                       width: '100%',
-                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -714,7 +714,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                   <button
                     style={{
                       width: '100%',
-                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -734,7 +734,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                   <button
                     style={{
                       width: '100%',
-                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -767,7 +767,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                     }}
                     style={{
                       width: '100%',
-                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem, 2vw, 1rem)',
+                      padding: 'clamp(0.65rem, 1.5vw, 0.75rem) clamp(0.84rem !important, 2vw, 1rem)',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
@@ -829,7 +829,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
       {showSearch && (
         <div style={{
           marginTop: 'clamp(0.75rem, 2vw, 1rem)',
-          padding: 'clamp(0.75rem, 1.8vw, 0.84rem)',
+          padding: 'clamp(0.75rem, 1.8vw, 0.84rem !important)',
           background: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
           borderRadius: 'clamp(0.5rem, 1.2vw, 0.625rem)',
           border: `1px solid ${colors.border}`
@@ -838,7 +838,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
             <div className="flex-grow-1 position-relative">
               <i className="fas fa-search" style={{
                 position: 'absolute',
-                left: 'clamp(0.75rem, 1.5vw, 0.84rem)',
+                left: 'clamp(0.75rem, 1.5vw, 0.84rem !important)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 color: colors.textMuted,
@@ -852,12 +852,12 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 autoFocus
                 style={{
                   width: '100%',
-                  padding: 'clamp(0.5rem, 1.2vw, 0.625rem) clamp(0.84rem, 2vw, 1rem) clamp(0.5rem, 1.2vw, 0.625rem) clamp(2rem, 4vw, 2.5rem)',
+                  padding: 'clamp(0.5rem, 1.2vw, 0.625rem) clamp(0.84rem !important, 2vw, 1rem) clamp(0.5rem, 1.2vw, 0.625rem) clamp(2rem, 4vw, 2.5rem)',
                   background: colors.surface,
                   border: `1px solid ${colors.border}`,
                   borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                   color: colors.text,
-                  fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem)',
+                  fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem !important)',
                   outline: 'none',
                   transition: 'all 0.2s'
                 }}
@@ -873,7 +873,7 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 border: 'none',
                 borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                 color: '#fff',
-                fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem)',
+                fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem !important)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -898,12 +898,12 @@ const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed 
                 setSearchQuery('');
               }}
               style={{
-                padding: 'clamp(0.5rem, 1.2vw, 0.625rem) clamp(0.84rem, 2vw, 1rem)',
+                padding: 'clamp(0.5rem, 1.2vw, 0.625rem) clamp(0.84rem !important, 2vw, 1rem)',
                 background: 'transparent',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                 color: colors.text,
-                fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem)',
+                fontSize: 'clamp(0.8rem, 1.6vw, 0.84rem !important)',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',

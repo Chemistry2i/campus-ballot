@@ -49,7 +49,7 @@ const ObserverElections = () => {
           borderRadius: '6px',
           backgroundColor: config.bgColor,
           color: config.color,
-          fontSize: '0.84rem',
+          fontSize: '0.84rem !important',
           fontWeight: '500'
         }}
       >

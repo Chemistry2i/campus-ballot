@@ -326,7 +326,7 @@ const ObserverAnalytics = () => {
                               color: '#10b981',
                               padding: '6px 14px',
                               borderRadius: '12px',
-                              fontSize: '0.84rem',
+                              fontSize: '0.84rem !important',
                               fontWeight: 'bold'
                             }}
                           >
@@ -384,7 +384,7 @@ const ObserverAnalytics = () => {
                               : '#f59e0b',
                             padding: '4px 10px',
                             borderRadius: '4px',
-                            fontSize: '0.84rem',
+                            fontSize: '0.84rem !important',
                             fontWeight: '500'
                           }}
                         >

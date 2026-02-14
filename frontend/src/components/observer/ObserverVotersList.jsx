@@ -649,7 +649,7 @@ const ObserverVotersList = () => {
                               width: '35px',
                               height: '35px',
                               background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                              fontSize: '0.84rem',
+                              fontSize: '0.84rem !important',
                               fontWeight: 'bold'
                             }}
                           >
@@ -673,7 +673,7 @@ const ObserverVotersList = () => {
                           {voter.accountStatus}
                         </span>
                       </td>
-                      <td style={{ color: colors.textSecondary, fontSize: '0.84rem' }}>
+                      <td style={{ color: colors.textSecondary, fontSize: '0.84rem !important' }}>
                         {voter.registeredAt
                           ? new Date(voter.registeredAt).toLocaleDateString('en-US', {
                               year: 'numeric',
