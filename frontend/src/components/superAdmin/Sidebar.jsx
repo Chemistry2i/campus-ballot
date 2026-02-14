@@ -336,7 +336,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 to={item.to}
                 className={`sidebar-nav-link nav-link d-flex align-items-center custom-superadmin-navlink ${isActive ? 'active fw-bold' : ''}`}
                 style={{
-                  fontSize: '.88rem',
+                  fontSize: '.88rem !important',
                   gap: '0.95rem',
                   padding: collapsed ? '0.48rem 0.48rem' : '0.95rem 1.7rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
