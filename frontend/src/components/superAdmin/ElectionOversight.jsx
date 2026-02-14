@@ -219,11 +219,12 @@ const ElectionOversight = () => {
                   borderRadius: '8px'
                 }}
               >
-                <option value="pending">⏳ Pending Approval</option>
-                <option value="upcoming">📅 Upcoming</option>
-                <option value="ongoing">▶️ Ongoing</option>
-                <option value="completed">✅ Completed</option>
-                <option value="all">📊 All Elections</option>
+                <option value="all">All Elections</option>
+                <option value="pending">Pending Approval</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                
               </select>
             </div>
           </div>
@@ -256,8 +257,14 @@ const ElectionOversight = () => {
             <small className="text-muted">Try adjusting your search or filter criteria</small>
           </div>
         ) : (
-          <div className="table-responsive">
+          <div className="table-responsive election-oversight-table-font-size">
             <table className="table mb-0">
+                        {/* High-specificity CSS for table font size override */}
+                        <style>{`
+                          .election-oversight-table-font-size, .election-oversight-table-font-size * {
+                            font-size: .84rem !important;
+                          }
+                        `}</style>
               <thead style={{ background: isDarkMode ? colors.cardBg : '#f8f9fa', borderBottomColor: colors.border }}>
                 <tr>
                   <th style={{ color: colors.text }} className="fw-bold py-3">
