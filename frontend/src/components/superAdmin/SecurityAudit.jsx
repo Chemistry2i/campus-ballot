@@ -616,103 +616,111 @@ const SecurityAudit = () => {
       </div>
 
       {/* Logs Table */}
-      <ThemedTable striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>Admin</th>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Type</th>
-            <th>Timestamp</th>
-            <th>IP Address</th>
-            <th>Status</th>
-            <th>Severity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedLogs.length > 0 ? (
-            paginatedLogs.map(log => {
-              const badge = getActionBadge(log.type);
-              return (
-                <tr key={log.id}>
-                  <td>
-                    <div className="d-flex align-items-center gap-2">
-                      <div style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: colors.primary,
-                        color: '#fff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold'
-                      }}>
-                        {log.admin.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <div>
-                        <strong>{log.admin}</strong>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 500 }}>{log.action}</span>
-                  </td>
-                  <td>
-                    <span>{log.target}</span>
-                  </td>
-                  <td>
-                    <span className={`badge bg-${badge.bg}`}>
-                      <i className={`fa-solid ${badge.icon} me-1`}></i>
-                      {badge.text}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>
-                      {new Date(log.timestamp).toLocaleDateString()}
-                    </div>
-                    <small className="text-muted">
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </small>
-                  </td>
-                  <td>
-                    <code style={{
-                      background: 'rgba(0,0,0,0.05)',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.85rem'
-                    }}>
-                      {log.ipAddress}
-                    </code>
-                  </td>
-                  <td>
-                    <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
-                      <i className={`fa-solid fa-${log.status === 'success' ? 'check' : 'times'} me-1`}></i>
-                      {log.status}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${
-                      log.severity === 'critical' ? 'bg-danger' :
-                      log.severity === 'warning' ? 'bg-warning' : 'bg-info'
-                    }`}>
-                      {log.severity}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
+      <div className="security-audit-table-font-size">
+        <ThemedTable striped bordered hover responsive>
+          <thead>
             <tr>
-              <td colSpan="8" className="text-center py-5 text-muted">
-                <i className="fa-solid fa-inbox fa-3x mb-3 d-block" style={{ opacity: 0.3 }}></i>
-                <p className="mb-0">No audit logs found matching your filters</p>
-              </td>
+              <th>Admin</th>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Type</th>
+              <th>Timestamp</th>
+              <th>IP Address</th>
+              <th>Status</th>
+              <th>Severity</th>
             </tr>
-          )}
-        </tbody>
-      </ThemedTable>
+          </thead>
+          <tbody>
+            {paginatedLogs.length > 0 ? (
+              paginatedLogs.map(log => {
+                const badge = getActionBadge(log.type);
+                return (
+                  <tr key={log.id}>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <div style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: colors.primary,
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold'
+                        }}>
+                          {log.admin.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <strong>{log.admin}</strong>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 500 }}>{log.action}</span>
+                    </td>
+                    <td>
+                      <span>{log.target}</span>
+                    </td>
+                    <td>
+                      <span className={`badge bg-${badge.bg}`}>
+                        <i className={`fa-solid ${badge.icon} me-1`}></i>
+                        {badge.text}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 500 }}>
+                        {new Date(log.timestamp).toLocaleDateString()}
+                      </div>
+                      <small className="text-muted">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </small>
+                    </td>
+                    <td>
+                      <code style={{
+                        background: 'rgba(0,0,0,0.05)',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem'
+                      }}>
+                        {log.ipAddress}
+                      </code>
+                    </td>
+                    <td>
+                      <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
+                        <i className={`fa-solid fa-${log.status === 'success' ? 'check' : 'times'} me-1`}></i>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        log.severity === 'critical' ? 'bg-danger' :
+                        log.severity === 'warning' ? 'bg-warning' : 'bg-info'
+                      }`}>
+                        {log.severity}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center py-5 text-muted">
+                  <i className="fa-solid fa-inbox fa-3x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                  <p className="mb-0">No audit logs found matching your filters</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </ThemedTable>
+        {/* High-specificity CSS for table font size override */}
+        <style>{`
+          .security-audit-table-font-size, .security-audit-table-font-size * {
+            font-size: .84rem !important;
+          }
+        `}</style>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (

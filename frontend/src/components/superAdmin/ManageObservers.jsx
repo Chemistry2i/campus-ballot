@@ -147,7 +147,7 @@ const ManageObservers = () => {
   return (
     <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="h3 mb-0 fw-bold text-primary">Manage Observers</h3>
+        <h2 className="h2 mb-0 fw-bold text-primary">Manage Observers</h2>
         <button className="btn btn-primary" onClick={() => openModal()}>
           <i className="fas fa-plus me-2"></i>Add Observer
         </button>
