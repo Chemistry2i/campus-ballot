@@ -374,7 +374,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
       <style>{`
         .custom-superadmin-navlink {
           font-size: .9rem !important;
-          margin-bottom: 0.42rem !important;
+          margin-bottom: 0.5rem !important;
         }
       `}</style>
 
