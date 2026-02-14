@@ -444,7 +444,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   gap: collapsed ? 0 : '0.75rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   padding: collapsed ? '0.5rem' : '0.6rem 1rem',
-                  margin: '0.35rem 0',
+                  margin: '0.25rem 0',
                   textDecoration: 'none',
                   color: isActive ? '#fff' : colors.text,
                   background: isActive 
