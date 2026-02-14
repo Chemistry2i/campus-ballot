@@ -315,7 +315,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0, marginBottom: '0.42rem !important' }}>
+            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0, marginBottom: '0.5rem' }}>
               {isActive && (
                 <span
                   style={{
@@ -336,7 +336,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 to={item.to}
                 className={`sidebar-nav-link nav-link d-flex align-items-center custom-superadmin-navlink ${isActive ? 'active fw-bold' : ''}`}
                 style={{
-                  fontSize: '.88rem !important',
                   gap: '0.95rem',
                   padding: collapsed ? '0.48rem 0.48rem' : '0.95rem 1.7rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
@@ -374,7 +373,6 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
       <style>{`
         .custom-superadmin-navlink {
           font-size: .9rem !important;
-          margin-bottom: 0.5rem !important;
         }
       `}</style>
 
