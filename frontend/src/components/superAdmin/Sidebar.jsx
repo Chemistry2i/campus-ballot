@@ -366,16 +366,17 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
               </Link>
             </div>
-                {/* High-specificity CSS for nav link font size and spacing override */}
-                <style>{`
-                  .custom-superadmin-navlink {
-                    font-size: .84rem !important;
-                    margin-bottom: 0.42rem !important;
-                  }
-                `}</style>
           );
         })}
+
       </nav>
+      {/* High-specificity CSS for nav link font size and spacing override */}
+      <style>{`
+        .custom-superadmin-navlink {
+          font-size: .84rem !important;
+          margin-bottom: 0.42rem !important;
+        }
+      `}</style>
 
       {/* Footer */}
       {!collapsed && (
