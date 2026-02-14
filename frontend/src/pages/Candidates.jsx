@@ -340,6 +340,15 @@ function CreateCandidateModal({
 }
 
 function Candidates({ user }) {
+    // Compact table font size for candidates table
+    const tableFont80 = `
+      .candidates-table-font80, .candidates-table-font80 th, .candidates-table-font80 td {
+        font-size: 0.84rem !important;
+      }
+    `;
+    // Render style block for table font size
+    // Only one style block is needed per page
+    const styleBlock = <style dangerouslySetInnerHTML={{ __html: tableFont80 }} />;
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -797,6 +806,7 @@ function Candidates({ user }) {
         </div>
       </div>
 
+      {styleBlock}
       {loading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 200 }}>
           <div className="spinner-border text-primary" role="status" />
@@ -808,7 +818,7 @@ function Candidates({ user }) {
           overflow: 'hidden',
           boxShadow: isDarkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}>
-          <table className="table table-hover table-striped mb-0" style={{
+          <table className="table table-hover table-striped mb-0 candidates-table-font80" style={{
             ...(isDarkMode && {
               '--bs-table-bg': colors.surface,
               '--bs-table-striped-bg': '#2d3748',
