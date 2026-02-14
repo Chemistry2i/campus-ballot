@@ -520,11 +520,11 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
           style={{
             background: colors.surface,
             borderBottom: `1px solid ${colors.border}`,
-            padding: "1rem 2rem",
+            padding: "0.75rem 1.5rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            minHeight: 64,
+            minHeight: 52,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, }}>
@@ -533,21 +533,21 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                 background: '#2563eb',
                 color: '#fff',
                 borderRadius: '6px',
-                width: 45,
-                height: 45,
+                width: 36,
+                height: 36,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 600,
-                fontSize: 18,
+                fontSize: 14,
                 boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
               }}
             >
-              <i className="fa fa-user-shield" style={{ fontSize: 18, color: '#fff' }}></i>
+              <i className="fa fa-user-shield" style={{ fontSize: 14, color: '#fff' }}></i>
             </span>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 20, color: isDarkMode ? '#fff' : '#222' }}>Admin Dashboard</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manage elections, candidates, and users</div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: isDarkMode ? '#fff' : '#222' }}>Admin Dashboard</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Manage elections, candidates, and users</div>
             </div>
           </div>
           {/* Right: Controls */}
@@ -557,12 +557,12 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
               background: colors.primary, // Updated to use primary color
               color: '#fff',
               borderRadius: 3,
-              padding: '4px 16px',
+              padding: '3px 12px',
               fontWeight: 500,
-              fontSize: 14,
+              fontSize: 12,
               display: 'flex',
               alignItems: 'center',
-              minWidth: 80,
+              minWidth: 70,
               justifyContent: 'center',
             }}>
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
@@ -602,8 +602,8 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                   background: 'none',
                   border: 'none',
                   borderRadius: '50%',
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -611,7 +611,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                 }}
                 onClick={() => setIsSearchExpanded(true)}
               >
-                <span className="fa fa-search" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+                <span className="fa fa-search" style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#222' }} />
               </button>
             )}
             {/* Notification icon with border */}
@@ -619,10 +619,10 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
               aria-label="Notifications"
               style={{
                 background: 'none',
-                border: isDarkMode ? '2px solid #334155' : '2px solid #e5e7eb',
-                borderRadius: '10px',
-                width: 36,
-                height: 36,
+                border: isDarkMode ? '1.5px solid #334155' : '1.5px solid #e5e7eb',
+                borderRadius: '8px',
+                width: 32,
+                height: 32,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -631,7 +631,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
               }}
               onClick={() => setShowNotifications(!showNotifications)}
             >
-              <span className="fa fa-bell" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+              <span className="fa fa-bell" style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#222' }} />
               {/* Notification dot */}
               {notifications.some(n => !n.read) && (
                 <span style={{
@@ -653,8 +653,8 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
             <div style={{ position: 'relative' }} ref={profileMenuRef}>
               <div
                 style={{
-                  width: '45px',
-                  height: '45px',
+                  width: '36px',
+                  height: '36px',
                   cursor: 'pointer',
                   borderRadius: '50%',
                   background: '#22c55e',
@@ -662,7 +662,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontSize: '1.1rem',
+                  fontSize: '0.9rem',
                   fontWeight: 'bold',
                   overflow: 'hidden',
                   transition: 'box-shadow 0.18s, transform 0.18s',
@@ -674,7 +674,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                 onKeyDown={e => { if (e.key === 'Enter') setShowProfileMenu(!showProfileMenu); }}
               >
                 {user?.profilePicture ? (
-                  <img src={user.profilePicture} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+                  <img src={user.profilePicture} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                 ) : (
                   user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'A'
                 )}
