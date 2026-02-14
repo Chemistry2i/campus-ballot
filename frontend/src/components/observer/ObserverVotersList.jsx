@@ -568,7 +568,7 @@ const ObserverVotersList = () => {
             borderRadius: '8px'
           }}
         >
-          <ThemedTable striped hover responsive>
+          <ThemedTable striped hover responsive style={{ fontSize: '0.84rem !important' }}>
               <thead style={{
                 background: isDarkMode ? colors.surfaceHover : '#f9fafb',
                 borderBottom: `2px solid ${colors.border}`

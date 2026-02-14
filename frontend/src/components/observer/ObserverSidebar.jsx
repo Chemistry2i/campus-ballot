@@ -486,8 +486,8 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       {/* High-specificity CSS for nav link font size and spacing override */}
       <style>{`
         .observer-navlink-font, .observer-navlink-font * {
-          font-size: 0.9rem !important;
-          margin-bottom: 0.20rem !important;
+          font-size: 1rem !important;
+          margin-bottom: 0.3rem !important;
         }
       `}</style>
 
