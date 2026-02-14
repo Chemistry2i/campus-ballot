@@ -315,7 +315,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
+            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0, marginBottom: '0.42rem !important' }}>
               {isActive && (
                 <span
                   style={{
@@ -334,11 +334,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               )}
               <Link
                 to={item.to}
-                className={`sidebar-nav-link nav-link d-flex align-items-center mb-1 ${isActive ? 'active fw-bold' : ''}`}
+                className={`sidebar-nav-link nav-link d-flex align-items-center custom-superadmin-navlink ${isActive ? 'active fw-bold' : ''}`}
                 style={{
-                  fontSize: '0.875em',
-                  gap: '0.75rem',
-                  padding: collapsed ? '0.45rem 0.45rem' : '0.85rem 1.5rem',
+                  fontSize: '.84rem',
+                  gap: '0.95rem',
+                  padding: collapsed ? '0.48rem 0.48rem' : '0.95rem 1.7rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   borderRadius: 4,
                   fontWeight: isActive ? 700 : 500,
@@ -366,6 +366,13 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
               </Link>
             </div>
+                {/* High-specificity CSS for nav link font size and spacing override */}
+                <style>{`
+                  .custom-superadmin-navlink {
+                    font-size: .84rem !important;
+                    margin-bottom: 0.42rem !important;
+                  }
+                `}</style>
           );
         })}
       </nav>
