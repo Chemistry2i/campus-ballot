@@ -506,7 +506,7 @@ const Users = ({ user }) => {
 
                             {/* Users Table */}
                             <div className="table-responsive">
-                                <table className="table table-striped table-hover">
+                                <table className="table table-striped table-hover" style={{ fontSize: '0.82rem', /* eslint-disable-next-line react/style-prop-object */ '--table-font-size': '0.82rem !important' }}>
                                     <thead className="table-light">
                                         <tr>
                                             {/* ID intentionally hidden; admin can copy via action */}
