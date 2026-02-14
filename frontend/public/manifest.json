@@ -1,6 +1,6 @@
 {
   "name": "Campus Ballot",
-  "short_name": "Ballot",
+  "short_name": "Campus Ballot",
   "description": "Campus Election and Voting System",
   "start_url": "/",
   "display": "standalone",
