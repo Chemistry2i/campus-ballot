@@ -55,8 +55,8 @@ body {
   }
   
   /* Reduce table font size */
-  table {
-    font-size: 0.8rem;
+  table, .table {
+    font-size: 0.84rem !important;
   }
   
   /* Reduce modal sizes */
