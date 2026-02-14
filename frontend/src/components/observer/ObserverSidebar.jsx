@@ -487,7 +487,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       <style>{`
         .observer-navlink-font, .observer-navlink-font * {
           font-size: 1rem !important;
-          margin-bottom: 0.3rem !important;
+          margin-bottom: 0.25rem !important;
         }
       `}</style>
 
