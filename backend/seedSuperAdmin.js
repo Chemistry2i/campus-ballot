@@ -23,17 +23,17 @@ const seedSuperAdmin = async () => {
   try {
     await connectDB();
 
-    const superAdminEmail = "superadmin@kyu.ac.ug";
+    const superAdminEmail = "omolo@campusballot.tech";
 
     const superAdminExists = await User.findOne({ email: superAdminEmail });
 
     if (superAdminExists) {
       console.log("ℹ️ Super Admin already exists with email:", superAdminEmail);
     } else {
-      const hashedPassword = await bcrypt.hash("SuperAdminStrongPass123!", 12);
+      const hashedPassword = await bcrypt.hash("campusballot", 12);
 
       const superAdmin = await User.create({
-        name: "Super Admin",
+        name: "Omolo Pasikali",
         email: superAdminEmail,
         password: hashedPassword,
         role: "super_admin",
