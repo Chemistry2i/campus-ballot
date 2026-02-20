@@ -2285,8 +2285,8 @@ const LandingPage = () => {
                 </li>
                 <li className="d-flex align-items-center mb-2">
                   <i className="fa-solid fa-phone me-2"></i>
-                  <a href="tel:+256700000000" className="text-white-50 small">
-                    +256 700 000 000
+                  <a href="tel:+256742685864" className="text-white-50 small">
+                    +256 742 685 864
                   </a>
                 </li>
                 <li className="d-flex align-items-center">
@@ -2328,7 +2328,7 @@ const LandingPage = () => {
                 <p className="text-white-50 small mb-0">
                   Developed with{" "}
                   by{" "}
-                  <strong className="text-white">Concept Crashers</strong>
+                  <a className="text-white fw-bold" href="https://conceptcrashers.tech" target="_blank" rel="noopener noreferrer">Concept Crashers</a>
                 </p>
               </Col>
             </Row>
