@@ -30,12 +30,10 @@ const seedSuperAdmin = async () => {
     if (superAdminExists) {
       console.log("ℹ️ Super Admin already exists with email:", superAdminEmail);
     } else {
-      const hashedPassword = await bcrypt.hash("campusballot", 12);
-
       const superAdmin = await User.create({
         name: "Omolo Pasikali",
         email: superAdminEmail,
-        password: hashedPassword,
+        password: "campusballot", // Let pre-save hook hash this
         role: "super_admin",
         isVerified: true,
       });
