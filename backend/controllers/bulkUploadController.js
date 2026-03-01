@@ -9,9 +9,9 @@ const emailTemplates = require("../utils/emailTemplates");
 
 /**
  * Expected CSV/Excel columns:
- * Required: name, email, role
- * For students: studentId, faculty, course, yearOfStudy, gender
- * Optional: phone, department, password, organizationCode (if not provided, uses admin's org)
+ * MINIMUM REQUIRED FOR STUDENTS: email, studentId, organization (or organizationCode)
+ * Optional: name (derived from email if missing), faculty, course, yearOfStudy, gender, phone, password
+ * For other roles: name, email, role required
  */
 
 // Generate a random password
@@ -25,14 +25,13 @@ const generatePassword = () => {
 };
 
 // Validate a single user row
-const validateUserRow = (row, rowIndex) => {
+// For students: MINIMUM required = email, studentId, organization
+// For other roles: name, email required
+const validateUserRow = (row, rowIndex, adminOrganization = null) => {
   const errors = [];
+  const role = (row.role || 'student').toLowerCase().trim();
   
-  // Required fields for all users
-  if (!row.name || !row.name.trim()) {
-    errors.push(`Row ${rowIndex}: Name is required`);
-  }
-  
+  // Email is always required
   if (!row.email || !row.email.trim()) {
     errors.push(`Row ${rowIndex}: Email is required`);
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email.trim())) {
@@ -40,29 +39,34 @@ const validateUserRow = (row, rowIndex) => {
   }
   
   const validRoles = ['student', 'admin', 'observer', 'candidate', 'agent'];
-  const role = (row.role || 'student').toLowerCase().trim();
   if (!validRoles.includes(role)) {
     errors.push(`Row ${rowIndex}: Invalid role '${row.role}'. Valid roles: ${validRoles.join(', ')}`);
   }
   
-  // Student-specific validation
+  // Student-specific validation - MINIMUM: email, studentId, organization
   if (role === 'student') {
     if (!row.studentId || !row.studentId.toString().trim()) {
       errors.push(`Row ${rowIndex}: Student ID is required for students`);
     }
-    if (!row.faculty || !row.faculty.trim()) {
-      errors.push(`Row ${rowIndex}: Faculty is required for students`);
+    // Organization is required for imports (can be code or name)
+    if (!row.organizationCode && !adminOrganization) {
+      errors.push(`Row ${rowIndex}: Organization is required for students (provide 'organization' column or import as assigned admin)`);
     }
-    if (!row.course || !row.course.trim()) {
-      errors.push(`Row ${rowIndex}: Course is required for students`);
+    // Name is optional - will be derived from email if not provided
+    // Faculty, course, yearOfStudy, gender are all optional
+  } else {
+    // Non-student roles still require name
+    if (!row.name || !row.name.trim()) {
+      errors.push(`Row ${rowIndex}: Name is required`);
     }
-    if (!row.yearOfStudy || !row.yearOfStudy.toString().trim()) {
-      errors.push(`Row ${rowIndex}: Year of study is required for students`);
-    }
-    const validGenders = ['Male', 'Female', 'Other'];
-    const gender = row.gender ? row.gender.trim() : '';
-    if (!gender || !validGenders.map(g => g.toLowerCase()).includes(gender.toLowerCase())) {
-      errors.push(`Row ${rowIndex}: Gender is required for students (Male/Female/Other)`);
+  }
+  
+  // Validate gender format if provided
+  if (row.gender) {
+    const validGenders = ['male', 'female', 'other', 'm', 'f', 'o'];
+    const gender = row.gender.trim().toLowerCase();
+    if (!validGenders.includes(gender)) {
+      errors.push(`Row ${rowIndex}: Invalid gender '${row.gender}'. Use Male/Female/Other`);
     }
   }
   
@@ -175,7 +179,7 @@ const validateBulkUpload = asyncHandler(async (req, res) => {
     
     rows.forEach((row, index) => {
       const rowIndex = index + 2; // Account for header row and 0-index
-      const rowErrors = validateUserRow(row, rowIndex);
+      const rowErrors = validateUserRow(row, rowIndex, req.user?.organization);
       
       const email = row.email?.toLowerCase().trim();
       const studentId = row.studentId?.toString().trim();
@@ -300,8 +304,8 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
       const rowIndex = i + 2;
       
       try {
-        // Validate row
-        const rowErrors = validateUserRow(row, rowIndex);
+        // Validate row (pass admin's organization for fallback)
+        const rowErrors = validateUserRow(row, rowIndex, defaultOrganizationId);
         
         const email = row.email?.toLowerCase().trim();
         const studentId = row.studentId?.toString().trim();
@@ -354,23 +358,39 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
           }
         }
         
+        // Derive name from email if not provided
+        let userName = row.name?.trim();
+        if (!userName && email) {
+          // Extract name from email (e.g., john.doe@uni.edu -> John Doe)
+          const localPart = email.split('@')[0];
+          userName = localPart
+            .replace(/[._-]/g, ' ') // Replace separators with spaces
+            .replace(/\d+/g, '')   // Remove numbers
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ') || 'Student';
+        }
+        
         // Create user object
         const userData = {
-          name: row.name.trim(),
+          name: userName,
           email: email,
           password: hashedPassword,
           role: role,
           organization: userOrganization,
           isVerified: true, // Auto-verify imported users
+          emailVerified: true,
+          accountStatus: 'active'
         };
         
-        // Add student-specific fields
+        // Add student-specific fields (all optional except studentId)
         if (role === 'student') {
           userData.studentId = studentId;
-          userData.faculty = row.faculty.trim();
-          userData.course = row.course.trim();
-          userData.yearOfStudy = row.yearOfStudy.toString().trim();
-          userData.gender = normalizeGender(row.gender);
+          if (row.faculty?.trim()) userData.faculty = row.faculty.trim();
+          if (row.course?.trim()) userData.course = row.course.trim();
+          if (row.yearOfStudy?.toString().trim()) userData.yearOfStudy = row.yearOfStudy.toString().trim();
+          if (row.gender) userData.gender = normalizeGender(row.gender);
         }
         
         // Optional fields
@@ -514,46 +534,44 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
 const downloadTemplate = asyncHandler(async (req, res) => {
   const format = req.query.format || 'csv';
   
-  // Sample data
+  // Sample data showing MINIMUM requirements: email, studentId, organization
+  // Other fields are OPTIONAL and will be auto-derived if missing
   const sampleData = [
     {
-      name: 'John Doe',
       email: 'john.doe@university.edu',
-      role: 'student',
-      organizationCode: 'KYU',
       studentId: 'STU001',
-      faculty: 'Engineering',
-      course: 'Computer Science',
-      yearOfStudy: '3',
-      gender: 'Male',
-      phone: '+256700000001',
-      department: 'Computer Engineering'
+      organization: 'KYU',
+      name: 'John Doe (optional)',
+      faculty: 'Engineering (optional)',
+      course: 'Computer Science (optional)',
+      yearOfStudy: '3 (optional)',
+      gender: 'Male (optional)',
+      phone: '+256700000001 (optional)',
+      role: 'student (default if blank)'
     },
     {
-      name: 'Jane Smith',
       email: 'jane.smith@university.edu',
-      role: 'student',
-      organizationCode: 'MAK',
       studentId: 'STU002',
+      organization: 'KYU',
+      name: '',
       faculty: 'Science',
       course: 'Biology',
       yearOfStudy: '2',
       gender: 'Female',
-      phone: '+256700000002',
-      department: 'Life Sciences'
+      phone: '',
+      role: 'student'
     },
     {
-      name: 'Observer User',
-      email: 'observer@university.edu',
-      role: 'observer',
-      organizationCode: '',
-      studentId: '',
+      email: 'simple@university.edu',
+      studentId: '22/U/12345',
+      organization: 'KYU',
+      name: '',
       faculty: '',
       course: '',
       yearOfStudy: '',
       gender: '',
-      phone: '+256700000003',
-      department: ''
+      phone: '',
+      role: ''
     }
   ];
   
@@ -562,17 +580,16 @@ const downloadTemplate = asyncHandler(async (req, res) => {
   
   // Set column widths
   worksheet['!cols'] = [
-    { wch: 20 }, // name
-    { wch: 30 }, // email
-    { wch: 10 }, // role
-    { wch: 12 }, // organizationCode
-    { wch: 12 }, // studentId
-    { wch: 15 }, // faculty
-    { wch: 20 }, // course
-    { wch: 12 }, // yearOfStudy
-    { wch: 10 }, // gender
-    { wch: 15 }, // phone
-    { wch: 20 }, // department
+    { wch: 30 }, // email (REQUIRED)
+    { wch: 15 }, // studentId (REQUIRED)
+    { wch: 12 }, // organization (REQUIRED)
+    { wch: 25 }, // name (optional)
+    { wch: 20 }, // faculty (optional)
+    { wch: 25 }, // course (optional)
+    { wch: 15 }, // yearOfStudy (optional)
+    { wch: 12 }, // gender (optional)
+    { wch: 15 }, // phone (optional)
+    { wch: 10 }, // role (optional, defaults to student)
   ];
   
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');

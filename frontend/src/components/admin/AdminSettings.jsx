@@ -627,7 +627,8 @@ export default function AdminSettings({ user }) {
           <div className="d-flex align-items-start justify-content-between mb-3">
             <div>
               <h5 className="card-title mb-1">Bulk User Import</h5>
-              <p className="text-muted small mb-0">Import multiple users from a CSV or Excel file</p>
+              <p className="text-muted small mb-0">Import multiple students from a CSV or Excel file</p>
+              <p className="text-muted small mb-0"><strong>Minimum required columns:</strong> email, studentId, organization</p>
             </div>
             <div className="d-flex gap-2">
               <button className="btn btn-outline-secondary btn-sm" onClick={() => downloadTemplate('csv')} title="Download CSV Template">
@@ -716,9 +717,9 @@ export default function AdminSettings({ user }) {
                     <thead style={{ position: 'sticky', top: 0, backgroundColor: colors.surface }}>
                       <tr>
                         <th style={{ padding: '0.4rem' }}>Row</th>
-                        <th style={{ padding: '0.4rem' }}>Name</th>
                         <th style={{ padding: '0.4rem' }}>Email</th>
-                        <th style={{ padding: '0.4rem' }}>Role</th>
+                        <th style={{ padding: '0.4rem' }}>Student ID</th>
+                        <th style={{ padding: '0.4rem' }}>Name</th>
                         <th style={{ padding: '0.4rem' }}>Status</th>
                       </tr>
                     </thead>
@@ -726,9 +727,9 @@ export default function AdminSettings({ user }) {
                       {importValidation.preview.slice(0, 20).map(p => (
                         <tr key={p.row} style={{ borderBottom: `1px solid ${colors.border}` }}>
                           <td style={{ padding: '0.4rem' }}>{p.row}</td>
-                          <td style={{ padding: '0.4rem' }}>{p.name}</td>
                           <td style={{ padding: '0.4rem' }}>{p.email}</td>
-                          <td style={{ padding: '0.4rem' }}>{p.role}</td>
+                          <td style={{ padding: '0.4rem' }}>{p.studentId || '-'}</td>
+                          <td style={{ padding: '0.4rem' }}>{p.name || <span className="text-muted">(auto)</span>}</td>
                           <td style={{ padding: '0.4rem' }}>
                             {p.valid ? (
                               <span className="badge bg-success">Valid</span>

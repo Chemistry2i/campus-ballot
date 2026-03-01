@@ -31,6 +31,7 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   const [profilePic, setProfilePic] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [logCount, setLogCount] = useState(0);
+  const [organizationName, setOrganizationName] = useState('');
   const { isDarkMode, colors } = useTheme();
 
   const SIDEBAR_WIDTH = 240;
@@ -68,7 +69,34 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
       }
     };
     fetchCounts();
-  }, [user?.profilePicture]);
+
+    // Fetch organization name
+    const fetchOrganization = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const orgId = user?.organization?._id || user?.organization;
+        if (orgId) {
+          const res = await axios.get(`/api/organizations/${orgId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setOrganizationName(res.data?.name || '');
+        }
+      } catch (err) {
+        console.error('Error fetching organization', err);
+        // Try from localStorage as fallback
+        try {
+          const stored = localStorage.getItem('currentUser');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.organization?.name) {
+              setOrganizationName(parsed.organization.name);
+            }
+          }
+        } catch (e) {}
+      }
+    };
+    fetchOrganization();
+  }, [user?.profilePicture, user?.organization]);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -315,6 +343,20 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               }}>
                 {user?.role}
               </div>
+              {organizationName && (
+                <div style={{ 
+                  fontSize: '0.7rem', 
+                  color: colors.textMuted, 
+                  marginTop: '0.25rem',
+                  maxWidth: '180px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }} title={organizationName}>
+                  <i className="fa-solid fa-building" style={{ marginRight: '4px', fontSize: '0.6rem' }}></i>
+                  {organizationName}
+                </div>
+              )}
             </div>
             
             {/* Quick Action Button */}

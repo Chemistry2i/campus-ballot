@@ -38,6 +38,7 @@ const createElection = asyncHandler(async (req, res) => {
       allowedFaculties: allowedFaculties || [], // Add allowedFaculties field
       status: computedStatus,
       createdBy: req.user._id,
+      organization: req.user.organization, // Auto-assign to admin's organization
     });
 
     // Log activity

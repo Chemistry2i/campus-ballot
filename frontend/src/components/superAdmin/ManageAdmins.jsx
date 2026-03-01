@@ -13,6 +13,7 @@ const dummyAdmins = [
 
 const ManageAdmins = ({ collapsed, isMobile }) => {
   const [admins, setAdmins] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -23,6 +24,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     phone: '',
     image: '',
     password: '',
+    organization: '',
     lastLogin: '',
     createdAt: '',
   });
@@ -48,7 +50,21 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         setLoading(false);
       }
     };
+
+    const fetchOrganizations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/organizations', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setOrganizations(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error('Error fetching organizations:', err);
+      }
+    };
+
     fetchAdmins();
+    fetchOrganizations();
   }, []);
 
   // Filter admins by search
@@ -80,7 +96,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         password: newAdmin.password,
         role: newAdmin.role,
         phone: newAdmin.phone,
-        image: newAdmin.image // This will be the base64 string
+        image: newAdmin.image,
+        organization: newAdmin.organization || undefined
       };
       await axios.post('/api/super-admin/admins', adminData, {
         headers: { 
@@ -97,6 +114,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         phone: '',
         image: '',
         password: '',
+        organization: '',
         lastLogin: '',
         createdAt: '',
       });
@@ -232,26 +250,36 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     Email: a.email,
     Role: a.role,
     Status: a.status,
-    Department: a.department || '',
+    Organization: a.organization?.name || '',
     Verified: a.emailVerified ? 'Yes' : 'No',
     CreatedAt: a.createdAt,
     LastLogin: a.lastLogin,
     Phone: a.phone,
   }));
 
-  // Remove department column from columns array
+  // Helper to get organization name
+  const getOrgName = (admin) => {
+    if (admin.organization?.name) return admin.organization.name;
+    if (admin.organization) {
+      const org = organizations.find(o => o._id === admin.organization);
+      return org?.name || '';
+    }
+    return '';
+  };
+
+  // Columns including organization
   const columns = [
     { key: 'select', label: '', style: { width: 32 } },
     { key: 'image', label: 'Image', style: { width: 60 } },
     { key: 'name', label: 'Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
+    // { key: 'email', label: 'Email', sortable: true },
+    { key: 'organization', label: 'Organization', sortable: true },
     { key: 'role', label: 'Role', sortable: true },
     { key: 'status', label: 'Status', sortable: true },
     { key: 'emailVerified', label: 'Verified', style: { width: 70 } },
-    { key: 'createdAt', label: 'Created At', sortable: true },
+    { key: 'createdAt', label: 'Created', sortable: true },
     { key: 'lastLogin', label: 'Last Login', sortable: true },
-    { key: 'phone', label: 'Phone' },
-    { key: 'actions', label: 'Actions', style: { width: 240 } }
+    { key: 'actions', label: 'Actions', style: { width: 200 } }
   ];
 
   return (
@@ -468,8 +496,19 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         {admin.name}
                       </a>
                     </td>
+                    {/* Email column commented out
                     <td style={{ padding: '0.75rem', color: colors.textSecondary }}>
                       {admin.email}
+                    </td>
+                    */}
+                    <td style={{ padding: '0.75rem' }}>
+                      <span style={{ 
+                        fontSize: '0.8rem',
+                        color: getOrgName(admin) ? colors.text : colors.textMuted,
+                        fontStyle: getOrgName(admin) ? 'normal' : 'italic'
+                      }}>
+                        {getOrgName(admin) || 'Not assigned'}
+                      </span>
                     </td>
                     <td style={{ padding: '0.75rem' }}>
                       <select
@@ -501,13 +540,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem' }}>
-                      {admin.emailVerified
-                        ? <span className="badge bg-success">Verified</span>
-                        : <span className="badge bg-warning text-dark">Unverified</span>}
+                      <span className="badge bg-success">Verified</span>
                     </td>
                     <td style={{ padding: '0.75rem' }}>{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : '-'}</td>
                     <td style={{ padding: '0.75rem' }}>{admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : '-'}</td>
-                    <td style={{ padding: '0.75rem' }}>{admin.phone || '-'}</td>
                     <td style={{ padding: '0.75rem' }}>
                       <button
                         className="btn btn-sm btn-info me-2"
@@ -661,6 +697,28 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         <option value="admin">Admin</option>
                         <option value="super_admin">Super Admin</option>
                       </select>
+                    </div>
+                    <div className="col-md-12 mb-3">
+                      <label className="form-label">Assign to Organization</label>
+                      <select
+                        className="form-select"
+                        value={newAdmin.organization}
+                        onChange={e => setNewAdmin({ ...newAdmin, organization: e.target.value })}
+                      >
+                        <option value="">-- Select Organization (Optional) --</option>
+                        {organizations.filter(o => o.type === 'federation').map(org => (
+                          <optgroup key={org._id} label={`📁 ${org.name}`}>
+                            <option value={org._id}>{org.name} (Federation)</option>
+                            {organizations.filter(u => u.type === 'university' && (u.parent?._id || u.parent) === org._id).map(uni => (
+                              <option key={uni._id} value={uni._id}>&nbsp;&nbsp;🏛️ {uni.name}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                        {organizations.filter(o => o.type === 'university' && !o.parent).map(org => (
+                          <option key={org._id} value={org._id}>🏛️ {org.name} (Independent)</option>
+                        ))}
+                      </select>
+                      <small className="text-muted">Assign this admin to manage a specific organization</small>
                     </div>
                     <div className="col-md-12 mb-3">
                       <div className="alert alert-info" role="alert">

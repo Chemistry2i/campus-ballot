@@ -362,12 +362,26 @@ function CreateElection({ onCreated }) {
 
           <div className="col-md-6">
             <label className="form-label small" style={{ color: colors.text }}>Eligibility</label>
-            <select className="form-select" value={eligibilityType} onChange={e => setEligibilityType(e.target.value)}>
-              <option value="all">All registered students</option>
+            <select className="form-select" value={eligibilityType} onChange={e => setEligibilityType(e.target.value)} style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}>
+              <option value="all">All registered students (this organization)</option>
+              <option value="university">University-wide (all students in university)</option>
+              <option value="federation">Federation-wide (all member universities)</option>
               <option value="faculty">Faculty / Department</option>
               <option value="cohort">Cohort / Year</option>
               <option value="csv">Whitelist CSV upload</option>
             </select>
+            <small className="text-muted d-block mt-1">
+              {eligibilityType === 'all' && 'Only students registered to your organization can vote.'}
+              {eligibilityType === 'university' && 'All students in your university can participate.'}
+              {eligibilityType === 'federation' && 'Students from all universities in your federation can vote.'}
+              {eligibilityType === 'faculty' && 'Select specific faculties/departments.'}
+              {eligibilityType === 'cohort' && 'Select specific cohorts/years.'}
+              {eligibilityType === 'csv' && 'Upload a CSV file with student emails or IDs.'}
+            </small>
           </div>
             {eligibilityType === 'faculty' && (
               <div className="col-md-6">
