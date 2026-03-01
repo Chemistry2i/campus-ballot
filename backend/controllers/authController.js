@@ -498,7 +498,9 @@ const login = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
     const normalizedEmail = (email || '').toString().trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail }).select("+password");
+    const user = await User.findOne({ email: normalizedEmail })
+      .select("+password")
+      .populate("organization", "_id name code type parent");
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -543,6 +545,7 @@ const login = asyncHandler(async (req, res) => {
       additionalRoles: user.additionalRoles || [],
       isVerified: user.isVerified,
       profilePicture: user.profilePicture,
+      organization: user.organization, // Include organization for eligibility checks
     };
 
     // Add student-specific fields if user is a student

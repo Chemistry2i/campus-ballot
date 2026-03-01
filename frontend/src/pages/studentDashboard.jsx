@@ -356,6 +356,64 @@ function StudentDashboard({ user: initialUser }) {
   const isUserEligibleForElection = (election) => {
     if (!election || !user) return false;
 
+    // Get user's organization ID (handle both populated and non-populated cases)
+    const getUserOrgId = () => {
+      if (!user.organization) return null;
+      return typeof user.organization === 'object' ? user.organization._id : user.organization;
+    };
+
+    // Get user's organization parent ID (for federation checks)
+    const getUserOrgParentId = () => {
+      if (!user.organization || typeof user.organization !== 'object') return null;
+      if (!user.organization.parent) return null;
+      return typeof user.organization.parent === 'object' ? user.organization.parent._id : user.organization.parent;
+    };
+
+    // Get election's organization ID
+    const getElectionOrgId = () => {
+      if (!election.organization) return null;
+      return typeof election.organization === 'object' ? election.organization._id : election.organization;
+    };
+
+    const userOrgId = getUserOrgId();
+    const userOrgParentId = getUserOrgParentId();
+    const electionOrgId = getElectionOrgId();
+
+    // Check organization/scope-based eligibility for federation and university elections
+    if (election.scope && electionOrgId) {
+      if (election.scope === 'university') {
+        // For university scope: user MUST have organization AND it must match election's organization
+        if (!userOrgId || userOrgId.toString() !== electionOrgId.toString()) {
+          return false;
+        }
+      } else if (election.scope === 'federation') {
+        // For federation scope: user MUST have organization AND must either:
+        // 1. Be the federation itself, OR
+        // 2. Have the federation as its parent organization
+        if (!userOrgId) {
+          return false;
+        }
+        const userBelongsToFederation = 
+          (userOrgId.toString() === electionOrgId.toString()) ||
+          (userOrgParentId && userOrgParentId.toString() === electionOrgId.toString());
+        
+        if (!userBelongsToFederation) {
+          return false;
+        }
+      } else if (election.scope === 'custom') {
+        // For custom scope: user's organization must be in allowedOrganizations
+        if (election.allowedOrganizations && Array.isArray(election.allowedOrganizations) && election.allowedOrganizations.length > 0) {
+          const allowedOrgIds = election.allowedOrganizations.map(org => 
+            typeof org === 'object' ? org._id?.toString() : org?.toString()
+          ).filter(Boolean);
+          
+          if (!userOrgId || !allowedOrgIds.includes(userOrgId.toString())) {
+            return false;
+          }
+        }
+      }
+    }
+
     // Check faculty eligibility
     const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
     if (hasFacultyRestriction && user.faculty && !election.allowedFaculties.includes(user.faculty)) {
@@ -534,16 +592,12 @@ function StudentDashboard({ user: initialUser }) {
                          (election.description || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesStatus = statusFilter === "all" || getElectionStatus(election).status === statusFilter;
     
-    // Faculty eligibility check - only show elections user is eligible for
-    // If election has faculty restrictions, user MUST be in that list
-    const hasRestrictions = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
-    const isEligibleByFaculty = hasRestrictions 
-      ? (user?.faculty && election.allowedFaculties.includes(user.faculty))
-      : true; // No restrictions = everyone can see it
+    // Use full eligibility check (includes organization/scope, faculty, year, course, GPA)
+    const isEligible = isUserEligibleForElection(election);
     
-    console.log('Election:', election.title, 'hasRestrictions:', hasRestrictions, 'allowedFaculties:', election.allowedFaculties, 'userFaculty:', user?.faculty, 'isEligible:', isEligibleByFaculty);
+    console.log('Election:', election.title, 'scope:', election.scope, 'orgId:', election.organization?._id || election.organization, 'userOrg:', user?.organization?._id || user?.organization, 'isEligible:', isEligible);
     
-    return matchesSearch && matchesStatus && isEligibleByFaculty;
+    return matchesSearch && matchesStatus && isEligible;
   });
 
 

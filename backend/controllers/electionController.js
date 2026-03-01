@@ -82,6 +82,8 @@ const getAllElections = asyncHandler(async (req, res) => {
     // Build query
     let query = Election.find()
       .populate("createdBy", "name email role")
+      .populate("organization", "_id name code type parent")
+      .populate("allowedOrganizations", "_id name code type parent")
       .sort({ startDate: -1 })
       .skip(skip)
       .limit(limit)
