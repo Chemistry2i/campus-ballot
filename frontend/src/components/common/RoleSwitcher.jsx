@@ -57,20 +57,20 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
   const buttonStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: window.innerWidth < 768 ? '6px' : '8px',
-    padding: window.innerWidth < 768 ? '6px 12px' : '8px 16px',
-    borderRadius: window.innerWidth < 768 ? '6px' : '8px',
+    gap: window.innerWidth < 768 ? '6px' : '6px',
+    padding: window.innerWidth < 768 ? '6px 12px' : '5px 10px',
+    borderRadius: window.innerWidth < 768 ? '6px' : '6px',
     border: `1.5px solid ${isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0, 0, 0, 0.1)'}`,
     background: isDarkMode 
       ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))' 
       : '#ffffff',
     color: colors?.text || (isDarkMode ? '#fff' : '#1f2937'),
     cursor: 'pointer',
-    fontSize: window.innerWidth < 768 ? '12px' : '14px',
+    fontSize: window.innerWidth < 768 ? '12px' : '12px',
     fontWeight: '600',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
-    minHeight: '36px',
+    minHeight: window.innerWidth < 768 ? '36px' : '28px',
     boxShadow: isDarkMode 
       ? 'none'
       : '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -80,26 +80,26 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     position: 'absolute',
     top: '100%',
     right: '0',
-    marginTop: '8px',
-    minWidth: window.innerWidth < 768 ? '220px' : '200px',
-    maxWidth: window.innerWidth < 400 ? '280px' : 'none',
-    borderRadius: window.innerWidth < 768 ? '5px' : '10px',
+    marginTop: '6px',
+    minWidth: window.innerWidth < 768 ? '180px' : '140px',
+    maxWidth: window.innerWidth < 400 ? '220px' : 'none',
+    borderRadius: window.innerWidth < 768 ? '5px' : '6px',
     border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'}`,
     background: isDarkMode ? '#1f2937' : '#ffffff',
     boxShadow: isDarkMode 
-      ? '0 10px 40px rgba(0,0,0,0.5)' 
-      : '0 10px 40px rgba(0,0,0,0.2)',
+      ? '0 8px 24px rgba(0,0,0,0.4)' 
+      : '0 8px 24px rgba(0,0,0,0.15)',
     zIndex: 1000,
     overflow: 'hidden',
-    animation: 'fadeIn 0.2s ease',
+    animation: 'fadeIn 0.15s ease',
   };
   
 
   const menuItemStyle = (isActive) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: window.innerWidth < 768 ? '10px' : '12px',
-    padding: window.innerWidth < 768 ? '10px 14px' : '12px 16px',
+    gap: window.innerWidth < 768 ? '10px' : '8px',
+    padding: window.innerWidth < 768 ? '10px 14px' : '8px 12px',
     cursor: isActive ? 'default' : 'pointer',
     background: isActive 
       ? (isDarkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.12)')
@@ -109,13 +109,13 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
       : (colors?.text || (isDarkMode ? '#e5e7eb' : '#374151')),
     borderLeft: isActive ? '3px solid #6366f1' : '3px solid transparent',
     transition: 'all 0.2s ease',
-    fontSize: window.innerWidth < 768 ? '13px' : '14px',
+    fontSize: window.innerWidth < 768 ? '13px' : '12px',
   });
 
   const iconContainerStyle = (roleType) => ({
-    width: window.innerWidth < 768 ? '32px' : '36px',
-    height: window.innerWidth < 768 ? '32px' : '36px',
-    borderRadius: window.innerWidth < 768 ? '6px' : '8px',
+    width: window.innerWidth < 768 ? '32px' : '28px',
+    height: window.innerWidth < 768 ? '32px' : '28px',
+    borderRadius: window.innerWidth < 768 ? '6px' : '6px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -125,7 +125,7 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
     color: roleType === 'student' 
       ? (isDarkMode ? '#10b981' : '#059669')
       : (isDarkMode ? '#f59e0b' : '#d97706'),
-    fontSize: window.innerWidth < 768 ? '14px' : '16px',
+    fontSize: window.innerWidth < 768 ? '14px' : '13px',
   });
 
   return (
@@ -153,15 +153,15 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
         className="role-switcher-btn"
         style={buttonStyle}
         onClick={() => setIsOpen(!isOpen)}
-        title="Switch between Student and Candidate view"
+        title="Switch role"
       >
-        <FaExchangeAlt style={{ fontSize: window.innerWidth < 768 ? '12px' : '14px', color: '#6366f1' }} />
+        <FaExchangeAlt style={{ fontSize: window.innerWidth < 768 ? '12px' : '11px', color: '#6366f1' }} />
         <span style={{ display: window.innerWidth < 400 ? 'none' : 'inline' }}>
           {currentRole === 'student' ? 'Student' : currentRole === 'candidate' ? 'Candidate' : 'Agent'}
         </span>
         <FaChevronDown 
           style={{ 
-            fontSize: window.innerWidth < 768 ? '10px' : '12px', 
+            fontSize: window.innerWidth < 768 ? '10px' : '9px', 
             transition: 'transform 0.2s',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
           }} 
@@ -184,33 +184,6 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
           />
           
           <div style={menuStyle}>
-            <div style={{ 
-              padding: window.innerWidth < 768 ? '10px 14px' : '12px 16px', 
-              borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}`,
-              background: isDarkMode ? 'transparent' : 'rgba(99, 102, 241, 0.02)'
-            }}>
-              <div style={{ 
-                fontSize: window.innerWidth < 768 ? '11px' : '12px', 
-                color: isDarkMode ? '#9ca3af' : '#6b7280', 
-                textTransform: 'uppercase', 
-                letterSpacing: '0.5px',
-                fontWeight: '600'
-              }}>
-                Switch View
-              </div>
-              <div style={{ 
-                fontSize: window.innerWidth < 768 ? '13px' : '14px', 
-                fontWeight: '600', 
-                color: colors?.text || (isDarkMode ? '#fff' : '#111827'), 
-                marginTop: '4px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}>
-                {user?.name || 'User'}
-              </div>
-            </div>
-            
             <div
               className="role-menu-item"
               style={menuItemStyle(currentRole === 'student')}
@@ -219,17 +192,9 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
               <div style={iconContainerStyle('student')}>
                 <FaUserGraduate />
               </div>
-              <div>
-                <div style={{ fontWeight: '500' }}>Student View</div>
-                <div style={{ 
-                  fontSize: window.innerWidth < 768 ? '11px' : '12px', 
-                  color: isDarkMode ? '#9ca3af' : '#6b7280' 
-                }}>
-                  Vote & view elections
-                </div>
-              </div>
+              <div style={{ fontWeight: '500' }}>Student</div>
               {currentRole === 'student' && (
-                <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#10b981', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                <div style={{ marginLeft: 'auto', fontSize: '9px', background: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: '8px' }}>
                   Active
                 </div>
               )}
@@ -244,17 +209,9 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
                 <div style={iconContainerStyle('candidate')}>
                   <FaUserTie />
                 </div>
-                <div>
-                  <div style={{ fontWeight: '500' }}>Candidate View</div>
-                  <div style={{ 
-                    fontSize: window.innerWidth < 768 ? '11px' : '12px', 
-                    color: isDarkMode ? '#9ca3af' : '#6b7280' 
-                  }}>
-                    Manage your campaign
-                  </div>
-                </div>
+                <div style={{ fontWeight: '500' }}>Candidate</div>
                 {currentRole === 'candidate' && (
-                  <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                  <div style={{ marginLeft: 'auto', fontSize: '9px', background: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '8px' }}>
                     Active
                   </div>
                 )}
@@ -270,17 +227,9 @@ const RoleSwitcher = ({ user, isDarkMode, colors }) => {
                 <div style={{...iconContainerStyle('agent'), background: isDarkMode ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.15)', color: isDarkMode ? '#a78bfa' : '#7c3aed'}}>
                   <FaUsers />
                 </div>
-                <div>
-                  <div style={{ fontWeight: '500' }}>Agent View</div>
-                  <div style={{ 
-                    fontSize: window.innerWidth < 768 ? '11px' : '12px', 
-                    color: isDarkMode ? '#9ca3af' : '#6b7280' 
-                  }}>
-                    Support candidate campaigns
-                  </div>
-                </div>
+                <div style={{ fontWeight: '500' }}>Agent</div>
                 {currentRole === 'agent' && (
-                  <div style={{ marginLeft: 'auto', fontSize: '10px', background: '#8b5cf6', color: '#fff', padding: '2px 8px', borderRadius: '10px' }}>
+                  <div style={{ marginLeft: 'auto', fontSize: '9px', background: '#8b5cf6', color: '#fff', padding: '2px 6px', borderRadius: '8px' }}>
                     Active
                   </div>
                 )}

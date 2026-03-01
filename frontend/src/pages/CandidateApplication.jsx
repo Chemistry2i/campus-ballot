@@ -1072,58 +1072,64 @@ export default function CandidateApplication({ user, users = [] }) {
     {/* Success Modal */}
     {showSuccessModal && (
       <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 9999 }} onClick={() => setShowSuccessModal(false)}>
-        <div className="modal-dialog modal-dialog-centered modal-sm">
+        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 'min(90vw, 500px)' }}>
           <div className="modal-content" style={{ 
             background: isDarkMode ? colors.cardBackground : '#ffffff',
             border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
-            margin: '1rem'
-          }}>
-            <div className="modal-body text-center p-3 p-sm-4 p-md-5">
-              <div className="mb-3 mb-md-4">
+            borderRadius: '1rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }} onClick={e => e.stopPropagation()}>
+            <div className="modal-body text-center p-4 p-md-5">
+              <div className="mb-4">
                 <div style={{
-                  width: 'clamp(60px, 12vw, 80px)',
-                  height: 'clamp(60px, 12vw, 80px)',
+                  width: '100px',
+                  height: '100px',
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto',
-                  animation: 'scaleIn 0.5s ease-out'
+                  animation: 'scaleIn 0.5s ease-out',
+                  boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)'
                 }}>
-                  <i className="fa fa-check" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#ffffff' }} />
+                  <i className="fa fa-check" style={{ fontSize: '3rem', color: '#ffffff' }} />
                 </div>
               </div>
-              <h3 className="fw-bold mb-2 mb-md-3" style={{ 
+              <h3 className="fw-bold mb-3" style={{ 
                 color: isDarkMode ? colors.text : '#1f2937',
-                fontSize: 'clamp(1.25rem, 3vw, 1.75rem)'
+                fontSize: '1.5rem'
               }}>
                 Application Submitted!
               </h3>
-              <p className="mb-3 mb-md-4" style={{ 
+              <p className="mb-4" style={{ 
                 color: isDarkMode ? '#94a3b8' : '#6b7280', 
-                fontSize: 'clamp(0.875rem, 2vw, 1.05rem)',
-                lineHeight: 1.5
+                fontSize: '1rem',
+                lineHeight: 1.6,
+                maxWidth: '400px',
+                margin: '0 auto 1.5rem'
               }}>
                 Your candidate application has been successfully submitted and is now under review by the election committee.
               </p>
-              <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+              <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                 <button 
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-lg"
                   style={{ 
-                    padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem)',
-                    fontSize: 'clamp(0.875rem, 1.5vw, 1rem)'
+                    padding: '0.75rem 2rem',
+                    fontSize: '1rem',
+                    borderRadius: '0.5rem'
                   }}
                   onClick={() => { setShowSuccessModal(false); window.history.back(); }}
                 >
                   <i className="fa fa-home me-2" />
-                  Dashboard
+                  Go to Dashboard
                 </button>
                 <button 
-                  className="btn btn-outline-secondary"
+                  className="btn btn-outline-secondary btn-lg"
                   style={{ 
-                    padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem)',
-                    fontSize: 'clamp(0.875rem, 1.5vw, 1rem)'
+                    padding: '0.75rem 2rem',
+                    fontSize: '1rem',
+                    borderRadius: '0.5rem'
                   }}
                   onClick={() => setShowSuccessModal(false)}
                 >
