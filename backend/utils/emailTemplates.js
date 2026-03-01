@@ -262,6 +262,169 @@ const emailTemplates = {
         </html>
       `
     };
+  },
+
+  /**
+   * Welcome email sent to users created via bulk import
+   */
+  bulkImportWelcome: ({ userName, userEmail, password, role, organizationName = 'Campus Ballot', loginUrl = 'https://campusballot.tech/login' }) => {
+    const roleDisplay = {
+      'student': 'Student Voter',
+      'admin': 'Administrator',
+      'observer': 'Election Observer',
+      'candidate': 'Candidate',
+      'agent': 'Campaign Agent',
+      'federation_admin': 'Federation Administrator'
+    };
+    
+    return {
+      subject: `Welcome to Campus Ballot - Your Account Has Been Created`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #0d6efd 0%, #0056d2 100%); color: white; padding: 50px 30px; text-align: center; }
+            .header-icon { font-size: 48px; margin-bottom: 15px; }
+            .header h1 { font-size: 32px; margin-bottom: 8px; font-weight: 700; letter-spacing: -0.5px; }
+            .header p { font-size: 16px; opacity: 0.9; }
+            .content { padding: 40px 35px; }
+            .welcome-text { font-size: 18px; color: #333; margin-bottom: 25px; }
+            .welcome-text .name { color: #0d6efd; font-weight: 700; }
+            .credentials-box { background: linear-gradient(135deg, #f8fafc 0%, #f0f6ff 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 25px; margin: 25px 0; }
+            .credentials-box h3 { color: #0d6efd; font-size: 16px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+            .credential-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+            .credential-row:last-child { border-bottom: none; }
+            .credential-label { color: #64748b; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+            .credential-value { color: #1e293b; font-size: 15px; font-weight: 600; font-family: 'Consolas', 'Monaco', monospace; background: #fff; padding: 8px 14px; border-radius: 6px; border: 1px solid #e2e8f0; }
+            .password-value { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+            .warning-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
+            .warning-icon { color: #f59e0b; font-size: 20px; flex-shrink: 0; }
+            .warning-text { color: #92400e; font-size: 13px; line-height: 1.6; }
+            .info-section { margin: 30px 0; }
+            .info-section h2 { color: #0d6efd; font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+            .info-section p { color: #555; font-size: 14px; line-height: 1.8; margin-bottom: 12px; }
+            .feature-list { list-style: none; margin: 15px 0; }
+            .feature-list li { padding: 10px 0; padding-left: 28px; position: relative; color: #555; font-size: 14px; }
+            .feature-list li::before { content: "✓"; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #0d6efd 0%, #0056d2 100%); color: white !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 25px 0; text-align: center; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3); }
+            .cta-button:hover { background: linear-gradient(135deg, #0056d2 0%, #004299 100%); }
+            .org-badge { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 10px; }
+            .role-badge { display: inline-block; background: #dcfce7; color: #166534; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+            .divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 30px 0; }
+            .footer { background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+            .footer p { color: #64748b; font-size: 12px; margin: 6px 0; }
+            .footer-links { margin-top: 15px; }
+            .footer-link { color: #0d6efd; text-decoration: none; font-weight: 600; font-size: 13px; margin: 0 10px; }
+            .social-links { margin-top: 20px; }
+            .social-link { display: inline-block; width: 36px; height: 36px; background: #e2e8f0; border-radius: 50%; margin: 0 5px; line-height: 36px; color: #64748b; text-decoration: none; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="header-icon">🗳️</div>
+              <h1>Welcome to Campus Ballot!</h1>
+              <p>Your secure digital voting platform</p>
+            </div>
+            
+            <div class="content">
+              <p class="welcome-text">
+                Hello <span class="name">${userName}</span>,
+              </p>
+              
+              <p style="color: #555; font-size: 15px; line-height: 1.8; margin-bottom: 20px;">
+                We're excited to welcome you to <strong>Campus Ballot</strong>! Your account has been successfully created by your institution's administrator. You now have access to participate in secure digital elections.
+              </p>
+              
+              <div style="margin-bottom: 15px;">
+                <span class="org-badge">📍 ${organizationName}</span>
+                <span class="role-badge">👤 ${roleDisplay[role] || role}</span>
+              </div>
+              
+              <div class="credentials-box">
+                <h3>🔐 Your Login Credentials</h3>
+                <div class="credential-row">
+                  <span class="credential-label">Email Address</span>
+                  <span class="credential-value">${userEmail}</span>
+                </div>
+                <div class="credential-row">
+                  <span class="credential-label">Temporary Password</span>
+                  <span class="credential-value password-value">${password}</span>
+                </div>
+              </div>
+              
+              <div class="warning-box">
+                <span class="warning-icon">⚠️</span>
+                <span class="warning-text">
+                  <strong>Important Security Notice:</strong> Please change your password immediately after your first login. This temporary password should not be shared with anyone. For your security, we recommend using a strong, unique password.
+                </span>
+              </div>
+              
+              <div style="text-align: center;">
+                <a href="${loginUrl}" class="cta-button">Login to Your Account →</a>
+              </div>
+              
+              <div class="divider"></div>
+              
+              <div class="info-section">
+                <h2>What You Can Do</h2>
+                <p>As a registered member, you have access to:</p>
+                <ul class="feature-list">
+                  <li>Participate in secure, transparent elections</li>
+                  <li>View upcoming and ongoing elections</li>
+                  <li>Cast your vote with complete privacy</li>
+                  <li>Track election results in real-time</li>
+                  <li>Receive important election notifications</li>
+                </ul>
+              </div>
+              
+              <div class="divider"></div>
+              
+              <div class="info-section">
+                <h2>Getting Started</h2>
+                <p>Follow these simple steps to get started:</p>
+                <ol style="margin-left: 20px; color: #555; font-size: 14px; line-height: 2;">
+                  <li>Click the login button above or visit <strong>${loginUrl}</strong></li>
+                  <li>Enter your email and temporary password</li>
+                  <li>Change your password to something secure and memorable</li>
+                  <li>Complete your profile information</li>
+                  <li>You're ready to participate in elections!</li>
+                </ol>
+              </div>
+              
+              <div class="divider"></div>
+              
+              <p style="color: #555; font-size: 14px; line-height: 1.8;">
+                If you have any questions or need assistance, please don't hesitate to contact your institution's election administrator or our support team.
+              </p>
+              
+              <p style="margin-top: 25px; color: #333;">
+                Welcome aboard!<br>
+                <strong style="color: #0d6efd;">The Campus Ballot Team</strong>
+              </p>
+            </div>
+            
+            <div class="footer">
+              <p><strong>Campus Ballot</strong> - Secure Digital Voting for Universities</p>
+              <p>This is an automated welcome message. Please do not reply to this email.</p>
+              <div class="footer-links">
+                <a href="${loginUrl}" class="footer-link">Login</a>
+                <a href="#" class="footer-link">Help Center</a>
+                <a href="#" class="footer-link">Contact Support</a>
+              </div>
+              <p style="margin-top: 20px;">© 2026 Campus Ballot. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
   }
 };
 

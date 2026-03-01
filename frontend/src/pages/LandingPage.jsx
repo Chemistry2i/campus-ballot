@@ -82,7 +82,7 @@ const LandingPage = () => {
 
       // Send to backend API
       const response = await fetch(
-        "https://api.campusballot.tech/api/contact",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/contact",
         {
           method: "POST",
           headers: {

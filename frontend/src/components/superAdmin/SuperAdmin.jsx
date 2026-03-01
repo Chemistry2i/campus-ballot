@@ -15,6 +15,7 @@ import SecurityAudit from './SecurityAudit';
 import BackupRecovery from './BackupRecovery';
 import SystemConfiguration from './SystemConfiguration';
 import AdminActivityMonitor from './AdminActivityMonitor';
+import OrganizationManagement from './OrganizationManagement';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../admin/ThemeToggle';
 import '../../styles/darkmode.css';
@@ -90,6 +91,7 @@ const SuperAdmin = ({ user, onLogout }) => {
     'backup-recovery': { label: 'Backup & Recovery', icon: 'fa-download' },
     'system-config': { label: 'System Configuration', icon: 'fa-gears' },
     'admin-activity': { label: 'Admin Activity', icon: 'fa-person-circle-check' },
+    'organizations': { label: 'Organizations', icon: 'fa-building' },
   };
 
   useEffect(() => {
@@ -485,6 +487,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             <Route path="backup-recovery" element={<BackupRecovery />} />
             <Route path="system-config" element={<SystemConfiguration />} />
             <Route path="admin-activity" element={<AdminActivityMonitor />} />
+            <Route path="organizations" element={<OrganizationManagement />} />
             <Route path="*" element={<SystemHealth />} />
           </Routes>
         </div>

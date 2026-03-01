@@ -144,7 +144,7 @@ const authorize = (...roles) => {
 };
 
 // Shortcut for admin-only routes
-const adminOnly = authorize("admin");
+const adminOnly = authorize("admin", "super_admin", "federation_admin");
 
 // Super Admin only middleware
 const superAdminOnly = (req, res, next) => {
@@ -152,6 +152,15 @@ const superAdminOnly = (req, res, next) => {
     next();
   } else {
     res.status(403).json({ message: "Access denied. Super Admin only." });
+  }
+};
+
+// Federation Admin or Super Admin only middleware
+const federationAdminOnly = (req, res, next) => {
+  if (req.user && ['super_admin', 'federation_admin'].includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Federation Admin or Super Admin only." });
   }
 };
 
@@ -276,6 +285,7 @@ module.exports = {
   authorize,
   adminOnly,
   superAdminOnly,
+  federationAdminOnly,
   hasRole,
   studentOrCandidate,
   studentOrAgent,

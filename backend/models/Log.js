@@ -14,7 +14,7 @@ const logSchema = new mongoose.Schema({
   entityType: {
     type: String,
     required: true,
-    enum: ['User', 'Election', 'Candidate', 'Vote', 'Notification', 'Log', 'System']
+    enum: ['User', 'Election', 'Candidate', 'Vote', 'Notification', 'Log', 'System', 'Organization']
   },
   entityId: {
     type: String,

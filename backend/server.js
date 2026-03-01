@@ -47,6 +47,7 @@ const publicRoutes = require('./routes/publicRoutes');
 const engagementRoutes = require('./routes/engagementRoutes');
 const observerRoutes = require('./routes/observerRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const organizationRoutes = require('./routes/organizationRoutes');
 const backupController = require('./controllers/backupController');
 const cron = require('node-cron');
 
@@ -67,17 +68,17 @@ app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'", "https://www.campusballot.tech", "https://api.campusballot.tech"],
+      defaultSrc: ["'self'", "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev", "https://api.campusballot.tech"],
       scriptSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net"
       ],
       styleSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
@@ -87,19 +88,19 @@ app.use(
         "'self'",
         "data:",
         "https://res.cloudinary.com",
-        "https://www.campusballot.tech",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       connectSrc: [
         "'self'",
-        "https://www.campusballot.tech",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       fontSrc: [
         "'self'",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
-        "https://www.campusballot.tech",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
         "https://api.campusballot.tech"
       ],
       objectSrc: ["'none'"],
@@ -111,9 +112,9 @@ app.use(
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://www.campusballot.tech",
+    "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
     "https://api.campusballot.tech",
-    "https://www.campusballot.tech",
+    "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
@@ -214,6 +215,7 @@ app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/observer', observerRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/organizations', organizationRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 
@@ -238,8 +240,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://www.campusballot.tech",
-      "https://www.campusballot.tech",
+      "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+      "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],

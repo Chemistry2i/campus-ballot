@@ -7,6 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 const navItems = [
   { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
+  { label: 'Organizations', icon: 'fa-solid fa-building', to: '/super-admin/organizations' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
   { label: 'Manage Observers', icon: 'fa-solid fa-eye', to: '/super-admin/manage-observers' },
   { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },

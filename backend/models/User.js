@@ -20,9 +20,18 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false // Exclude password from queries by default
     },
+    
+    // Organization this user belongs to (university or federation)
+    organization: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null,
+        index: true
+    },
+    
     role: {
         type: String,
-        enum: ['student', 'admin', 'super_admin', 'candidate', 'agent', 'observer'], // Primary role
+        enum: ['student', 'admin', 'super_admin', 'federation_admin', 'candidate', 'agent', 'observer'], // Primary role
         default: 'student',
         required: true,
         trim: true,
