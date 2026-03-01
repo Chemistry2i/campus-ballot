@@ -324,9 +324,9 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                     left: 0,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: 6,
-                    height: 32,
-                    borderRadius: 2,
+                    width: 5,
+                    // height: 40,
+                    borderRadius: 1,
                     background: '#2563eb',
                     boxShadow: '0 2px 8px rgba(37,99,235,0.12)',
                   }}

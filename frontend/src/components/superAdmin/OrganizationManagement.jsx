@@ -54,6 +54,32 @@ const OrganizationManagement = () => {
 
   const { isDarkMode, colors } = useTheme();
 
+  // Dark mode styles for SweetAlert2
+  const swalDarkOptions = isDarkMode ? {
+    background: colors.surface,
+    color: colors.text,
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#6b7280',
+    customClass: {
+      popup: 'swal-dark-popup',
+      title: 'swal-dark-title',
+      htmlContainer: 'swal-dark-content',
+      input: 'swal-dark-input',
+      confirmButton: 'swal-dark-confirm',
+      cancelButton: 'swal-dark-cancel'
+    }
+  } : {};
+
+  // Helper function for themed Swal
+  const showAlert = (title, text, icon) => {
+    return Swal.fire({
+      title,
+      text,
+      icon,
+      ...swalDarkOptions
+    });
+  };
+
   // Fetch organizations
   const fetchOrganizations = async () => {
     setLoading(true);
@@ -71,7 +97,7 @@ const OrganizationManagement = () => {
       setExpandedFederations(expanded);
     } catch (err) {
       console.error('Error fetching organizations:', err);
-      Swal.fire('Error', 'Failed to load organizations', 'error');
+      showAlert('Error', 'Failed to load organizations', 'error');
     } finally {
       setLoading(false);
     }
@@ -169,7 +195,7 @@ const OrganizationManagement = () => {
     e.preventDefault();
     
     if (!formData.name || !formData.code) {
-      Swal.fire('Error', 'Name and code are required', 'error');
+      showAlert('Error', 'Name and code are required', 'error');
       return;
     }
 
@@ -185,19 +211,19 @@ const OrganizationManagement = () => {
         await axios.post('/api/organizations', payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        Swal.fire('Success', `${formData.type === 'federation' ? 'Federation' : 'University'} created successfully`, 'success');
+        showAlert('Success', `${formData.type === 'federation' ? 'Federation' : 'University'} created successfully`, 'success');
       } else {
         await axios.put(`/api/organizations/${selectedOrg._id}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        Swal.fire('Success', 'Organization updated successfully', 'success');
+        showAlert('Success', 'Organization updated successfully', 'success');
       }
 
       setShowModal(false);
       fetchOrganizations();
     } catch (err) {
       console.error('Error saving organization:', err);
-      Swal.fire('Error', err.response?.data?.message || 'Failed to save organization', 'error');
+      showAlert('Error', err.response?.data?.message || 'Failed to save organization', 'error');
     } finally {
       setSaving(false);
     }
@@ -208,11 +234,12 @@ const OrganizationManagement = () => {
     const result = await Swal.fire({
       title: 'Delete Organization?',
       html: `<p>Are you sure you want to delete <strong>${org.name}</strong>?</p>
-             <p class="text-danger">This will also remove all associated data.</p>`,
+             <p class="${isDarkMode ? 'text-warning' : 'text-danger'}">This will also remove all associated data.</p>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
-      confirmButtonText: 'Yes, delete it'
+      confirmButtonText: 'Yes, delete it',
+      ...swalDarkOptions
     });
 
     if (result.isConfirmed) {
@@ -221,10 +248,10 @@ const OrganizationManagement = () => {
         await axios.delete(`/api/organizations/${org._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        Swal.fire('Deleted', 'Organization has been deleted', 'success');
+        showAlert('Deleted', 'Organization has been deleted', 'success');
         fetchOrganizations();
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to delete organization', 'error');
+        showAlert('Error', err.response?.data?.message || 'Failed to delete organization', 'error');
       }
     }
   };
@@ -239,7 +266,7 @@ const OrganizationManagement = () => {
       }, {});
 
     if (Object.keys(adminOptions).length === 0) {
-      Swal.fire('No Admins Available', 'All admins are already assigned to organizations. Create a new admin first.', 'info');
+      showAlert('No Admins Available', 'All admins are already assigned to organizations. Create a new admin first.', 'info');
       return;
     }
 
@@ -249,7 +276,8 @@ const OrganizationManagement = () => {
       inputOptions: adminOptions,
       inputPlaceholder: 'Select an admin',
       showCancelButton: true,
-      confirmButtonText: 'Assign'
+      confirmButtonText: 'Assign',
+      ...swalDarkOptions
     });
 
     if (adminId) {
@@ -259,11 +287,11 @@ const OrganizationManagement = () => {
           { adminId },
           { headers: { Authorization: `Bearer ${token}` }}
         );
-        Swal.fire('Success', 'Admin assigned successfully', 'success');
+        showAlert('Success', 'Admin assigned successfully', 'success');
         fetchOrganizations();
         fetchAdmins();
       } catch (err) {
-        Swal.fire('Error', err.response?.data?.message || 'Failed to assign admin', 'error');
+        showAlert('Error', err.response?.data?.message || 'Failed to assign admin', 'error');
       }
     }
   };
@@ -289,6 +317,30 @@ const OrganizationManagement = () => {
 
   return (
     <div style={{ padding: '1.5rem', color: colors.text }}>
+      {/* Dark mode styles for SweetAlert2 */}
+      {isDarkMode && (
+        <style>{`
+          .swal-dark-popup {
+            background: ${colors.surface} !important;
+            color: ${colors.text} !important;
+          }
+          .swal-dark-title {
+            color: ${colors.text} !important;
+          }
+          .swal-dark-content {
+            color: ${colors.textSecondary} !important;
+          }
+          .swal-dark-input, .swal2-select {
+            background: ${colors.background} !important;
+            color: ${colors.text} !important;
+            border-color: ${colors.border} !important;
+          }
+          .swal2-select option {
+            background: ${colors.surface} !important;
+            color: ${colors.text} !important;
+          }
+        `}</style>
+      )}
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>

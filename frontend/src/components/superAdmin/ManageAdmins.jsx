@@ -31,6 +31,24 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   const [creating, setCreating] = useState(false);
   const { isDarkMode, colors } = useTheme();
 
+  // Dark mode styles for SweetAlert2
+  const swalDarkOptions = isDarkMode ? {
+    background: colors.surface,
+    color: colors.text,
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#6b7280',
+  } : {};
+
+  // Helper function for themed Swal
+  const showAlert = (title, text, icon) => {
+    return Swal.fire({
+      title,
+      text,
+      icon,
+      ...swalDarkOptions
+    });
+  };
+
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
@@ -78,12 +96,12 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   // Add admin handler
   const handleAddAdmin = async () => {
     if (!newAdmin.name || !newAdmin.email || !newAdmin.password) {
-      Swal.fire('Error', 'Name, email, and password are required', 'error');
+      showAlert('Error', 'Name, email, and password are required', 'error');
       return;
     }
     // Validate password strength
     if (newAdmin.password.length < 6) {
-      Swal.fire('Error', 'Password must be at least 6 characters long', 'error');
+      showAlert('Error', 'Password must be at least 6 characters long', 'error');
       return;
     }
     setCreating(true);
@@ -105,7 +123,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
           'Content-Type': 'application/json'
         },
       });
-      Swal.fire('Success', 'Admin created successfully. Password has been hashed securely and account is automatically verified.', 'success');
+      showAlert('Success', 'Admin created successfully. Password has been hashed securely and account is automatically verified.', 'success');
       setShowAddModal(false);
       setNewAdmin({
         name: '',
@@ -118,14 +136,15 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         lastLogin: '',
         createdAt: '',
       });
-      // Refresh list
+      // Refresh list and reset to page 1 to show the new admin
       const res = await axios.get('/api/super-admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAdmins(Array.isArray(res.data) ? res.data : []);
+      setPage(1); // Reset to page 1 to see newly created admin
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add admin';
-      Swal.fire('Error', errorMessage, 'error');
+      showAlert('Error', errorMessage, 'error');
     } finally {
       setCreating(false);
     }
@@ -139,7 +158,9 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel'
+      confirmButtonColor: '#dc3545',
+      cancelButtonText: 'Cancel',
+      ...swalDarkOptions
     });
     if (!result.isConfirmed) return;
     try {
@@ -147,10 +168,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       await axios.delete(`/api/super-admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      Swal.fire('Deleted', 'Admin removed', 'success');
+      showAlert('Deleted', 'Admin removed', 'success');
       setAdmins(admins.filter(a => a._id !== id && a.id !== id));
     } catch (err) {
-      Swal.fire('Error', 'Failed to delete admin', 'error');
+      showAlert('Error', 'Failed to delete admin', 'error');
     }
   };
 
@@ -167,9 +188,9 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
           ? { ...a, status: newStatus, accountStatus: newStatus }
           : a
       ));
-      Swal.fire('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
+      showAlert('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
     } catch (err) {
-      Swal.fire('Error', 'Failed to update status', 'error');
+      showAlert('Error', 'Failed to update status', 'error');
     }
   };
 
@@ -186,20 +207,16 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const totalPages = Math.ceil(filteredAdmins.length / pageSize);
-  const paginatedAdmins = filteredAdmins.slice((page - 1) * pageSize, page * pageSize);
 
   // Status filter
   const [statusFilter, setStatusFilter] = useState('all');
-  const statusFilteredAdmins = statusFilter === 'all'
-    ? paginatedAdmins
-    : paginatedAdmins.filter(a => a.status === statusFilter);
 
   // Bulk selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Sorting state
-  const [sortKey, setSortKey] = useState('name');
-  const [sortAsc, setSortAsc] = useState(true);
+  // Sorting state - default to createdAt descending to show newest first
+  const [sortKey, setSortKey] = useState('createdAt');
+  const [sortAsc, setSortAsc] = useState(false);
 
   // Handle sorting
   const handleSort = (key) => {
@@ -218,11 +235,12 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     return 0;
   });
 
-  // Pagination, status filter as before
-  const paginatedAdminsForSort = sortedAdmins.slice((page - 1) * pageSize, page * pageSize);
-  const statusFilteredAdminsForSort = statusFilter === 'all'
-    ? paginatedAdminsForSort
-    : paginatedAdminsForSort.filter(a => a.status === statusFilter);
+  // Apply pagination to sorted admins, then filter by status
+  const paginatedAdmins = sortedAdmins.slice((page - 1) * pageSize, page * pageSize);
+  // Check both status and accountStatus fields (backend uses accountStatus)
+  const statusFilteredAdmins = statusFilter === 'all'
+    ? paginatedAdmins
+    : paginatedAdmins.filter(a => (a.status || a.accountStatus) === statusFilter);
 
   // Handle bulk selection
   const handleSelectAll = (checked) => {
@@ -234,14 +252,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
 
   // Bulk deactivate/delete
   const handleBulkDeactivate = async () => {
-    if (selectedIds.length === 0) return Swal.fire('Info', 'No admins selected', 'info');
+    if (selectedIds.length === 0) return showAlert('Info', 'No admins selected', 'info');
     // ...implement bulk deactivate logic...
-    Swal.fire('Info', 'Bulk deactivate not implemented', 'info');
+    showAlert('Info', 'Bulk deactivate not implemented', 'info');
   };
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return Swal.fire('Info', 'No admins selected', 'info');
+    if (selectedIds.length === 0) return showAlert('Info', 'No admins selected', 'info');
     // ...implement bulk delete logic...
-    Swal.fire('Info', 'Bulk delete not implemented', 'info');
+    showAlert('Info', 'Bulk delete not implemented', 'info');
   };
 
   // Export to CSV
@@ -514,7 +532,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                       <select
                         className="form-select form-select-sm"
                         value={admin.role}
-                        onChange={e => Swal.fire('Info', 'Role change not implemented', 'info')}
+                        onChange={e => showAlert('Info', 'Role change not implemented', 'info')}
                         style={{ minWidth: 100 }}
                         disabled={admin.role === 'super_admin'}
                         title="Change role"
@@ -547,14 +565,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                     <td style={{ padding: '0.75rem' }}>
                       <button
                         className="btn btn-sm btn-info me-2"
-                        onClick={() => Swal.fire('Info', 'View details not implemented', 'info')}
+                        onClick={() => showAlert('Info', 'View details not implemented', 'info')}
                         title="View Details"
                       >
                         <i className="fa fa-eye"></i>
                       </button>
                       <button
                         className="btn btn-sm btn-warning me-2"
-                        onClick={() => Swal.fire('Info', 'Edit not implemented', 'info')}
+                        onClick={() => showAlert('Info', 'Edit not implemented', 'info')}
                         title="Edit"
                       >
                         <i className="fa fa-edit"></i>
@@ -575,7 +593,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                       </button>
                       <button
                         className="btn btn-sm btn-secondary ms-2"
-                        onClick={() => Swal.fire('Info', 'Audit log not implemented', 'info')}
+                        onClick={() => showAlert('Info', 'Audit log not implemented', 'info')}
                         title="Audit Log"
                       >
                         <i className="fa fa-history"></i>
