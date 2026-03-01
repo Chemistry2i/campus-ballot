@@ -132,6 +132,7 @@ function StudentDashboard({ user: initialUser }) {
     name: user?.name || '',
     phone: user?.phone || '',
     department: user?.department || getDepartmentFromCourse(user?.course) || '',
+    faculty: user?.faculty || '',
     yearOfStudy: user?.yearOfStudy || '',
     bio: user?.bio || '',
     profilePicture: user?.profilePicture || null
@@ -232,7 +233,8 @@ function StudentDashboard({ user: initialUser }) {
           // Update profile form data
           setProfileFormData(prev => ({
             ...prev,
-            department: updatedUser.department || getDepartmentFromCourse(updatedUser.course) || ''
+            department: updatedUser.department || getDepartmentFromCourse(updatedUser.course) || '',
+            faculty: updatedUser.faculty || ''
           }));
           
           console.log('User data updated with department:', updatedUser.department);
@@ -352,106 +354,139 @@ function StudentDashboard({ user: initialUser }) {
   }
 };
 
-  // Check if user is eligible for an election based on all criteria
+  // Check if user is eligible for an election based on eligibility type
   const isUserEligibleForElection = (election) => {
     if (!election || !user) return false;
 
-    // Get user's organization ID (handle both populated and non-populated cases)
+    // FIRST: Always check allowedFaculties if set (this is a global restriction that applies to ALL eligibility types)
+    const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+    if (hasFacultyRestriction) {
+      if (!user.faculty) return false;
+      const userFacultyLower = user.faculty.toLowerCase().trim();
+      const matchesFaculty = election.allowedFaculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+      if (!matchesFaculty) return false;
+    }
+
+    // Get eligibility type - prefer eligibility.type, fall back to scope, then 'all'
+    let eligibilityType = election.eligibility?.type;
+    
+    // If eligibility.type not set, derive from scope for backward compatibility
+    if (!eligibilityType) {
+      if (election.scope === 'university') {
+        eligibilityType = 'university';
+      } else if (election.scope === 'federation') {
+        eligibilityType = 'federation';
+      } else {
+        eligibilityType = 'all'; // default to all-access
+      }
+    }
+
+    // Helper: get organization IDs
     const getUserOrgId = () => {
       if (!user.organization) return null;
-      return typeof user.organization === 'object' ? user.organization._id : user.organization;
+      return typeof user.organization === 'object' ? user.organization._id?.toString() : user.organization?.toString();
     };
-
-    // Get user's organization parent ID (for federation checks)
     const getUserOrgParentId = () => {
       if (!user.organization || typeof user.organization !== 'object') return null;
       if (!user.organization.parent) return null;
-      return typeof user.organization.parent === 'object' ? user.organization.parent._id : user.organization.parent;
+      return typeof user.organization.parent === 'object' ? user.organization.parent._id?.toString() : user.organization.parent?.toString();
     };
-
-    // Get election's organization ID
     const getElectionOrgId = () => {
       if (!election.organization) return null;
-      return typeof election.organization === 'object' ? election.organization._id : election.organization;
+      return typeof election.organization === 'object' ? election.organization._id?.toString() : election.organization?.toString();
     };
 
     const userOrgId = getUserOrgId();
     const userOrgParentId = getUserOrgParentId();
     const electionOrgId = getElectionOrgId();
 
-    // Check organization/scope-based eligibility for federation and university elections
-    if (election.scope && electionOrgId) {
-      if (election.scope === 'university') {
-        // For university scope: user MUST have organization AND it must match election's organization
-        if (!userOrgId || userOrgId.toString() !== electionOrgId.toString()) {
-          return false;
+    // Check based on eligibility type
+    switch (eligibilityType) {
+      case 'all':
+        // All registered students - faculty check already done above
+        return true;
+
+      case 'university':
+        // University-wide: if we already passed faculty check, that's enough for users without org
+        // This allows faculty-restricted university elections to work for users with faculty but no org
+        if (hasFacultyRestriction) {
+          // Faculty check already passed above - user is eligible
+          return true;
         }
-      } else if (election.scope === 'federation') {
-        // For federation scope: user MUST have organization AND must either:
-        // 1. Be the federation itself, OR
-        // 2. Have the federation as its parent organization
-        if (!userOrgId) {
-          return false;
-        }
-        const userBelongsToFederation = 
-          (userOrgId.toString() === electionOrgId.toString()) ||
-          (userOrgParentId && userOrgParentId.toString() === electionOrgId.toString());
-        
-        if (!userBelongsToFederation) {
-          return false;
-        }
-      } else if (election.scope === 'custom') {
-        // For custom scope: user's organization must be in allowedOrganizations
+        // No faculty restriction - check org
         if (election.allowedOrganizations && Array.isArray(election.allowedOrganizations) && election.allowedOrganizations.length > 0) {
-          const allowedOrgIds = election.allowedOrganizations.map(org => 
+          const allowedOrgIds = election.allowedOrganizations.map(org =>
             typeof org === 'object' ? org._id?.toString() : org?.toString()
           ).filter(Boolean);
-          
-          if (!userOrgId || !allowedOrgIds.includes(userOrgId.toString())) {
-            return false;
-          }
+          // User must have org to match
+          if (!userOrgId) return false;
+          return allowedOrgIds.includes(userOrgId) || (userOrgParentId && allowedOrgIds.includes(userOrgParentId));
         }
-      }
+        // Fall back: if election has organization set, user's org must match 
+        if (electionOrgId) {
+          // User must have org to match election's org
+          if (!userOrgId) return false;
+          return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+        }
+        // No org restrictions specified - allow all
+        return true;
+
+      case 'federation':
+        // Federation-wide: if we already passed faculty check, that's enough for users without org
+        if (hasFacultyRestriction) {
+          return true;
+        }
+        // No faculty restriction - check org
+        if (election.allowedOrganizations && Array.isArray(election.allowedOrganizations) && election.allowedOrganizations.length > 0) {
+          const federationId = typeof election.allowedOrganizations[0] === 'object' 
+            ? election.allowedOrganizations[0]._id?.toString() 
+            : election.allowedOrganizations[0]?.toString();
+          // User must have org to be part of federation
+          if (!userOrgId) return false;
+          return userOrgId === federationId || userOrgParentId === federationId;
+        }
+        // Fall back to election.organization
+        if (electionOrgId) {
+          if (!userOrgId) return false;
+          return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+        }
+        return true;
+
+      case 'faculty':
+        // Faculty-based: already checked allowedFaculties above
+        // Also check eligibility.faculties array as additional check
+        if (election.eligibility?.faculties && Array.isArray(election.eligibility.faculties) && election.eligibility.faculties.length > 0) {
+          if (!user.faculty) return false;
+          const userFacultyLower = user.faculty.toLowerCase().trim();
+          return election.eligibility.faculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+        }
+        // If no eligibility.faculties, the global allowedFaculties check already passed
+        return true;
+
+      case 'cohort':
+        // Cohort/Year-based: check cohorts array
+        if (election.eligibility?.cohorts && Array.isArray(election.eligibility.cohorts) && election.eligibility.cohorts.length > 0) {
+          if (!user.yearOfStudy) return false;
+          return election.eligibility.cohorts.includes(user.yearOfStudy.toString());
+        }
+        return true;
+
+      case 'csv':
+        // CSV whitelist: check if user email/studentId is in whitelist
+        if (election.eligibility?.whitelist && Array.isArray(election.eligibility.whitelist) && election.eligibility.whitelist.length > 0) {
+          const userEmail = user.email?.toLowerCase().trim();
+          const userStudentId = user.studentId?.toString().trim();
+          return election.eligibility.whitelist.some(entry => {
+            const entryLower = entry?.toLowerCase().trim();
+            return entryLower === userEmail || entryLower === userStudentId;
+          });
+        }
+        return true;
+
+      default:
+        // Unknown type - allow by default
+        return true;
     }
-
-    // Check faculty eligibility
-    const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
-    if (hasFacultyRestriction && user.faculty && !election.allowedFaculties.includes(user.faculty)) {
-      return false;
-    }
-
-    // Check specific eligibility criteria if they exist
-    if (election.eligibility) {
-      // Check faculty from eligibility object
-      if (election.eligibility.faculty && election.eligibility.faculty !== null && election.eligibility.faculty !== '') {
-        if (user.faculty !== election.eligibility.faculty) {
-          return false;
-        }
-      }
-
-      // Check year of study
-      if (election.eligibility.yearOfStudy && election.eligibility.yearOfStudy !== null && election.eligibility.yearOfStudy !== '') {
-        if (user.yearOfStudy !== election.eligibility.yearOfStudy) {
-          return false;
-        }
-      }
-
-      // Check course
-      if (election.eligibility.course && election.eligibility.course !== null && election.eligibility.course !== '') {
-        if (user.course !== election.eligibility.course) {
-          return false;
-        }
-      }
-
-      // Check minimum GPA if applicable
-      if (election.eligibility.minimunmGPA && election.eligibility.minimunmGPA > 0) {
-        if (user.gpa && user.gpa < election.eligibility.minimunmGPA) {
-          return false;
-        }
-      }
-    }
-
-    return true;
   };
 
   const calculateElectionStats = (electionsData) => {
@@ -595,7 +630,14 @@ function StudentDashboard({ user: initialUser }) {
     // Use full eligibility check (includes organization/scope, faculty, year, course, GPA)
     const isEligible = isUserEligibleForElection(election);
     
-    console.log('Election:', election.title, 'scope:', election.scope, 'orgId:', election.organization?._id || election.organization, 'userOrg:', user?.organization?._id || user?.organization, 'isEligible:', isEligible);
+    console.log('Election:', election.title, 
+      'eligType:', election.eligibility?.type || 'NOT_SET',
+      'scope:', election.scope, 
+      'allowedFaculties:', election.allowedFaculties,
+      'eligFaculties:', election.eligibility?.faculties,
+      'userFaculty:', user?.faculty,
+      'userOrg:', user?.organization?._id || user?.organization,
+      'isEligible:', isEligible);
     
     return matchesSearch && matchesStatus && isEligible;
   });
@@ -4189,6 +4231,18 @@ function StudentDashboard({ user: initialUser }) {
                             style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
                           />
                           <small className="text-muted">Auto-populated from your course</small>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold">Faculty</label>
+                          <input 
+                            type="text"
+                            className="form-control" 
+                            name="faculty"
+                            value={profileFormData.faculty || user?.faculty || 'Not Available'}
+                            readOnly
+                            style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
+                          />
+                          <small className="text-muted">Set during registration</small>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Phone Number</label>
