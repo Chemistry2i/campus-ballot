@@ -20,9 +20,18 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false // Exclude password from queries by default
     },
+    
+    // Organization this user belongs to (university or federation)
+    organization: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        default: null,
+        index: true
+    },
+    
     role: {
         type: String,
-        enum: ['student', 'admin', 'super_admin', 'candidate', 'agent', 'observer'], // Primary role
+        enum: ['student', 'admin', 'super_admin', 'federation_admin', 'candidate', 'agent', 'observer'], // Primary role
         default: 'student',
         required: true,
         trim: true,
@@ -94,16 +103,14 @@ const userSchema = new mongoose.Schema({
     },
     faculty: {
         type: String,
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
         trim: true,
     },
     course: {
         type: String,
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
         trim: true,
     },
     department: {
@@ -114,16 +121,14 @@ const userSchema = new mongoose.Schema({
     yearOfStudy: {
         type: String,
         trim: true,
-        required: function() {
-            return this.role === 'student';
-        }
+        // Optional - not all imports have this data
+        required: false
     },
     gender: {
         type: String,
         enum: ['Male', 'Female', 'Other'],
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
     },
     phone: {
         type: String,

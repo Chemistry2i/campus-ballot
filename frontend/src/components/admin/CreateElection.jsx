@@ -30,6 +30,10 @@ function CreateElection({ onCreated }) {
 
   const [availableFaculties, setAvailableFaculties] = useState([]);
   const [availableCohorts, setAvailableCohorts] = useState([]);
+  const [availableUniversities, setAvailableUniversities] = useState([]);
+  const [availableFederations, setAvailableFederations] = useState([]);
+  const [selectedUniversities, setSelectedUniversities] = useState([]);
+  const [selectedFederation, setSelectedFederation] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +42,12 @@ function CreateElection({ onCreated }) {
         // Try a meta endpoint; fallback gracefully if not present
         const resFac = await axios.get('/api/meta/faculties').catch(() => null);
         const resCoh = await axios.get('/api/meta/cohorts').catch(() => null);
+        // Fetch universities and federations
+        const token = localStorage.getItem('token');
+        const resUni = await axios.get('/api/organizations/universities', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+        const resFed = await axios.get('/api/organizations/federations', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null);
+        if (resUni?.data) setAvailableUniversities(resUni.data);
+        if (resFed?.data) setAvailableFederations(resFed.data);
         if (!mounted) return;
         if (resFac && Array.isArray(resFac.data)) setAvailableFaculties(resFac.data);
         if (resCoh && Array.isArray(resCoh.data)) setAvailableCohorts(resCoh.data);
@@ -181,9 +191,15 @@ function CreateElection({ onCreated }) {
         positions: positions.map(p => (p.name || '').trim()),
         // Send allowedFaculties directly for faculty-based restrictions
         allowedFaculties: eligibilityType === 'faculty' ? faculties : [],
+        // Set scope for university/federation elections
+        scope: eligibilityType === 'university' ? 'university' : (eligibilityType === 'federation' ? 'federation' : 'custom'),
+        // Allowed organizations for university/federation scope
+        allowedOrganizations: eligibilityType === 'university' 
+          ? selectedUniversities.map(u => u.value) 
+          : (eligibilityType === 'federation' && selectedFederation ? [selectedFederation.value] : []),
         eligibility: {
           type: eligibilityType,
-          faculties: eligibilityType === 'faculty' ? faculties : undefined,
+          faculties: eligibilityType === 'faculty' && faculties.length ? faculties : undefined,
           cohorts: eligibilityType === 'cohort' ? cohorts : undefined,
           whitelist: whitelist.length ? whitelist : undefined
         },
@@ -196,6 +212,7 @@ function CreateElection({ onCreated }) {
   // reset form
   setTitle(''); setDescription(''); setStartDate(''); setStartAmPm('AM'); setEndDate(''); setEndAmPm('AM'); setPositions([{ name: '', seats: 1, method: 'fptp' }]);
   setEligibilityType('all'); setFaculties([]); setCohorts([]); setWhitelistFile(null); setAutoPublish(false); setSaveDraft(false);
+  setSelectedUniversities([]); setSelectedFederation(null);
       if (onCreated) onCreated();
     } catch (err) {
       console.error('Create election failed', err);
@@ -362,12 +379,26 @@ function CreateElection({ onCreated }) {
 
           <div className="col-md-6">
             <label className="form-label small" style={{ color: colors.text }}>Eligibility</label>
-            <select className="form-select" value={eligibilityType} onChange={e => setEligibilityType(e.target.value)}>
-              <option value="all">All registered students</option>
+            <select className="form-select" value={eligibilityType} onChange={e => setEligibilityType(e.target.value)} style={{
+              backgroundColor: colors.inputBg,
+              borderColor: colors.inputBorder,
+              color: colors.text
+            }}>
+              <option value="all">All registered students (this organization)</option>
+              <option value="university">University-wide (all students in university)</option>
+              <option value="federation">Federation-wide (all member universities)</option>
               <option value="faculty">Faculty / Department</option>
               <option value="cohort">Cohort / Year</option>
               <option value="csv">Whitelist CSV upload</option>
             </select>
+            <small className="text-muted d-block mt-1">
+              {eligibilityType === 'all' && 'Only students registered to your organization can vote.'}
+              {eligibilityType === 'university' && 'All students in your university can participate.'}
+              {eligibilityType === 'federation' && 'Students from all universities in your federation can vote.'}
+              {eligibilityType === 'faculty' && 'Select specific faculties/departments.'}
+              {eligibilityType === 'cohort' && 'Select specific cohorts/years.'}
+              {eligibilityType === 'csv' && 'Upload a CSV file with student emails or IDs.'}
+            </small>
           </div>
             {eligibilityType === 'faculty' && (
               <div className="col-md-6">
@@ -489,6 +520,48 @@ function CreateElection({ onCreated }) {
                       ...base,
                       color: colors.text
                     })
+                  }}
+                />
+              </div>
+            )}
+            {eligibilityType === 'university' && (
+              <div className="col-md-6">
+                <label className="form-label small" style={{ color: colors.text }}>Select Universities</label>
+                <Select
+                  isMulti
+                  isSearchable
+                  placeholder="Select universities..."
+                  options={availableUniversities.map(u => ({ value: u._id, label: u.name }))}
+                  value={selectedUniversities}
+                  onChange={vals => setSelectedUniversities(vals || [])}
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({ ...base, backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }),
+                    menu: (base) => ({ ...base, backgroundColor: colors.inputBg }),
+                    option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? colors.primary : colors.inputBg, color: state.isFocused ? '#fff' : colors.text }),
+                    multiValue: (base) => ({ ...base, backgroundColor: isDarkMode ? colors.primary : '#e0e7ff' }),
+                    multiValueLabel: (base) => ({ ...base, color: isDarkMode ? '#fff' : colors.text }),
+                    input: (base) => ({ ...base, color: colors.text }),
+                  }}
+                />
+              </div>
+            )}
+            {eligibilityType === 'federation' && (
+              <div className="col-md-6">
+                <label className="form-label small" style={{ color: colors.text }}>Select Federation</label>
+                <Select
+                  isSearchable
+                  placeholder="Select federation..."
+                  options={availableFederations.map(f => ({ value: f._id, label: f.name }))}
+                  value={selectedFederation}
+                  onChange={val => setSelectedFederation(val)}
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({ ...base, backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }),
+                    menu: (base) => ({ ...base, backgroundColor: colors.inputBg }),
+                    option: (base, state) => ({ ...base, backgroundColor: state.isFocused ? colors.primary : colors.inputBg, color: state.isFocused ? '#fff' : colors.text }),
+                    singleValue: (base) => ({ ...base, color: colors.text }),
+                    input: (base) => ({ ...base, color: colors.text }),
                   }}
                 />
               </div>

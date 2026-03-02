@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const User = require('../models/User');
 const Vote = require('../models/Vote');
@@ -10,7 +11,34 @@ const Log = require('../models/Log');
 
 // settings controller + auth
 const settingsController = require('../controllers/settingsController');
+const bulkUploadController = require('../controllers/bulkUploadController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+
+// Configure multer for file uploads (memory storage for processing)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept CSV and Excel files
+    const allowedMimes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/csv',
+      'text/plain' // Some systems send CSV as text/plain
+    ];
+    const allowedExtensions = ['.csv', '.xlsx', '.xls'];
+    const ext = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf('.'));
+    
+    if (allowedMimes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV and Excel files are allowed'), false);
+    }
+  }
+});
 
 router.get('/dashboard-stats', async (req, res) => {
   try {
@@ -93,5 +121,15 @@ router.put('/profile', protect, adminOnly, settingsController.updateProfile);
 
 // Settings history
 router.get('/settings/history', protect, adminOnly, settingsController.listHistory);
+
+// --- Bulk User Upload endpoints ---
+// Download template (CSV or Excel)
+router.get('/users/bulk-template', protect, adminOnly, bulkUploadController.downloadTemplate);
+
+// Validate uploaded file (preview mode)
+router.post('/users/bulk-validate', protect, adminOnly, upload.single('file'), bulkUploadController.validateBulkUpload);
+
+// Import users from file
+router.post('/users/bulk-import', protect, adminOnly, upload.single('file'), bulkUploadController.bulkImportUsers);
 
 module.exports = router;

@@ -10,9 +10,15 @@ import {
   faEnvelope,
   faBell,
   faClipboardList,
-  faHistory
+  faHistory,
+  faDownload,
+  faUpload,
+  faCheck,
+  faTimes,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import ThemedTable from '../common/ThemedTable';
 
 function SectionCard({ id, title, children, onSave, onSaveDraft, saving }) {
   return (
@@ -67,10 +73,13 @@ export default function AdminSettings({ user }) {
   const [retentionDays, setRetentionDays] = useState(30);
   const [lastBackupAt, setLastBackupAt] = useState(null);
 
-  // Voter roll (client-side preview)
-  const [voterFile, setVoterFile] = useState(null);
-  const [voterPreview, setVoterPreview] = useState([]);
-  const [voterValidation, setVoterValidation] = useState(null);
+  // Bulk User Import
+  const [importFile, setImportFile] = useState(null);
+  const [importValidation, setImportValidation] = useState(null);
+  const [importStep, setImportStep] = useState('upload'); // upload | validate | import | done
+  const [skipDuplicates, setSkipDuplicates] = useState(true);
+  const [sendWelcomeEmails, setSendWelcomeEmails] = useState(true);
+  const [importResult, setImportResult] = useState(null);
 
   // RBAC / MFA enforcement
   const [enforceMfa, setEnforceMfa] = useState(false);
@@ -290,45 +299,138 @@ export default function AdminSettings({ user }) {
     }
   };
 
-  // Voter roll upload (client-side preview/validate)
-  const handleVoterFile = (file) => {
-    setVoterFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const rows = text.split(/\r?\n/).filter(Boolean).slice(0, 200);
-      const parsed = rows.map((r, i) => {
-        const cols = r.split(',').map(c => c.trim());
-        return { row: i+1, cols };
+  // Download import template
+  const downloadTemplate = async (format = 'csv') => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/admin/users/bulk-template?format=${format}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
       });
-      setVoterPreview(parsed.slice(0, 50));
-      // simple validation: check email-like tokens
-      const invalid = parsed.filter(p => !p.cols[0] || !/\S+@\S+\.\S+/.test(p.cols[0]));
-      setVoterValidation({ total: parsed.length, invalidCount: invalid.length, sampleInvalid: invalid.slice(0,5) });
-    };
-    reader.readAsText(file);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `user_import_template.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Template download error:', err);
+      Swal.fire('Error', 'Failed to download template', 'error');
+    }
   };
 
-  const uploadVoterRoll = async () => {
-    if (!voterFile) { Swal.fire('No file', 'Please choose a CSV file first', 'warning'); return; }
+  // Handle file selection for bulk import
+  const handleImportFile = (file) => {
+    if (!file) return;
+    setImportFile(file);
+    setImportValidation(null);
+    setImportResult(null);
+    setImportStep('upload');
+  };
+
+  // Validate the uploaded file
+  const validateImportFile = async () => {
+    if (!importFile) {
+      Swal.fire('No file', 'Please choose a CSV or Excel file first', 'warning');
+      return;
+    }
     setSaving(true);
+    setImportStep('validate');
     try {
-      // try backend upload
-      try {
-        const token = localStorage.getItem('token');
-        const form = new FormData();
-        form.append('file', voterFile);
-        await axios.post('/api/admin/voters/validate', form, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } });
-        Swal.fire('Uploaded', 'Voter roll validation request sent to server.', 'success');
-      } catch (err) {
-        await new Promise(r => setTimeout(r, 800));
-        Swal.fire('Validated (local)', `Previewed ${voterPreview.length} rows, invalid: ${voterValidation?.invalidCount || 0}`, 'info');
+      const token = localStorage.getItem('token');
+      const form = new FormData();
+      form.append('file', importFile);
+      const res = await axios.post('/api/admin/users/bulk-validate', form, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      setImportValidation(res.data);
+      if (res.data.validRows > 0) {
+        Swal.fire('Validation Complete', `${res.data.validRows} valid rows, ${res.data.invalidRows} invalid rows`, res.data.invalidRows > 0 ? 'warning' : 'success');
+      } else {
+        Swal.fire('Validation Failed', 'No valid rows found in the file', 'error');
       }
     } catch (err) {
-      Swal.fire('Error', 'Failed to upload/validate', 'error');
+      console.error('Validation error:', err);
+      Swal.fire('Error', err.response?.data?.message || 'Failed to validate file', 'error');
+      setImportStep('upload');
     } finally {
       setSaving(false);
     }
+  };
+
+  // Import users from validated file
+  const importUsers = async () => {
+    if (!importFile) {
+      Swal.fire('No file', 'Please upload and validate a file first', 'warning');
+      return;
+    }
+    
+    const confirmed = await Swal.fire({
+      title: 'Confirm Import',
+      html: `<p>You are about to import <strong>${importValidation?.validRows || 0}</strong> users.</p>
+             <p>${skipDuplicates ? 'Duplicates will be skipped.' : 'Duplicates will cause errors.'}</p>
+             <p>${sendWelcomeEmails ? '<strong>Welcome emails with credentials will be sent.</strong>' : 'No welcome emails will be sent.'}</p>
+             <p>This action cannot be undone. Continue?</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Import Users',
+      cancelButtonText: 'Cancel'
+    });
+    
+    if (!confirmed.isConfirmed) return;
+    
+    setSaving(true);
+    setImportStep('import');
+    try {
+      const token = localStorage.getItem('token');
+      const form = new FormData();
+      form.append('file', importFile);
+      form.append('skipDuplicates', String(skipDuplicates));
+      form.append('sendWelcomeEmail', String(sendWelcomeEmails));
+      
+      const res = await axios.post('/api/admin/users/bulk-import', form, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setImportResult(res.data);
+      setImportStep('done');
+      
+      const emailInfo = res.data.emailsSent > 0 
+        ? `<p>📧 ${res.data.emailsSent} welcome emails sent${res.data.emailsFailed > 0 ? `, ${res.data.emailsFailed} failed` : ''}</p>`
+        : '';
+      
+      // Show error details if any failures
+      const errorDetails = res.data.errors?.length > 0
+        ? `<details style="text-align:left;margin-top:10px"><summary style="cursor:pointer;color:#dc3545">View ${res.data.errors.length} error(s)</summary><ul style="max-height:200px;overflow-y:auto;font-size:0.85em">${res.data.errors.slice(0, 20).map(e => `<li style="color:#dc3545">${e}</li>`).join('')}${res.data.errors.length > 20 ? '<li>...and more</li>' : ''}</ul></details>`
+        : '';
+      
+      Swal.fire({
+        title: 'Import Complete!',
+        html: `<p><strong>${res.data.imported}</strong> users imported successfully</p>
+               <p>${res.data.skipped > 0 ? `${res.data.skipped} skipped (duplicates)` : ''}</p>
+               <p>${res.data.failed > 0 ? `<span style="color:#dc3545">${res.data.failed} failed</span>` : ''}</p>
+               ${emailInfo}
+               ${errorDetails}`,
+        icon: res.data.failed > 0 ? 'warning' : 'success',
+        width: res.data.errors?.length > 0 ? '600px' : undefined
+      });
+    } catch (err) {
+      console.error('Import error:', err);
+      Swal.fire('Error', err.response?.data?.message || 'Failed to import users', 'error');
+      setImportStep('validate');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Reset import state
+  const resetImport = () => {
+    setImportFile(null);
+    setImportValidation(null);
+    setImportResult(null);
+    setImportStep('upload');
   };
 
   // RBAC / MFA enforcement
@@ -393,8 +495,8 @@ export default function AdminSettings({ user }) {
           <button className="btn btn-sm qa-btn qa-primary d-flex align-items-center" onClick={() => scrollToSection('profile','Profile')} aria-label="Edit profile">
             <FontAwesomeIcon icon={faUser} className="me-2" />Profile
           </button>
-          <button className="btn btn-sm qa-btn qa-success d-flex align-items-center" onClick={() => scrollToSection('voter-roll','Voter roll')} aria-label="Voter roll">
-            <FontAwesomeIcon icon={faFileImport} className="me-2" />Voter roll
+          <button className="btn btn-sm qa-btn qa-success d-flex align-items-center" onClick={() => scrollToSection('bulk-import','Bulk Import')} aria-label="Bulk User Import">
+            <FontAwesomeIcon icon={faUsers} className="me-2" />Bulk Import
           </button>
           <button className="btn btn-sm qa-btn qa-warning d-flex align-items-center" onClick={() => scrollToSection('backup','Backups')} aria-label="Backups">
             <FontAwesomeIcon icon={faDatabase} className="me-2" />Backups
@@ -528,46 +630,226 @@ export default function AdminSettings({ user }) {
         <div className="small text-muted">Last backup: {lastBackupAt ? new Date(lastBackupAt).toLocaleString() : 'Never'}</div>
       </SectionCard>
 
-  <SectionCard id="voter-roll" title="Voter Roll" onSave={uploadVoterRoll} onSaveDraft={async () => { Swal.fire('Saved draft', 'Voter roll draft saved locally.', 'info'); }} saving={saving}>
-        <div className="mb-3">
-          <label className="form-label">Upload CSV</label>
-          <input type="file" accept=".csv" className="form-control" onChange={(e) => handleVoterFile(e.target.files && e.target.files[0])} />
-        </div>
-        {voterPreview && voterPreview.length > 0 && (
-          <div className="mb-3">
-            <div className="fw-bold small" style={{ color: colors.text }}>Preview (first {voterPreview.length} rows)</div>
-            <div className="table-responsive" style={{ 
-              maxHeight: 220,
-              borderRadius: '0.5rem',
-              border: `1px solid ${colors.border}`,
-              backgroundColor: colors.surface
-            }}>
-              <table className="table table-sm mb-0" style={{
-                backgroundColor: colors.surface,
-                color: colors.text,
-                ...(isDarkMode && {
-                  '--bs-table-bg': colors.surface,
-                  '--bs-table-striped-bg': '#2d3748',
-                  '--bs-table-hover-bg': '#3b4a5c',
-                  '--bs-table-border-color': colors.border,
-                })
-              }}>
-                <tbody>
-                  {voterPreview.slice(0,50).map(p => (
-                    <tr key={p.row} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                      <td className="small" style={{ color: colors.textSecondary, padding: '0.5rem' }}>{p.row}</td>
-                      <td className="small" style={{ color: colors.text, padding: '0.5rem' }}>{p.cols.join(' | ')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+  <div id="bulk-import" className="card mb-4">
+        <div className="card-body">
+          <div className="d-flex align-items-start justify-content-between mb-3">
+            <div>
+              <h5 className="card-title mb-1">Bulk User Import</h5>
+              <p className="text-muted small mb-0">Import multiple students from a CSV or Excel file</p>
+              <p className="text-muted small mb-0"><strong>Minimum required columns:</strong> email, studentId, organization</p>
             </div>
-            <div className="small" style={{ color: colors.textMuted }}>
-              Validation: {voterValidation ? `${voterValidation.invalidCount} invalid of ${voterValidation.total}` : 'Pending'}
+            <div className="d-flex gap-2">
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => downloadTemplate('csv')} title="Download CSV Template">
+                <FontAwesomeIcon icon={faDownload} className="me-1" />CSV
+              </button>
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => downloadTemplate('xlsx')} title="Download Excel Template">
+                <FontAwesomeIcon icon={faDownload} className="me-1" />Excel
+              </button>
             </div>
           </div>
-        )}
-      </SectionCard>
+
+          {/* Step 1: Upload */}
+          <div className="mb-3">
+            <label className="form-label">Upload CSV or Excel file</label>
+            <input 
+              type="file" 
+              accept=".csv,.xlsx,.xls" 
+              className="form-control" 
+              onChange={(e) => handleImportFile(e.target.files && e.target.files[0])}
+              disabled={importStep === 'import'}
+            />
+            {importFile && (
+              <div className="small mt-2" style={{ color: colors.textSecondary }}>
+                <FontAwesomeIcon icon={faCheck} className="text-success me-1" />
+                Selected: {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
+              </div>
+            )}
+          </div>
+
+          {/* Options */}
+          <div className="form-check mb-2">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={skipDuplicates} 
+              id="skipDuplicates" 
+              onChange={(e) => setSkipDuplicates(e.target.checked)}
+              disabled={importStep === 'import'}
+            />
+            <label className="form-check-label" htmlFor="skipDuplicates">
+              Skip duplicate emails/student IDs (recommended)
+            </label>
+          </div>
+          
+          <div className="form-check mb-3">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={sendWelcomeEmails} 
+              id="sendWelcomeEmails" 
+              onChange={(e) => setSendWelcomeEmails(e.target.checked)}
+              disabled={importStep === 'import'}
+            />
+            <label className="form-check-label" htmlFor="sendWelcomeEmails">
+              Send welcome emails with login credentials
+            </label>
+          </div>
+
+          {/* Validation Results */}
+          {importValidation && (
+            <div className="mb-3 p-3 rounded" style={{ backgroundColor: colors.surface, border: `1px solid ${colors.border}` }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-bold">Validation Results</span>
+                <span className="badge bg-secondary">{importValidation.totalRows} rows</span>
+              </div>
+              <div className="d-flex gap-4 mb-2">
+                <span className="text-success">
+                  <FontAwesomeIcon icon={faCheck} className="me-1" />
+                  {importValidation.validRows} valid
+                </span>
+                <span className={importValidation.invalidRows > 0 ? 'text-danger' : 'text-muted'}>
+                  <FontAwesomeIcon icon={faTimes} className="me-1" />
+                  {importValidation.invalidRows} invalid
+                </span>
+                {importValidation.duplicateEmails?.length > 0 && (
+                  <span className="text-warning">
+                    {importValidation.duplicateEmails.length} duplicate emails
+                  </span>
+                )}
+              </div>
+              
+              {/* Preview table */}
+              {importValidation.preview && importValidation.preview.length > 0 && (
+                <div style={{ maxHeight: 200, overflow: 'auto' }}>
+                  <ThemedTable size="sm" striped hover bordered>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: colors.surface, zIndex: 1 }}>
+                      <tr>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Row</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Email</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Student ID</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Name</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importValidation.preview.slice(0, 20).map(p => (
+                        <tr key={p.row}>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.row}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.email}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.studentId || '-'}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.name || <span className="text-muted">(auto)</span>}</td>
+                          <td style={{ padding: '0.4rem' }}>
+                            {p.valid ? (
+                              <span className="badge bg-success">Valid</span>
+                            ) : (
+                              <span className="badge bg-danger" title={p.errors?.join(', ')}>Invalid</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </ThemedTable>
+                </div>
+              )}
+              
+              {/* Error details */}
+              {importValidation.errors && importValidation.errors.length > 0 && (
+                <div className="mt-2">
+                  <details>
+                    <summary className="text-danger small" style={{ cursor: 'pointer' }}>
+                      View {importValidation.errors.length} error(s)
+                    </summary>
+                    <ul className="small mt-1 mb-0" style={{ maxHeight: 150, overflowY: 'auto' }}>
+                      {importValidation.errors.slice(0, 20).map((err, i) => (
+                        <li key={i} className="text-danger">{err}</li>
+                      ))}
+                      {importValidation.errors.length > 20 && (
+                        <li className="text-muted">...and {importValidation.errors.length - 20} more</li>
+                      )}
+                    </ul>
+                  </details>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Import Result */}
+          {importResult && (
+            <div className={`mb-3 p-3 rounded border ${importResult.failed > 0 ? 'border-warning' : 'border-success'}`} style={{ backgroundColor: importResult.failed > 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(25, 135, 84, 0.1)' }}>
+              <div className={`fw-bold ${importResult.failed > 0 ? 'text-warning' : 'text-success'} mb-2`}>
+                <FontAwesomeIcon icon={faCheck} className="me-2" />
+                Import Completed
+              </div>
+              <div className="d-flex gap-4 mb-2">
+                <span><strong>{importResult.imported}</strong> imported</span>
+                {importResult.skipped > 0 && <span className="text-warning"><strong>{importResult.skipped}</strong> skipped</span>}
+                {importResult.failed > 0 && <span className="text-danger"><strong>{importResult.failed}</strong> failed</span>}
+              </div>
+              
+              {/* Show import errors if any */}
+              {importResult.errors && importResult.errors.length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-danger small" style={{ cursor: 'pointer' }}>
+                    View {importResult.errors.length} error(s)
+                  </summary>
+                  <ul className="small mt-1 mb-0" style={{ maxHeight: 200, overflowY: 'auto' }}>
+                    {importResult.errors.slice(0, 30).map((err, i) => (
+                      <li key={i} className="text-danger">{err}</li>
+                    ))}
+                    {importResult.errors.length > 30 && (
+                      <li className="text-muted">...and {importResult.errors.length - 30} more</li>
+                    )}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="d-flex gap-2 flex-wrap">
+            {importStep === 'upload' && (
+              <button 
+                className="btn btn-primary" 
+                onClick={validateImportFile} 
+                disabled={!importFile || saving}
+              >
+                {saving ? 'Validating...' : 'Validate File'}
+              </button>
+            )}
+            {importStep === 'validate' && importValidation?.validRows > 0 && (
+              <>
+                <button 
+                  className="btn btn-success" 
+                  onClick={importUsers} 
+                  disabled={saving}
+                >
+                  <FontAwesomeIcon icon={faUpload} className="me-2" />
+                  {saving ? 'Importing...' : `Import ${importValidation.validRows} Users`}
+                </button>
+                <button 
+                  className="btn btn-outline-secondary" 
+                  onClick={resetImport}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            {importStep === 'done' && (
+              <button className="btn btn-outline-primary" onClick={resetImport}>
+                Import More Users
+              </button>
+            )}
+          </div>
+
+          {/* Help text */}
+          <div className="mt-3 small text-muted">
+            <strong>Required columns:</strong> name, email, role<br />
+            <strong>For students:</strong> studentId, faculty, course, yearOfStudy, gender<br />
+            <strong>Optional:</strong> phone, department, password (auto-generated if not provided)
+          </div>
+        </div>
+      </div>
 
   <SectionCard id="rbac" title="RBAC & MFA" onSave={saveRbacMfa} onSaveDraft={async () => { Swal.fire('Saved draft', 'Security draft saved locally.', 'info'); }} saving={saving}>
         <div className="form-check mb-2">

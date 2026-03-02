@@ -14,6 +14,23 @@ import {
   Legend,
 } from 'chart.js';
 import { useTheme } from '../../contexts/ThemeContext';
+import ThemedTable from '../common/ThemedTable';
+
+// Distinct color palette for chart bars
+const CHART_COLORS = [
+  'rgba(59, 130, 246, 0.8)',   // Blue
+  'rgba(249, 115, 22, 0.8)',   // Orange
+  'rgba(168, 85, 247, 0.8)',   // Purple
+  'rgba(236, 72, 153, 0.8)',   // Pink
+  'rgba(14, 165, 233, 0.8)',   // Sky
+  'rgba(245, 158, 11, 0.8)',   // Amber
+  'rgba(99, 102, 241, 0.8)',   // Indigo
+  'rgba(239, 68, 68, 0.8)',    // Red
+  'rgba(20, 184, 166, 0.8)',   // Teal
+  'rgba(132, 204, 22, 0.8)',   // Lime
+];
+
+const WINNER_COLOR = 'rgba(34, 197, 94, 0.9)'; // Green for winner
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -196,12 +213,30 @@ function Results({ user }) {
   }, [socketRef, selectedElectionId]);
 
   // --- Enhancement logic ---
-  // Calculate total votes, winner(s), percentages, last updated
+  // Calculate total votes, single winner (highest votes), percentages, last updated
   const totalVotes = results.reduce((sum, r) => sum + (r.votes || 0), 0);
   const maxVotes = Math.max(...results.map(r => r.votes || 0), 0);
-  const winners = results.filter(r => r.votes === maxVotes && maxVotes > 0);
+  
+  // Get only ONE winner - the first person with highest votes (in case of tie, first in array)
+  const sortedResults = [...results].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  const winner = maxVotes > 0 ? sortedResults[0] : null;
+  
   const lastUpdated = selectedElection?.updatedAt || selectedElection?.lastModified || null;
   const published = !unpublished;
+  
+  // Helper to check if a candidate is the winner
+  const isWinner = (candidate) => {
+    if (!winner) return false;
+    return (candidate._id === winner._id || candidate.id === winner.id || candidate.name === winner.name);
+  };
+  
+  // Generate unique colors for each candidate
+  const getBarColors = () => {
+    return results.map((r, index) => {
+      if (isWinner(r)) return WINNER_COLOR;
+      return CHART_COLORS[index % CHART_COLORS.length];
+    });
+  };
 
   return (
     <div className="container-fluid">
@@ -224,9 +259,10 @@ function Results({ user }) {
                     <span className="me-3"><strong>Last Updated:</strong> {new Date(lastUpdated).toLocaleString()}</span>
                   )}
                 </div>
-                {winners.length > 0 && (
+                {winner && (
                   <div className="mt-1">
-                    <strong>Winner{winners.length > 1 ? 's' : ''}:</strong> {winners.map(w => w.name).join(', ')}
+                    <strong>Winner:</strong> <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{winner.name}</span>
+                    <span className="ms-2 badge bg-success">🏆 {winner.votes} votes</span>
                   </div>
                 )}
               </div>
@@ -312,13 +348,13 @@ function Results({ user }) {
           ) : (
             <div className="row">
               <div className="col-md-6">
-                <div className="table-responsive" style={{ borderRadius: '0.5rem', border: `1px solid ${colors.border}`, backgroundColor: colors.surface, minHeight: 220, transition: 'all 0.3s' }}>
-                  <table className="table table-striped mb-0" style={{ backgroundColor: colors.surface, color: colors.text, ...(isDarkMode && { '--bs-table-bg': colors.surface, '--bs-table-striped-bg': '#2d3748', '--bs-table-hover-bg': '#3b4a5c', '--bs-table-border-color': colors.border, }) }}>
-                    <thead style={{ backgroundColor: isDarkMode ? '#334155' : '#f8f9fa', borderBottomColor: colors.border }}>
+                <div style={{ minHeight: 220 }}>
+                  <ThemedTable striped hover bordered>
+                    <thead>
                       <tr>
-                        <th style={{ color: colors.text, borderBottomColor: colors.border, padding: '0.75rem' }}>Candidate</th>
-                        <th style={{ color: colors.text, borderBottomColor: colors.border, padding: '0.75rem' }}>Votes</th>
-                        <th style={{ color: colors.text, borderBottomColor: colors.border, padding: '0.75rem' }}>Percent</th>
+                        <th style={{ padding: '0.75rem', color: colors.text }}>Candidate</th>
+                        <th style={{ padding: '0.75rem', color: colors.text }}>Votes</th>
+                        <th style={{ padding: '0.75rem', color: colors.text }}>Percent</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -331,27 +367,38 @@ function Results({ user }) {
                             </div>
                           </td>
                         </tr>
-                      ) : results.map(r => {
+                      ) : results.map((r, index) => {
                         const percent = totalVotes > 0 ? ((r.votes || 0) / totalVotes * 100).toFixed(1) : '0.0';
-                        const isWinner = winners.some(w => w._id === r._id || w.id === r.id || w.name === r.name);
+                        const candidateIsWinner = isWinner(r);
+                        const barColor = candidateIsWinner ? WINNER_COLOR : CHART_COLORS[index % CHART_COLORS.length];
                         return (
-                          <tr key={r._id || r.id || r.name} style={{ borderBottomColor: colors.border, background: isWinner ? (isDarkMode ? 'rgba(34,197,94,0.15)' : '#e6ffe6') : undefined, transition: 'background 0.3s' }}>
-                            <td style={{ color: colors.text, borderBottomColor: colors.border, padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {r.photo ? (
-                                <img src={r.photo} alt={r.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${isWinner ? '#22c55e' : colors.border}` }} />
-                              ) : (
-                                <span className="bg-secondary rounded-circle d-inline-block" style={{ width: 32, height: 32, lineHeight: '32px', textAlign: 'center', color: '#fff', fontWeight: 600 }}>{r.name?.charAt(0) || '?'}</span>
-                              )}
-                              <span style={{ fontWeight: isWinner ? 'bold' : 'normal', color: isWinner ? '#22c55e' : colors.text }}>{r.name}</span>
-                              {isWinner && <span className="badge bg-success ms-2">Winner</span>}
+                          <tr key={r._id || r.id || r.name} style={{ background: candidateIsWinner ? (isDarkMode ? 'rgba(34,197,94,0.15)' : '#e6ffe6') : undefined }}>
+                            <td style={{ padding: '0.75rem', color: colors.text }}>
+                              <div className="d-flex align-items-center gap-2">
+                                {/* Color indicator matching chart */}
+                                <span style={{ 
+                                  width: 12, 
+                                  height: 12, 
+                                  borderRadius: '3px', 
+                                  backgroundColor: barColor,
+                                  flexShrink: 0
+                                }} />
+                                {r.photo ? (
+                                  <img src={r.photo} alt={r.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${candidateIsWinner ? '#22c55e' : colors.border}` }} />
+                                ) : (
+                                  <span className="bg-secondary rounded-circle d-inline-block" style={{ width: 32, height: 32, lineHeight: '32px', textAlign: 'center', color: '#fff', fontWeight: 600 }}>{r.name?.charAt(0) || '?'}</span>
+                                )}
+                                <span style={{ fontWeight: candidateIsWinner ? 'bold' : 'normal', color: candidateIsWinner ? '#22c55e' : colors.text }}>{r.name}</span>
+                                {candidateIsWinner && <span className="badge bg-success ms-2">🏆 Winner</span>}
+                              </div>
                             </td>
-                            <td style={{ color: colors.textSecondary, borderBottomColor: colors.border, padding: '0.75rem' }}>{r.votes || 0}</td>
-                            <td style={{ color: colors.textSecondary, borderBottomColor: colors.border, padding: '0.75rem' }}>{percent}%</td>
+                            <td style={{ padding: '0.75rem', color: colors.textSecondary }}>{r.votes || 0}</td>
+                            <td style={{ padding: '0.75rem', color: colors.textSecondary }}>{percent}%</td>
                           </tr>
                         );
                       })}
                     </tbody>
-                  </table>
+                  </ThemedTable>
                 </div>
               </div>
               <div className="col-md-6">
@@ -369,23 +416,25 @@ function Results({ user }) {
                           {
                             label: 'Votes',
                             data: results.map(r => r.votes || 0),
-                            backgroundColor: results.map(r => {
-                              const isWinner = winners.some(w => w._id === r._id || w.id === r.id || w.name === r.name);
-                              return isWinner ? 'rgba(34,197,94,0.8)' : (isDarkMode ? 'rgba(96, 165, 250, 0.8)' : 'rgba(54, 162, 235, 0.7)');
-                            })
+                            backgroundColor: getBarColors(),
+                            borderColor: getBarColors().map(c => c.replace('0.8', '1').replace('0.9', '1')),
+                            borderWidth: 2,
+                            borderRadius: 6,
                           }
                         ]
                       }}
                       options={{
                         responsive: true,
                         plugins: { 
-                          legend: { display: false, labels: { color: colors.text } },
+                          legend: { display: false },
                           tooltip: {
                             callbacks: {
                               label: function(context) {
                                 const votes = context.parsed.y;
                                 const percent = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0.0';
-                                return `${votes} votes (${percent}%)`;
+                                const candidateName = context.label;
+                                const isTopCandidate = winner && candidateName === winner.name;
+                                return `${votes} votes (${percent}%)${isTopCandidate ? ' 🏆' : ''}`;
                               }
                             }
                           }

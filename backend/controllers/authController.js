@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://www.campusballot.tech/verify/${verificationToken}`;
+//         const verifyUrl = `https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://www.campusballot.tech/reset-password/${token}`;
+//         const resetUrl = `https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
@@ -498,7 +498,9 @@ const login = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
     const normalizedEmail = (email || '').toString().trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail }).select("+password");
+    const user = await User.findOne({ email: normalizedEmail })
+      .select("+password")
+      .populate("organization", "_id name code type parent");
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -543,6 +545,7 @@ const login = asyncHandler(async (req, res) => {
       additionalRoles: user.additionalRoles || [],
       isVerified: user.isVerified,
       profilePicture: user.profilePicture,
+      organization: user.organization, // Include organization for eligibility checks
     };
 
     // Add student-specific fields if user is a student

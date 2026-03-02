@@ -325,13 +325,16 @@ const getSystemSummary = asyncHandler(async (req, res) => {
 const getAllAdmins = asyncHandler(async (req, res) => {
     const admins = await User.find({ 
         role: { $in: ['admin', 'super_admin'] } 
-    }).select("-password").lean();
+    })
+    .select("-password")
+    .populate('organization', 'name code type')
+    .lean();
     res.json(admins);
 });
 
 // @desc    Create new admin
 const createAdmin = asyncHandler(async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, image, organization } = req.body;
     if (!name || !email || !password) {
         res.status(400);
         throw new Error("Please provide name, email, and password");
@@ -344,13 +347,22 @@ const createAdmin = asyncHandler(async (req, res) => {
         throw new Error("Admin with this email already exists");
     }
 
-    const admin = await User.create({
+    const adminData = {
         name,
         email: emailLower,
         password,
         role: role || 'admin',
-        isVerified: true
-    });
+        isVerified: true,
+        emailVerified: true,
+        accountStatus: 'active'
+    };
+    
+    // Add optional fields if provided
+    if (phone) adminData.phone = phone;
+    if (image) adminData.profilePicture = image;
+    if (organization) adminData.organization = organization;
+
+    const admin = await User.create(adminData);
 
     await logActivity({
         userId: req.user._id,
@@ -367,7 +379,13 @@ const createAdmin = asyncHandler(async (req, res) => {
         _id: admin._id, 
         name: admin.name, 
         email: admin.email, 
-        role: admin.role 
+        role: admin.role,
+        phone: admin.phone,
+        profilePicture: admin.profilePicture,
+        organization: admin.organization,
+        status: admin.accountStatus,
+        emailVerified: admin.emailVerified,
+        createdAt: admin.createdAt
     });
 });
 

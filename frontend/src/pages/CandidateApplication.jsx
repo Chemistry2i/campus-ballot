@@ -100,47 +100,118 @@ export default function CandidateApplication({ user, users = [] }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        // Filter elections based on user eligibility
         const allElections = data.elections || [];
+        const now = new Date();
+        
+        // Filter elections: must not be ended AND user must be eligible
         const eligibleElections = allElections.filter(election => {
-          // Check faculty eligibility
-          const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
-          if (hasFacultyRestriction && user?.faculty && !election.allowedFaculties.includes(user.faculty)) {
+          // First: filter out ended elections
+          if (election.endDate && new Date(election.endDate) < now) {
             return false;
           }
 
-          // Check specific eligibility criteria if they exist
-          if (election.eligibility) {
-            // Check faculty from eligibility object
-            if (election.eligibility.faculty && election.eligibility.faculty !== null && election.eligibility.faculty !== '') {
-              if (user?.faculty !== election.eligibility.faculty) {
-                return false;
-              }
-            }
-
-            // Check year of study
-            if (election.eligibility.yearOfStudy && election.eligibility.yearOfStudy !== null && election.eligibility.yearOfStudy !== '') {
-              if (user?.yearOfStudy !== election.eligibility.yearOfStudy) {
-                return false;
-              }
-            }
-
-            // Check course
-            if (election.eligibility.course && election.eligibility.course !== null && election.eligibility.course !== '') {
-              if (user?.course !== election.eligibility.course) {
-                return false;
-              }
-            }
-
-            // Check minimum GPA if applicable
-            if (election.eligibility.minimunmGPA && election.eligibility.minimunmGPA > 0) {
-              if (user?.gpa && user.gpa < election.eligibility.minimunmGPA) {
-                return false;
-              }
-            }
+          // GLOBAL: Always check allowedFaculties first (applies to ALL eligibility types)
+          const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+          if (hasFacultyRestriction) {
+            if (!user?.faculty) return false;
+            const userFacultyLower = user.faculty.toLowerCase().trim();
+            const matchesFaculty = election.allowedFaculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+            if (!matchesFaculty) return false;
           }
 
-          return true;
+          // Get eligibility type
+          let eligibilityType = election.eligibility?.type;
+          if (!eligibilityType) {
+            if (election.scope === 'university') eligibilityType = 'university';
+            else if (election.scope === 'federation') eligibilityType = 'federation';
+            else eligibilityType = 'all';
+          }
+
+          // Helper: get organization IDs
+          const getUserOrgId = () => {
+            if (!user?.organization) return null;
+            return typeof user.organization === 'object' ? user.organization._id?.toString() : user.organization?.toString();
+          };
+          const getUserOrgParentId = () => {
+            if (!user?.organization || typeof user.organization !== 'object') return null;
+            if (!user.organization.parent) return null;
+            return typeof user.organization.parent === 'object' ? user.organization.parent._id?.toString() : user.organization.parent?.toString();
+          };
+          const getElectionOrgId = () => {
+            if (!election.organization) return null;
+            return typeof election.organization === 'object' ? election.organization._id?.toString() : election.organization?.toString();
+          };
+
+          const userOrgId = getUserOrgId();
+          const userOrgParentId = getUserOrgParentId();
+          const electionOrgId = getElectionOrgId();
+
+          // Check based on eligibility type
+          switch (eligibilityType) {
+            case 'all':
+              return true;
+
+            case 'university':
+              // If faculty check passed above, user is eligible
+              if (hasFacultyRestriction) return true;
+              // Otherwise check org
+              if (election.allowedOrganizations?.length > 0) {
+                const allowedOrgIds = election.allowedOrganizations.map(org =>
+                  typeof org === 'object' ? org._id?.toString() : org?.toString()
+                ).filter(Boolean);
+                if (!userOrgId) return false;
+                return allowedOrgIds.includes(userOrgId) || (userOrgParentId && allowedOrgIds.includes(userOrgParentId));
+              }
+              if (electionOrgId) {
+                if (!userOrgId) return false;
+                return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+              }
+              return true;
+
+            case 'federation':
+              if (hasFacultyRestriction) return true;
+              if (election.allowedOrganizations?.length > 0) {
+                const federationId = typeof election.allowedOrganizations[0] === 'object' 
+                  ? election.allowedOrganizations[0]._id?.toString() 
+                  : election.allowedOrganizations[0]?.toString();
+                if (!userOrgId) return false;
+                return userOrgId === federationId || userOrgParentId === federationId;
+              }
+              if (electionOrgId) {
+                if (!userOrgId) return false;
+                return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+              }
+              return true;
+
+            case 'faculty':
+              if (election.eligibility?.faculties?.length > 0) {
+                if (!user?.faculty) return false;
+                const userFacultyLower = user.faculty.toLowerCase().trim();
+                return election.eligibility.faculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+              }
+              return true;
+
+            case 'cohort':
+              if (election.eligibility?.cohorts?.length > 0) {
+                if (!user?.yearOfStudy) return false;
+                return election.eligibility.cohorts.includes(user.yearOfStudy.toString());
+              }
+              return true;
+
+            case 'csv':
+              if (election.eligibility?.whitelist?.length > 0) {
+                const userEmail = user?.email?.toLowerCase().trim();
+                const userStudentId = user?.studentId?.toString().trim();
+                return election.eligibility.whitelist.some(entry => {
+                  const entryLower = entry?.toLowerCase().trim();
+                  return entryLower === userEmail || entryLower === userStudentId;
+                });
+              }
+              return true;
+
+            default:
+              return true;
+          }
         });
 
         setElections(eligibleElections);
@@ -293,8 +364,8 @@ export default function CandidateApplication({ user, users = [] }) {
       {/* Hero Banner */}
       <div style={{
         background: isDarkMode 
-          ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%)'
-          : 'linear-gradient(135deg, #0d6efd 0%, #6366f1 50%, #8b5cf6 100%)',
+          ? '#1e3a8a'
+          : '#0d6efd',
         padding: 'clamp(3rem, 8vw, 5rem) clamp(1rem, 3vw, 1.5rem) clamp(2.5rem, 6vw, 4rem)',
         position: 'relative',
         overflow: 'hidden',
@@ -1001,58 +1072,64 @@ export default function CandidateApplication({ user, users = [] }) {
     {/* Success Modal */}
     {showSuccessModal && (
       <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 9999 }} onClick={() => setShowSuccessModal(false)}>
-        <div className="modal-dialog modal-dialog-centered modal-sm">
+        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 'min(90vw, 500px)' }}>
           <div className="modal-content" style={{ 
             background: isDarkMode ? colors.cardBackground : '#ffffff',
             border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none',
-            margin: '1rem'
-          }}>
-            <div className="modal-body text-center p-3 p-sm-4 p-md-5">
-              <div className="mb-3 mb-md-4">
+            borderRadius: '1rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }} onClick={e => e.stopPropagation()}>
+            <div className="modal-body text-center p-4 p-md-5">
+              <div className="mb-4">
                 <div style={{
-                  width: 'clamp(60px, 12vw, 80px)',
-                  height: 'clamp(60px, 12vw, 80px)',
+                  width: '100px',
+                  height: '100px',
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto',
-                  animation: 'scaleIn 0.5s ease-out'
+                  animation: 'scaleIn 0.5s ease-out',
+                  boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)'
                 }}>
-                  <i className="fa fa-check" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#ffffff' }} />
+                  <i className="fa fa-check" style={{ fontSize: '3rem', color: '#ffffff' }} />
                 </div>
               </div>
-              <h3 className="fw-bold mb-2 mb-md-3" style={{ 
+              <h3 className="fw-bold mb-3" style={{ 
                 color: isDarkMode ? colors.text : '#1f2937',
-                fontSize: 'clamp(1.25rem, 3vw, 1.75rem)'
+                fontSize: '1.5rem'
               }}>
                 Application Submitted!
               </h3>
-              <p className="mb-3 mb-md-4" style={{ 
+              <p className="mb-4" style={{ 
                 color: isDarkMode ? '#94a3b8' : '#6b7280', 
-                fontSize: 'clamp(0.875rem, 2vw, 1.05rem)',
-                lineHeight: 1.5
+                fontSize: '1rem',
+                lineHeight: 1.6,
+                maxWidth: '400px',
+                margin: '0 auto 1.5rem'
               }}>
                 Your candidate application has been successfully submitted and is now under review by the election committee.
               </p>
-              <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+              <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                 <button 
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-lg"
                   style={{ 
-                    padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem)',
-                    fontSize: 'clamp(0.875rem, 1.5vw, 1rem)'
+                    padding: '0.75rem 2rem',
+                    fontSize: '1rem',
+                    borderRadius: '0.5rem'
                   }}
                   onClick={() => { setShowSuccessModal(false); window.history.back(); }}
                 >
                   <i className="fa fa-home me-2" />
-                  Dashboard
+                  Go to Dashboard
                 </button>
                 <button 
-                  className="btn btn-outline-secondary"
+                  className="btn btn-outline-secondary btn-lg"
                   style={{ 
-                    padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5rem)',
-                    fontSize: 'clamp(0.875rem, 1.5vw, 1rem)'
+                    padding: '0.75rem 2rem',
+                    fontSize: '1rem',
+                    borderRadius: '0.5rem'
                   }}
                   onClick={() => setShowSuccessModal(false)}
                 >

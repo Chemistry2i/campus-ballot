@@ -83,7 +83,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture || user?.avatarUrl || '/logo.png');
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const profileMenuRef = useRef(null);
   const { colors, isDarkMode } = useTheme();
@@ -105,7 +105,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   async function fetchStats() {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -240,7 +240,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -274,14 +274,14 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       let res;
       try {
         res = await axios.get(
-          "https://api.campusballot.tech/api/admin/notifications",
+          "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/admin/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } catch (err) {
         res = await axios.get(
-          "https://api.campusballot.tech/api/notifications",
+          "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -334,7 +334,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     );
     try {
       await axios.put(
-        `https://api.campusballot.tech/api/notifications/${id}/read`,
+        `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -344,7 +344,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.put(
-          `https://api.campusballot.tech/api/admin/notifications/${id}/read`,
+          `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/admin/notifications/${id}/read`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -382,7 +382,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
 
     try {
       await axios.delete(
-        `https://api.campusballot.tech/api/notifications/${id}`,
+        `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications/${id}`,
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -395,7 +395,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.delete(
-          `https://api.campusballot.tech/api/admin/notifications/${id}`,
+          `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/admin/notifications/${id}`,
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -420,7 +420,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
       try {
         await axios.put(
-          "https://api.campusballot.tech/api/notifications/mark-all-read",
+          "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications/mark-all-read",
           {},
           {
             headers: { Authorization: `Bearer ${user?.token}` },
@@ -431,7 +431,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
         await Promise.all(
           unread.map((n) =>
             axios.put(
-              `https://api.campusballot.tech/api/notifications/${
+              `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications/${
                 n._id || n.id
               }/read`,
               {},
@@ -556,7 +556,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
             <div style={{
               background: colors.primary, // Updated to use primary color
               color: '#fff',
-              borderRadius: 3,
+              borderRadius: 10,
               padding: '3px 12px',
               fontWeight: 500,
               fontSize: 12,
@@ -569,32 +569,42 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
             </div>
             {/* Search */}
             {isSearchExpanded ? (
-              <input
-                type="text"
-                className="form-control search-input search-animate"
-                placeholder="Search users, logs..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  paddingLeft: '14px',
-                  borderRadius: '14px',
-                  border: `1.5px solid ${colors.border}`,
-                  boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
-                  background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
-                  color: colors.text,
-                  height: '36px',
-                  fontSize: '1rem',
-                  width: '250px',
-                  transition: 'box-shadow 0.2s, transform 0.2s',
-                }}
-                aria-label="Search input"
-                onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
-                onBlur={e => {
-                  e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)';
-                  setIsSearchExpanded(false);
-                }}
-                autoFocus
-              />
+              <div style={{ position: 'relative', width: '250px' }}>
+                <span
+                  className="fa fa-search"
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: 15,
+                    color: isDarkMode ? '#94a3b8' : '#64748b',
+                    pointerEvents: 'none',
+                  }}
+                />
+                <input
+                  type="text"
+                  className="form-control search-input search-animate"
+                  placeholder="Search users, logs..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{
+                    paddingLeft: '34px',
+                    borderRadius: '14px',
+                    border: `1.5px solid ${colors.border}`,
+                    boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+                    background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                    color: colors.text,
+                    height: '36px',
+                    fontSize: '1rem',
+                    width: '100%',
+                    transition: 'box-shadow 0.2s, transform 0.2s',
+                  }}
+                  aria-label="Search input"
+                  onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
+                  onBlur={e => e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)'}
+                />
+              </div>
             ) : (
               <button
                 aria-label="Search"

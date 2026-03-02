@@ -342,7 +342,9 @@ const activateUser = asyncHandler(async (req, res) => {
 // @access  User
 const getCurrentUserProfile = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user._id)
+      .select("-password")
+      .populate("organization", "_id name code type parent");
     if (!user) {
       console.log({ message: "User not found" });
       return res.status(404).json({ message: "User not found" });

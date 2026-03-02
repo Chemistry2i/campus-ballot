@@ -7,6 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 const navItems = [
   { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
+  { label: 'Organizations', icon: 'fa-solid fa-building', to: '/super-admin/organizations' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
   { label: 'Manage Observers', icon: 'fa-solid fa-eye', to: '/super-admin/manage-observers' },
   { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
@@ -323,9 +324,9 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                     left: 0,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    width: 6,
-                    height: 32,
-                    borderRadius: 2,
+                    width: 5,
+                    // height: 40,
+                    borderRadius: 1,
                     background: '#2563eb',
                     boxShadow: '0 2px 8px rgba(37,99,235,0.12)',
                   }}
