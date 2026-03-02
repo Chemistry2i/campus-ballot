@@ -33,7 +33,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev";
+axios.defaults.baseURL = "https://api.campusballot.tech";
 
 function Elections({ user }) {
     // Compact table and button styles (similar to Users.jsx)

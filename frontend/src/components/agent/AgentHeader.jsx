@@ -45,7 +45,7 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications', {
+      const response = await axios.get('https://api.campusballot.tech/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -64,7 +64,7 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev/api/notifications/${notificationId}/read`,
+        `https://api.campusballot.tech/api/notifications/${notificationId}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

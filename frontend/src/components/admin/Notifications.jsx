@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from '../../contexts/ThemeContext';
 
-axios.defaults.baseURL = "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev";
+axios.defaults.baseURL = "https://api.campusballot.tech";
 
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);

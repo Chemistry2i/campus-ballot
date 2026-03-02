@@ -23,7 +23,7 @@ import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGener
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev";
+axios.defaults.baseURL = "https://api.campusballot.tech";
 import {
   FaSignOutAlt,
   FaUserCircle,

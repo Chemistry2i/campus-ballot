@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev${imagePath}`;
+  return `https://api.campusballot.tech${imagePath}`;
 }
 
 export default getImageUrl;

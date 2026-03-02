@@ -68,17 +68,17 @@ app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'", "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev", "https://api.campusballot.tech"],
+      defaultSrc: ["'self'", "https://www.campusballot.tech", "https://api.campusballot.tech"],
       scriptSrc: [
         "'self'",
-        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net"
       ],
       styleSrc: [
         "'self'",
-        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
@@ -88,19 +88,19 @@ app.use(
         "'self'",
         "data:",
         "https://res.cloudinary.com",
-        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       connectSrc: [
         "'self'",
-        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       fontSrc: [
         "'self'",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
-        "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       objectSrc: ["'none'"],
@@ -112,9 +112,9 @@ app.use(
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+    "https://www.campusballot.tech",
     "https://api.campusballot.tech",
-    "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+    "https://www.campusballot.tech",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
@@ -240,8 +240,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
-      "https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev",
+      "https://www.campusballot.tech",
+      "https://www.campusballot.tech",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],

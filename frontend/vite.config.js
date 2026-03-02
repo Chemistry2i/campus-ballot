@@ -13,12 +13,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev',
+        target: 'https://api.campusballot.tech',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://laughing-memory-wrjgjx7g5qqq3g559-5000.app.github.dev',
+        target: 'https://api.campusballot.tech',
         changeOrigin: true,
         secure: false,
       }

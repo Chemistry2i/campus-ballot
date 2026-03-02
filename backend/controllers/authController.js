@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev/verify/${verificationToken}`;
+//         const verifyUrl = `https://www.campusballot.tech/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://laughing-memory-wrjgjx7g5qqq3g559-5173.app.github.dev/reset-password/${token}`;
+//         const resetUrl = `https://www.campusballot.tech/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
