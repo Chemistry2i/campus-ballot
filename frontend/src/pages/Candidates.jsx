@@ -7,6 +7,71 @@ import Select from "react-select";
 import ugandaPartiesOptions from '../utils/ugandaParties';
 import { useTheme } from '../contexts/ThemeContext';
 
+function AvatarFallback({ name, size = 50, borderColor = '#d1d5db', background = '#e5e7eb', textColor = '#475569' }) {
+  const initials = (name || 'U')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'U';
+
+  return (
+    <div
+      aria-label={name ? `${name} avatar` : 'Avatar fallback'}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        border: `2px solid ${borderColor}`,
+        background,
+        color: textColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+        fontSize: size >= 48 ? '0.9rem' : '0.75rem',
+        userSelect: 'none'
+      }}
+      title={name || 'Unknown user'}
+    >
+      {initials}
+    </div>
+  );
+}
+
+function CandidatePhoto({ src, name, size = 50, colors, isDarkMode }) {
+  const [failed, setFailed] = useState(false);
+  const resolvedSrc = src ? getImageUrl(src) : '';
+
+  if (!resolvedSrc || failed) {
+    return (
+      <AvatarFallback
+        name={name}
+        size={size}
+        borderColor={colors.border}
+        background={isDarkMode ? colors.surfaceHover : '#f1f5f9'}
+        textColor={isDarkMode ? colors.text : '#334155'}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={resolvedSrc}
+      alt={name || 'Candidate'}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'cover',
+        borderRadius: '50%',
+        border: `2px solid ${colors.border}`,
+        background: colors.surfaceHover,
+      }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 // Move CreateCandidateModal OUTSIDE of Candidates
 function CreateCandidateModal({
   form,
@@ -468,7 +533,53 @@ function Candidates({ user }) {
       Swal.fire('Warning', 'Please select candidates to approve', 'warning');
       return;
     }
-    // ...existing bulk approve logic...
+
+    const result = await Swal.fire({
+      title: 'Bulk Approve Candidates',
+      html: `Are you sure you want to approve <strong>${selectedIds.length}</strong> selected candidates?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Approve All',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const loadingSwal = Swal.fire({
+      title: 'Processing...',
+      html: `Approving ${selectedIds.length} candidates...`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      const promises = selectedIds.map(candidateId => 
+        axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected').length;
+
+      loadingSwal.close();
+      
+      if (successful > 0) {
+        Swal.fire('Success', `${successful} candidate(s) approved successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+        setSelectedIds([]);
+        fetchCandidates();
+      } else {
+        Swal.fire('Error', 'Failed to approve candidates', 'error');
+      }
+    } catch (error) {
+      loadingSwal.close();
+      Swal.fire('Error', 'Failed to approve candidates', 'error');
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -476,7 +587,149 @@ function Candidates({ user }) {
       Swal.fire('Warning', 'Please select candidates to delete', 'warning');
       return;
     }
-    // ...existing bulk delete logic...
+
+    const result = await Swal.fire({
+      title: 'Bulk Delete Candidates',
+      html: `Are you sure you want to delete <strong>${selectedIds.length}</strong> selected candidates?<br><small class="text-muted">This action cannot be undone</small>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Delete All',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const loadingSwal = Swal.fire({
+      title: 'Processing...',
+      html: `Deleting ${selectedIds.length} candidates...`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      const promises = selectedIds.map(candidateId => 
+        axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected').length;
+
+      loadingSwal.close();
+      
+      if (successful > 0) {
+        Swal.fire('Success', `${successful} candidate(s) deleted successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+        setSelectedIds([]);
+        fetchCandidates();
+      } else {
+        Swal.fire('Error', 'Failed to delete candidates', 'error');
+      }
+    } catch (error) {
+      loadingSwal.close();
+      Swal.fire('Error', 'Failed to delete candidates', 'error');
+    }
+  };
+
+  const handleBulkDisqualify = async () => {
+    if (selectedIds.length === 0) {
+      Swal.fire('Warning', 'Please select candidates to disqualify', 'warning');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Bulk Disqualify Candidates',
+      html: `Are you sure you want to disqualify <strong>${selectedIds.length}</strong> selected candidates?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ffc107',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Disqualify All',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const loadingSwal = Swal.fire({
+      title: 'Processing...',
+      html: `Disqualifying ${selectedIds.length} candidates...`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      const promises = selectedIds.map(candidateId => 
+        axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      const failed = results.filter(result => result.status === 'rejected').length;
+
+      loadingSwal.close();
+      
+      if (successful > 0) {
+        Swal.fire('Success', `${successful} candidate(s) disqualified successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+        setSelectedIds([]);
+        fetchCandidates();
+      } else {
+        Swal.fire('Error', 'Failed to disqualify candidates', 'error');
+      }
+    } catch (error) {
+      loadingSwal.close();
+      Swal.fire('Error', 'Failed to disqualify candidates', 'error');
+    }
+  };
+
+  const handleBulkExport = () => {
+    if (selectedIds.length === 0) {
+      Swal.fire('Warning', 'Please select candidates to export', 'warning');
+      return;
+    }
+
+    const selectedCandidates = statusFilteredCandidates.filter(c => selectedIds.includes(c._id || c.id));
+    const csvContent = convertCandidatesToCSV(selectedCandidates);
+    const filename = `selected_candidates_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    Swal.fire('Success', `${selectedIds.length} candidates exported successfully`, 'success');
+  };
+
+  const convertCandidatesToCSV = (candidates) => {
+    const headers = ['Name', 'Email', 'Election', 'Position', 'Party', 'Status', 'Created'];
+    const rows = candidates.map(candidate => [
+      candidate.name || '',
+      candidate.email || '',
+      candidate.election?.title || '',
+      candidate.position || '',
+      candidate.party || '',
+      candidate.status || '',
+      candidate.createdAt ? new Date(candidate.createdAt).toLocaleDateString() : ''
+    ]);
+    
+    return [headers, ...rows].map(row => 
+      row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
   };
 
   const fetchCandidates = async (query = "") => {
@@ -743,11 +996,37 @@ function Candidates({ user }) {
           >
             <FaFilePdf className="me-2" /> Export PDF
           </button>
-          <button className="btn btn-outline-secondary me-2" onClick={handleBulkApprove}>
-            <i className="fa fa-check me-2"></i> Bulk Approve
+          <button 
+            className="btn btn-outline-secondary me-2" 
+            onClick={handleBulkApprove}
+            disabled={selectedIds.length === 0}
+            title={selectedIds.length === 0 ? 'Select candidates to approve' : `Approve ${selectedIds.length} selected candidates`}
+          >
+            <i className="fa fa-check me-2"></i> Bulk Approve ({selectedIds.length})
           </button>
-          <button className="btn btn-outline-danger" onClick={handleBulkDelete}>
-            <i className="fa fa-trash me-2"></i> Bulk Delete
+          <button 
+            className="btn btn-outline-warning me-2" 
+            onClick={handleBulkDisqualify}
+            disabled={selectedIds.length === 0}
+            title={selectedIds.length === 0 ? 'Select candidates to disqualify' : `Disqualify ${selectedIds.length} selected candidates`}
+          >
+            <i className="fa fa-times me-2"></i> Bulk Disqualify ({selectedIds.length})
+          </button>
+          <button 
+            className="btn btn-outline-danger me-2" 
+            onClick={handleBulkDelete}
+            disabled={selectedIds.length === 0}
+            title={selectedIds.length === 0 ? 'Select candidates to delete' : `Delete ${selectedIds.length} selected candidates`}
+          >
+            <i className="fa fa-trash me-2"></i> Bulk Delete ({selectedIds.length})
+          </button>
+          <button 
+            className="btn btn-outline-info me-2" 
+            onClick={handleBulkExport}
+            disabled={selectedIds.length === 0}
+            title={selectedIds.length === 0 ? 'Select candidates to export' : `Export ${selectedIds.length} selected candidates`}
+          >
+            <i className="fa fa-download me-2"></i> Bulk Export ({selectedIds.length})
           </button>
         </div>
       </div>
@@ -909,21 +1188,12 @@ function Candidates({ user }) {
                       />
                     </td>
                     <td style={{ padding: '0.75rem' }}>
-                      <img
-                        src={getImageUrl(candidate.photo) || '/default-avatar.png'}
-                        alt={candidate.name}
-                        style={{
-                          width: 50,
-                          height: 50,
-                          objectFit: 'cover',
-                          borderRadius: '50%',
-                          border: `2px solid ${colors.border}`,
-                          background: colors.surfaceHover
-                        }}
-                        onError={(e) => {
-                          console.log('Image failed to load:', candidate.photo);
-                          e.target.src = '/default-avatar.png';
-                        }}
+                      <CandidatePhoto
+                        src={candidate.photo}
+                        name={candidate.name}
+                        size={50}
+                        colors={colors}
+                        isDarkMode={isDarkMode}
                       />
                     </td>
                     <td style={{ padding: '0.75rem' }}>
