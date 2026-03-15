@@ -5,6 +5,29 @@ import SuperAdminSidebar from './Sidebar';
 import { CSVLink } from 'react-csv';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const getInitials = (name = 'Admin') => {
+  const words = String(name).trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'A';
+  if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
+  return `${words[0][0]}${words[1][0]}`.toUpperCase();
+};
+
+const avatarColorFromName = (name = 'Admin') => {
+  const palette = ['#2563eb', '#0ea5e9', '#059669', '#7c3aed', '#ea580c', '#dc2626'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return palette[Math.abs(hash) % palette.length];
+};
+
+const buildAvatarDataUri = (name = 'Admin') => {
+  const initials = getInitials(name);
+  const bg = avatarColorFromName(name);
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='${bg}' rx='40' ry='40'/><text x='40' y='49' text-anchor='middle' font-family='Segoe UI, Arial, sans-serif' font-size='28' font-weight='700' fill='white'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
 const dummyAdmins = [
   { id: 1, name: 'Aine Bridget', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
   { id: 2, name: 'Natu Nah', email: 'john@kyu.ac.ug', role: 'admin', status: 'inactive' },
@@ -488,8 +511,12 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                     </td>
                     <td style={{ padding: '0.75rem' }}>
                       <img
-                        src={admin.profilePicture || admin.image || '/default-avatar.png'}
+                        src={admin.profilePicture || admin.image || buildAvatarDataUri(admin.name)}
                         alt={admin.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = buildAvatarDataUri(admin.name);
+                        }}
                         style={{
                           width: 40,
                           height: 40,
@@ -690,6 +717,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         <img
                           src={newAdmin.image}
                           alt="Preview"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = buildAvatarDataUri(newAdmin.name || 'Admin');
+                          }}
                           style={{ width: 40, height: 40, borderRadius: '50%', marginTop: 8, objectFit: 'cover', border: '1px solid #eee' }}
                         />
                       )}
