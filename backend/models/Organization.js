@@ -174,7 +174,6 @@ const organizationSchema = new mongoose.Schema({
 });
 
 // Indexes for efficient queries
-organizationSchema.index({ code: 1 });
 organizationSchema.index({ type: 1 });
 organizationSchema.index({ parent: 1 });
 organizationSchema.index({ status: 1 });

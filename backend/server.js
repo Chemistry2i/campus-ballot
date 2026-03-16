@@ -3,12 +3,22 @@
 // Loading environment variables
 require('dotenv').config();
 
-// Initialize Datadog Tracing as the very first thing (agentless for Render)
-const tracer = require('dd-trace').init({
-  apiKey: process.env.DD_API_KEY,
-  site: process.env.DD_SITE || 'datadoghq.com',
-});
-console.log(`🟣 Datadog tracing enabled (agentless). Service: ${process.env.DD_SERVICE}, Env: ${process.env.DD_ENV}, Site: ${process.env.DD_SITE || 'datadoghq.com'}`);
+const datadogSite = process.env.DD_SITE || 'us5.datadoghq.com';
+const datadogService = process.env.DD_SERVICE || 'campus-ballot-backend';
+const datadogEnv = process.env.DD_ENV || process.env.NODE_ENV || 'development';
+
+if (process.env.DD_API_KEY) {
+  require('dd-trace').init({
+    apiKey: process.env.DD_API_KEY,
+    site: datadogSite,
+    service: datadogService,
+    env: datadogEnv
+  });
+
+  console.log(`🟣 Datadog tracing enabled (agentless). Service: ${datadogService}, Env: ${datadogEnv}, Site: ${datadogSite}`);
+} else {
+  console.log('⚪ Datadog tracing disabled. Set DD_API_KEY to enable agentless tracing.');
+}
 
 // require("dotenv").config();
 

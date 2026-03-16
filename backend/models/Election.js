@@ -109,7 +109,6 @@ ElectionSchema.index({ startDate: 1 });
 ElectionSchema.index({ endDate: 1 });
 ElectionSchema.index({ createdBy: 1 });
 ElectionSchema.index({ candidates: 1 });
-ElectionSchema.index({ organization: 1 });
 ElectionSchema.index({ scope: 1 });
 ElectionSchema.index({ 'eligibility.faculty': 1 });
 ElectionSchema.index({ 'eligibility.yearOfStudy': 1 });
