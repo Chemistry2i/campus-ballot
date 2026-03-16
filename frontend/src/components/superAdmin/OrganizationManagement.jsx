@@ -302,7 +302,7 @@ const OrganizationManagement = () => {
       ? `linear-gradient(140deg, ${colors.surface} 0%, ${colors.background} 100%)`
       : `linear-gradient(140deg, ${colors.surface} 0%, #f8fbff 100%)`,
     border: `1px solid ${colors.border}`,
-    borderRadius: '18px',
+    borderRadius: '4px',
     padding: '1.25rem',
     marginBottom: '1rem',
     boxShadow: isDarkMode
@@ -311,7 +311,7 @@ const OrganizationManagement = () => {
   };
 
   const statCardBaseStyle = {
-    borderRadius: '20px',
+    borderRadius: '4px',
     padding: '1.1rem 1.15rem',
     position: 'relative',
     overflow: 'hidden',
@@ -326,7 +326,7 @@ const OrganizationManagement = () => {
       ? `linear-gradient(120deg, ${colors.surface} 0%, ${colors.background} 100%)`
       : 'linear-gradient(120deg, #ffffff 0%, #f7fbff 100%)',
     border: `1px solid ${colors.border}`,
-    borderRadius: '14px',
+    borderRadius: '4px',
     padding: '1rem',
     marginBottom: '0.75rem',
     transition: 'all 0.2s ease',
@@ -339,7 +339,7 @@ const OrganizationManagement = () => {
     const active = status === 'active';
     return {
       padding: '0.32rem 0.7rem',
-      borderRadius: '999px',
+      borderRadius: '4px',
       fontSize: '0.72rem',
       fontWeight: 700,
       letterSpacing: '0.02em',
@@ -351,7 +351,7 @@ const OrganizationManagement = () => {
   };
 
   const actionButtonStyle = {
-    borderRadius: '10px',
+    borderRadius: '4px',
     width: 34,
     height: 34,
     display: 'inline-flex',
@@ -360,7 +360,7 @@ const OrganizationManagement = () => {
   };
 
   const addUniversityButtonStyle = {
-    borderRadius: '10px',
+    borderRadius: '4px',
     padding: '0.38rem 0.65rem',
     fontWeight: 600,
     fontSize: '0.78rem'
