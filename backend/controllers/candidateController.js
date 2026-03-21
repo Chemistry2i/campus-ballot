@@ -154,7 +154,7 @@ const updateCandidate = asyncHandler(async (req, res) => {
     }
 
     const isOwner = candidate.user.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "admin";
+    const isAdmin = ["admin", "super_admin", "federation_admin"].includes(req.user.role);
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "You do not have permission to update this candidate" });

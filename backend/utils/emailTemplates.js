@@ -425,6 +425,98 @@ const emailTemplates = {
         </html>
       `
     };
+  },
+
+  /**
+   * Email verification template
+   */
+  verifyEmail: ({ userName, verifyUrl }) => {
+    return {
+      subject: "Verify your email",
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { background: white; padding: 40px; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🗳️ Campus Ballot</h1>
+              <p style="margin: 10px 0 0 0; font-size: 14px;">University Voting Platform</p>
+            </div>
+            <div class="content">
+              <p>Hello ${userName},</p>
+              <p>Thank you for registering with Campus Ballot! To complete your registration and gain access to our voting platform, please verify your email address by clicking the button below.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verifyUrl}" class="button">Verify Email Address</a>
+              </div>
+              <div style="background: #e8f4f8; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0; font-size: 13px; color: #555;">
+                <strong>⏱️ Note:</strong> This verification link will expire in 1 hour. If you didn't create this account, you can safely ignore this email.
+              </div>
+              <p>If the button above doesn't work, copy and paste this link in your browser:</p>
+              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;">${verifyUrl}</p>
+            </div>
+            <div class="footer">
+              <p>© 2026 Campus Ballot. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>`
+    };
+  },
+
+  /**
+   * Password reset template
+   */
+  resetPassword: ({ userName, resetUrl }) => {
+    return {
+      subject: "Password Reset Request",
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
+            .content { background: white; padding: 40px; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🗳️ Campus Ballot</h1>
+            </div>
+            <div class="content">
+              <p>Hello ${userName},</p>
+              <p>We received a request to reset your Campus Ballot password. Click the button below to create a new password.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" class="button">Reset Password</a>
+              </div>
+              <div style="background: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin: 20px 0; font-size: 13px; color: #856404;">
+                <strong>⚠️ Security Alert:</strong> This link expires in 30 minutes. If you didn't request this, please ignore this email.
+              </div>
+              <p>Or copy this link:</p>
+              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;">${resetUrl}</p>
+            </div>
+            <div class="footer">
+              <p>© 2026 Campus Ballot. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>`
+    };
   }
 };
 

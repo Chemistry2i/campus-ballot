@@ -299,6 +299,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 const sendSms = require("../utils/sendSms");
+const emailTemplates = require("../utils/emailTemplates");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 /* -------------------------------------------------------
@@ -325,6 +326,9 @@ const register = asyncHandler(async (req, res) => {
       gender,
       phone,
     } = req.body;
+
+    // Public registration is restricted to students
+    const role = 'student';
 
     // Normalize email early (trim + lowercase) to avoid case/whitespace duplicates
     const normalizedEmail = (email || '').toString().trim().toLowerCase();
@@ -393,59 +397,16 @@ const register = asyncHandler(async (req, res) => {
 
     /* ------------------ EMAIL VERIFICATION ------------------ */
     const verifyUrl = `${process.env.BASE_URL}/verify/${verificationToken}`;
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; }
-            .content { background: white; padding: 40px; }
-            .greeting { font-size: 16px; margin-bottom: 20px; }
-            .message { margin: 20px 0; line-height: 1.8; color: #555; }
-            .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
-            .button:hover { opacity: 0.9; }
-            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
-            .footer-link { color: #667eea; text-decoration: none; }
-            .security-note { background: #e8f4f8; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0; font-size: 13px; color: #555; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🗳️ Campus Ballot</h1>
-              <p style="margin: 10px 0 0 0; font-size: 14px;">University Voting Platform</p>
-            </div>
-            <div class="content">
-              <p class="greeting">Hello ${newUser.name},</p>
-              <p class="message">Thank you for registering with Campus Ballot! To complete your registration and gain access to our voting platform, please verify your email address by clicking the button below.</p>
-              <div class="button-container">
-                <a href="${verifyUrl}" class="button">Verify Email Address</a>
-              </div>
-              <div class="security-note">
-                <strong>⏱️ Note:</strong> This verification link will expire in 1 hour. If you didn't create this account, you can safely ignore this email.
-              </div>
-              <p class="message">If the button above doesn't work, you can also copy and paste this link in your browser:</p>
-              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;"><a href="${verifyUrl}" class="footer-link">${verifyUrl}</a></p>
-            </div>
-            <div class="footer">
-              <p style="margin: 0 0 10px 0;"><strong>Campus Ballot</strong> • Kyambogo University Voting System</p>
-              <p style="margin: 0;">If you have questions, contact us at <a href="mailto:support@campusballot.tech" class="footer-link">support@campusballot.tech</a></p>
-              <p style="margin: 10px 0 0 0; font-size: 11px;">© 2026 Campus Ballot. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const emailContent = emailTemplates.verifyEmail({
+      userName: newUser.name,
+      verifyUrl
+    });
 
     try {
       await sendEmail({
         to: newUser.email,
-        subject: "Verify your email",
-        html,
+        subject: emailContent.subject,
+        html: emailContent.html,
       });
       console.log("[REGISTER]: Verification email sent to:", newUser.email);
     } catch (err) {
@@ -650,59 +611,16 @@ const forgotPassword = asyncHandler(async (req, res) => {
     await user.save();
 
     const resetUrl = `${process.env.BASE_URL}/reset-password/${token}`;
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; }
-            .content { background: white; padding: 40px; }
-            .greeting { font-size: 16px; margin-bottom: 20px; }
-            .message { margin: 20px 0; line-height: 1.8; color: #555; }
-            .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
-            .button:hover { opacity: 0.9; }
-            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
-            .footer-link { color: #667eea; text-decoration: none; }
-            .security-note { background: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin: 20px 0; font-size: 13px; color: #856404; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🗳️ Campus Ballot</h1>
-              <p style="margin: 10px 0 0 0; font-size: 14px;">University Voting Platform</p>
-            </div>
-            <div class="content">
-              <p class="greeting">Hello ${user.name},</p>
-              <p class="message">We received a request to reset your Campus Ballot password. Click the button below to create a new password.</p>
-              <div class="button-container">
-                <a href="${resetUrl}" class="button">Reset Password</a>
-              </div>
-              <div class="security-note">
-                <strong>⚠️ Security Alert:</strong> This password reset link will expire in 30 minutes. If you didn't request a password reset, please ignore this email or contact our support team immediately.
-              </div>
-              <p class="message">If the button above doesn't work, copy and paste this link in your browser:</p>
-              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;"><a href="${resetUrl}" class="footer-link">${resetUrl}</a></p>
-            </div>
-            <div class="footer">
-              <p style="margin: 0 0 10px 0;"><strong>Campus Ballot</strong> • Kyambogo University Voting System</p>
-              <p style="margin: 0;">If you have questions, contact us at <a href="mailto:support@campusballot.tech" class="footer-link">support@campusballot.tech</a></p>
-              <p style="margin: 10px 0 0 0; font-size: 11px;">© 2026 Campus Ballot. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const emailContent = emailTemplates.resetPassword({
+      userName: user.name,
+      resetUrl
+    });
 
     try {
       await sendEmail({
         to: user.email,
-        subject: "Password Reset Request",
-        html,
+        subject: emailContent.subject,
+        html: emailContent.html,
       });
       console.log("[FORGOT PASSWORD]: Reset email sent to", user.email);
     } catch (err) {
@@ -822,59 +740,16 @@ const resendPasswordReset = asyncHandler(async (req, res) => {
 
     // Send password reset email
     const resetUrl = `${process.env.BASE_URL}/reset-password/${resetToken}`;
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; }
-            .content { background: white; padding: 40px; }
-            .greeting { font-size: 16px; margin-bottom: 20px; }
-            .message { margin: 20px 0; line-height: 1.8; color: #555; }
-            .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
-            .button:hover { opacity: 0.9; }
-            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
-            .footer-link { color: #667eea; text-decoration: none; }
-            .security-note { background: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin: 20px 0; font-size: 13px; color: #856404; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🗳️ Campus Ballot</h1>
-              <p style="margin: 10px 0 0 0; font-size: 14px;">University Voting Platform</p>
-            </div>
-            <div class="content">
-              <p class="greeting">Hello ${user.name},</p>
-              <p class="message">A new password reset request has been generated for your Campus Ballot account. Click the button below to reset your password.</p>
-              <div class="button-container">
-                <a href="${resetUrl}" class="button">Reset Password</a>
-              </div>
-              <div class="security-note">
-                <strong>⏱️ Note:</strong> This link will expire in 30 minutes. If you didn't request this, please ignore this email or contact support immediately.
-              </div>
-              <p class="message">If the button above doesn't work, copy and paste this link in your browser:</p>
-              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;"><a href="${resetUrl}" class="footer-link">${resetUrl}</a></p>
-            </div>
-            <div class="footer">
-              <p style="margin: 0 0 10px 0;"><strong>Campus Ballot</strong> • Kyambogo University Voting System</p>
-              <p style="margin: 0;">If you have questions, contact us at <a href="mailto:support@campusballot.tech" class="footer-link">support@campusballot.tech</a></p>
-              <p style="margin: 10px 0 0 0; font-size: 11px;">© 2026 Campus Ballot. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const emailContent = emailTemplates.resetPassword({
+      userName: user.name,
+      resetUrl
+    });
 
     try {
       await sendEmail({
         to: user.email,
-        subject: "Password Reset Request - New Link",
-        html,
+        subject: emailContent.subject,
+        html: emailContent.html,
       });
       console.log("[RESEND PASSWORD RESET]: Email sent to:", user.email);
       res.json({
@@ -922,59 +797,16 @@ const resendVerification = asyncHandler(async (req, res) => {
 
     // Send verification email
     const verifyUrl = `${process.env.BASE_URL}/verify/${verificationToken}`;
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; }
-            .content { background: white; padding: 40px; }
-            .greeting { font-size: 16px; margin-bottom: 20px; }
-            .message { margin: 20px 0; line-height: 1.8; color: #555; }
-            .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
-            .button:hover { opacity: 0.9; }
-            .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
-            .footer-link { color: #667eea; text-decoration: none; }
-            .security-note { background: #e8f4f8; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0; font-size: 13px; color: #555; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🗳️ Campus Ballot</h1>
-              <p style="margin: 10px 0 0 0; font-size: 14px;">University Voting Platform</p>
-            </div>
-            <div class="content">
-              <p class="greeting">Hello ${user.name},</p>
-              <p class="message">A new email verification link has been sent to your account. Please click the button below to complete your email verification.</p>
-              <div class="button-container">
-                <a href="${verifyUrl}" class="button">Verify Email Address</a>
-              </div>
-              <div class="security-note">
-                <strong>⏱️ Note:</strong> This verification link will expire in 1 hour. If you didn't request a new verification link, you can safely ignore this email.
-              </div>
-              <p class="message">If the button above doesn't work, copy and paste this link in your browser:</p>
-              <p style="word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 3px; font-size: 12px;"><a href="${verifyUrl}" class="footer-link">${verifyUrl}</a></p>
-            </div>
-            <div class="footer">
-              <p style="margin: 0 0 10px 0;"><strong>Campus Ballot</strong> • Kyambogo University Voting System</p>
-              <p style="margin: 0;">If you have questions, contact us at <a href="mailto:support@campusballot.tech" class="footer-link">support@campusballot.tech</a></p>
-              <p style="margin: 10px 0 0 0; font-size: 11px;">© 2026 Campus Ballot. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const emailContent = emailTemplates.verifyEmail({
+      userName: user.name,
+      verifyUrl
+    });
 
     try {
       await sendEmail({
         to: user.email,
-        subject: "Verify your email - New Link",
-        html,
+        subject: emailContent.subject,
+        html: emailContent.html,
       });
       console.log("[RESEND VERIFICATION]: Email sent to:", user.email);
       res.json({
