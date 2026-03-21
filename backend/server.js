@@ -248,16 +248,17 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 
-// Catch-all: send React index.html for any non-API route
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-// });
+// --- GLOBAL ERROR HANDLER ---
+// This must be defined AFTER all routes but BEFORE server listen
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
 
-// app.use(express.static(path.join(__dirname, "../frontend/build")));
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-// });
-
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+  });
+});
 
 // --- SOCKET.IO + START SERVER & CONNECT TO DB ---
 const http = require('http');

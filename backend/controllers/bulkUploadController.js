@@ -361,6 +361,14 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
         
         const role = (row.role || 'student').toLowerCase().trim();
         
+        // Security: Prevent privilege escalation via bulk import
+        // Regular admins cannot create super_admin or federation_admin
+        if (req.user.role === 'admin' && ['super_admin', 'federation_admin'].includes(role)) {
+          results.failed++;
+          results.errors.push(`Row ${rowIndex}: Insufficient permissions to create role '${role}'`);
+          continue;
+        }
+
         // Determine organization for this user - try code first, then name
         let userOrganization = defaultOrganizationId;
         if (row.organizationCode) {
