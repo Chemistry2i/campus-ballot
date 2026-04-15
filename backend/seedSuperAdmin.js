@@ -23,7 +23,7 @@ const seedSuperAdmin = async () => {
   try {
     await connectDB();
 
-    const superAdminEmail = "ediger@campusballot.tech";
+    const superAdminEmail = "omolo@campusballot.tech";
 
     const superAdminExists = await User.findOne({ email: superAdminEmail });
 
@@ -31,7 +31,7 @@ const seedSuperAdmin = async () => {
       console.log("ℹ️ Super Admin already exists with email:", superAdminEmail);
     } else {
       const superAdmin = await User.create({
-        name: "Nsubuga Ediger",
+        name: "Omolo Pasikali",
         email: superAdminEmail,
         password: "campusballot", // Let pre-save hook hash this
         role: "super_admin",
