@@ -1,6 +1,6 @@
 {
   "name": "Campus Ballot",
-  "short_name": "Ballot",
+  "short_name": "Campus Ballot",
   "description": "Campus Election and Voting System",
   "start_url": "/",
   "display": "standalone",
@@ -15,7 +15,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/android-chrome-512x512.png",
+      "src": "/logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

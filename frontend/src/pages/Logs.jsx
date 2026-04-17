@@ -1219,8 +1219,6 @@ function Logs({ user }) {
                     )}
                   </button>
                 </div>
-                  </button>
-                </div>
               </form>
             </div>
           </div>
