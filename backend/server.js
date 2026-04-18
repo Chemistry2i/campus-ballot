@@ -78,17 +78,17 @@ app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'", "http://localhost:5173", "https://api.campusballot.tech"],
+      defaultSrc: ["'self'", "https://www.campusballot.tech", "https://api.campusballot.tech"],
       scriptSrc: [
         "'self'",
-        "http://localhost:5173",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net"
       ],
       styleSrc: [
         "'self'",
-        "http://localhost:5173",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
@@ -98,19 +98,19 @@ app.use(
         "'self'",
         "data:",
         "https://res.cloudinary.com",
-        "http://localhost:5173",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       connectSrc: [
         "'self'",
-        "http://localhost:5173",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       fontSrc: [
         "'self'",
         "https://cdnjs.cloudflare.com",
         "https://cdn.jsdelivr.net",
-        "http://localhost:5173",
+        "https://www.campusballot.tech",
         "https://api.campusballot.tech"
       ],
       objectSrc: ["'none'"],
@@ -122,9 +122,9 @@ app.use(
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "http://localhost:5173",
+    "https://www.campusballot.tech",
     "https://api.campusballot.tech",
-    "http://localhost:5173",
+    "https://www.campusballot.tech",
     "https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev"
   ],
   credentials: true
@@ -270,8 +270,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "http://localhost:5173",
-      "http://localhost:5173",
+      "https://www.campusballot.tech",
+      "https://www.campusballot.tech",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],

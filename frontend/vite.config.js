@@ -8,12 +8,12 @@ export default defineConfig({
     port: 5173, // Set the default frontend port here
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://api.campusballot.tech',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'https://api.campusballot.tech',
         changeOrigin: true,
         secure: false,
       }
