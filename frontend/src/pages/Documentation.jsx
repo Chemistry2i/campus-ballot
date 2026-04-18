@@ -278,7 +278,7 @@ const Documentation = () => {
               <strong>Email:</strong> <a href="mailto:support@campusballot.tech">support@campusballot.tech</a>
             </p>
             <p>
-              <strong>Phone:</strong> <a href="tel:+256-XXX-XXX-XXX">+256-XXX-XXX-XXX</a>
+              <strong>Phone:</strong> <a href="tel:+256 742 685 864">+256 742 685 864</a>
             </p>
             <p>
               <strong>Response Time:</strong> Within 24 hours during business days
