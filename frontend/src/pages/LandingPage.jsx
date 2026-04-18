@@ -82,7 +82,7 @@ const LandingPage = () => {
 
       // Send to backend API
       const response = await fetch(
-        "https://api.campusballot.tech/api/contact",
+        "http://localhost:5000/api/contact",
         {
           method: "POST",
           headers: {

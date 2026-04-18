@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from '../../contexts/ThemeContext';
 
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "http://localhost:5000";
 
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);

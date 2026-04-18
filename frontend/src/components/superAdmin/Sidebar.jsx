@@ -300,15 +300,14 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         role="navigation"
         aria-label="Sidebar navigation"
         style={{
-          flex: '1 1 auto',
+          flex: 1,
+          padding: '0.5rem 0',
           display: 'flex',
           flexDirection: 'column',
-          // justifyContent: 'center',
           alignItems: 'stretch',
           overflowY: 'auto',
           overflowX: 'hidden',
           minHeight: 0,
-          paddingBottom: '0rem',
           width: '100%',
         }}
       >
@@ -316,66 +315,53 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0, marginBottom: '0.5rem' }}>
-              {isActive && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: 5,
-                    // height: 40,
-                    borderRadius: 1,
-                    background: '#2563eb',
-                    boxShadow: '0 2px 8px rgba(37,99,235,0.12)',
-                  }}
-                  aria-hidden="true"
-                />
-              )}
-              <Link
-                to={item.to}
-                className={`sidebar-nav-link nav-link d-flex align-items-center custom-superadmin-navlink ${isActive ? 'active fw-bold' : ''}`}
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`sidebar-nav-link nav-link d-flex align-items-center custom-superadmin-navlink ${isActive ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: collapsed ? '0.75rem' : '0.75rem 1.5rem',
+                color: isActive ? colors.primary : colors.textSecondary,
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+                background: isActive ? colors.sidebarHover : 'transparent',
+                transition: 'all 0.2s ease',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                margin: '0.35rem 0',
+              }}
+              aria-current={isActive ? 'page' : undefined}
+              tabIndex={0}
+              onClick={() => isMobile && setCollapsed(true)}
+              title={collapsed ? item.label : undefined}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = colors.sidebarHover;
+                e.currentTarget.style.color = colors.text;
+              }}
+              onMouseLeave={(e) => {
+                const isActivePath = location.pathname === item.to;
+                e.currentTarget.style.background = isActivePath ? colors.sidebarHover : 'transparent';
+                e.currentTarget.style.color = isActivePath ? colors.primary : colors.textSecondary;
+              }}
+            >
+              <i
+                className={item.icon}
                 style={{
-                  gap: '0.95rem',
-                  padding: collapsed ? '0.48rem 0.48rem' : '0.95rem 1.7rem',
-                  justifyContent: collapsed ? 'center' : 'flex-start',
-                  borderRadius: 4,
-                  fontWeight: isActive ? 700 : 500,
-                  background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
-                  boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
-                  minWidth: collapsed ? 0 : 220,
-                  width: '100%',
-                  outline: 'none',
-                  color: colors.text,
-                  borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
-                  flexShrink: 0,
-                  transition: 'background 0.18s, border-left 0.18s',
+                  fontSize: collapsed ? '1.5rem' : '1rem',
+                  width: collapsed ? 'auto' : '1rem',
+                  marginRight: collapsed ? '0' : '0.75rem',
                 }}
-                aria-current={isActive ? 'page' : undefined}
-                tabIndex={0}
-                onClick={() => isMobile && setCollapsed(true)}
-                title={collapsed ? item.label : undefined}
-              >
-                <i
-                  className={item.icon}
-                  style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: colors.primary }}
-                ></i>
-                {!collapsed && (
-                  <span style={{ whiteSpace: 'nowrap', color: colors.text }}>{item.label}</span>
-                )}
-              </Link>
-            </div>
+              ></i>
+              {!collapsed && <span>{item.label}</span>}
+            </Link>
           );
         })}
 
       </nav>
-      {/* High-specificity CSS for nav link font size and spacing override */}
-      <style>{`
-        .custom-superadmin-navlink, .custom-superadmin-navlink * {
-          font-size: .9rem !important;
-        }
-      `}</style>
 
       {/* Footer */}
       {!collapsed && (

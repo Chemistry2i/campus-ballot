@@ -494,13 +494,34 @@ const getAllObservers = asyncHandler(async (req, res) => {
 
 // @desc    Update observer
 const updateObserver = asyncHandler(async (req, res) => {
-    const observer = await User.findOneAndUpdate(
-        { _id: req.params.id, role: 'observer' }, 
-        { $set: req.body }, 
-        { new: true, runValidators: true }
-    ).lean();
-    if (!observer) return res.status(404).json({ message: "Observer not found" });
-    res.json({ success: true, data: observer });
+    const { name, email, observerInfo } = req.body;
+    
+    // Only allow updating specific fields for observers
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (observerInfo) updateData.observerInfo = observerInfo;
+    
+    if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
+    }
+    
+    try {
+        const observer = await User.findOneAndUpdate(
+            { _id: req.params.id, role: 'observer' }, 
+            { $set: updateData }, 
+            { new: true, runValidators: false } // Don't run validators - we're only updating specific safe fields
+        ).lean();
+        
+        if (!observer) return res.status(404).json({ message: "Observer not found" });
+        res.json({ success: true, data: observer });
+    } catch (error) {
+        console.error('Observer update error:', error);
+        res.status(500).json({ 
+            message: "Failed to update observer",
+            error: error.message 
+        });
+    }
 });
 
 // @desc    Update profile picture

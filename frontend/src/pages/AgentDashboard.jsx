@@ -34,6 +34,10 @@ import TaskManagement from '../components/agent/TaskManagement';
 import VoterOutreach from '../components/agent/VoterOutreach';
 import AgentCandidates from '../components/agent/AgentCandidates';
 import AgentAnalytics from '../components/agent/AgentAnalytics';
+import AgentPermissions from '../components/agent/AgentPermissions';
+import CampaignAnalytics from '../components/agent/CampaignAnalytics';
+import Messages from '../components/agent/CampaignMessage'; 
+import Events from '../components/agent/ScheduleCampaignEvent';
 
 // Import candidate components for reuse in agent dashboard
 import CampaignMaterials from '../components/candidacy/CampaignMaterials';
@@ -68,11 +72,11 @@ const AgentDashboard = ({ user, onLogout }) => {
     { path: '/agent/materials', icon: FaFileAlt, label: 'Campaign Materials' },
     { path: '/agent/engagement', icon: FaHandshake, label: 'Voter Engagement' },
     { path: '/agent/outreach', icon: FaRoute, label: 'Voter Outreach' },
-    { path: '/agent/tasks', icon: FaTasks, label: 'Tasks' },
+    { path: '/agent/tasks', icon: FaTasks, label: 'Assigned Tasks' },
     // { path: '/agent/communication', icon: FaComment, label: 'Communication' },
-    // { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
+    { path: '/agent/messages', icon: FaEnvelope, label: 'Messages' },
     // { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
-    // { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
+    { path: '/agent/events', icon: FaChartBar, label: 'Events' },
     // { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/agent/help', icon: FaQuestionCircle, label: 'Help & Support' }
   ];
@@ -97,7 +101,8 @@ const AgentDashboard = ({ user, onLogout }) => {
       minHeight: '100vh', 
       background: colors.background,
       width: '100%',
-      position: 'relative'
+      position: 'relative',
+      flexDirection: 'column'
     }}>
       {/* Mobile Sidebar */}
       <div
@@ -316,10 +321,11 @@ const AgentDashboard = ({ user, onLogout }) => {
           borderRight: `1px solid ${colors.border}`,
           transition: 'width 0.3s ease',
           position: 'fixed',
-          top: '0',
-          height: '100vh',
-          maxHeight: '100vh',
-          zIndex: 100,
+          top: '70px', // Offset for fixed header
+          left: 0,
+          height: 'calc(100vh - 70px)', // Full height minus header
+          maxHeight: 'calc(100vh - 70px)',
+          zIndex: 1100,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -334,38 +340,9 @@ const AgentDashboard = ({ user, onLogout }) => {
           display: 'flex',
           flexDirection: 'column'
         }}>
-          {/* Desktop Profile Section */}
+          {/* Desktop Profile Section (toggle moved to header) */}
           {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              {!sidebarCollapsed && (
-                <h4 className="fw-bold mb-0" style={{ 
-                  color: colors.text,
-                  fontSize: '1.2rem',
-                  marginTop: '0.5rem'
-                }}>
-                </h4>
-              )}
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                style={{
-                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: colors.text,
-                  marginLeft: sidebarCollapsed ? 'auto' : '0',
-                  marginRight: sidebarCollapsed ? 'auto' : '0'
-                }}
-                title="Toggle sidebar"
-              >
-                {sidebarCollapsed ? <FaChevronRight size={14} /> : <FaChevronLeft size={14} />}
-              </button>
-            </div>
+            <div style={{ height: '0.5rem', marginBottom: '0.5rem' }} />
           )}
 
           {/* User Info - Profile Picture - Desktop Only */}
@@ -556,33 +533,39 @@ const AgentDashboard = ({ user, onLogout }) => {
       </div>
 
       {/* Main Content */}
-      <div style={{ 
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        minWidth: 0,
-        overflow: 'hidden',
-        width: isMobile ? '100%' : 'auto',
-        margin: 0,
-        padding: 0,
-        marginLeft: window.innerWidth > 992 ? (sidebarCollapsed ? '70px' : '240px') : '0',
-        transition: 'margin-left 0.3s ease'
-      }}>
-        <AgentHeader 
-          user={user} 
-          onLogout={onLogout} 
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          minWidth: 0,
+          overflow: 'hidden',
+          width: isMobile ? '100%' : 'auto',
+          margin: 0,
+          padding: 0,
+          marginLeft: window.innerWidth > 992 ? (sidebarCollapsed ? '70px' : '240px') : '0',
+          transition: 'margin-left 0.3s ease',
+          paddingTop: '70px' // Adjust for fixed header height
+        }}
+      >
+        <AgentHeader
+          user={user}
+          onLogout={onLogout}
           isMobile={isMobile}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isDarkMode={isDarkMode}
           colors={colors}
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
         />
-        
-        <main style={{ 
-          flex: 1,
-          overflow: 'auto'
-        }}>
+        <main
+          style={{
+            flex: 1,
+            overflow: 'auto'
+          }}
+        >
           <Routes>
             <Route path="/" element={<AgentDashboardMain />} />
             <Route path="/tasks" element={<TaskManagement />} />
@@ -591,6 +574,8 @@ const AgentDashboard = ({ user, onLogout }) => {
             <Route path="/analytics" element={<AgentAnalytics />} />
             <Route path="/materials" element={<CampaignMaterials />} />
             <Route path="/engagement" element={<VoterEngagement />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/messages" element={<Messages />} />
           </Routes>
         </main>
       </div>

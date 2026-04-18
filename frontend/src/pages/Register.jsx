@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://api.campusballot.tech/api/auth/register",
+      "http://localhost:5000/api/auth/register",
       form
     );
     Swal.fire({

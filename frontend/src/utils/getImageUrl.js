@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://api.campusballot.tech${imagePath}`;
+  return `http://localhost:5000${imagePath}`;
 }
 
 export default getImageUrl;

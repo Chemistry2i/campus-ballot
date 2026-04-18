@@ -25,7 +25,7 @@ function ResetPassword() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://api.campusballot.tech/api/auth/reset-password/${token}`,
+        `http://localhost:5000/api/auth/reset-password/${token}`,
         { password }
         );
       Swal.fire({

@@ -16,7 +16,9 @@ const {
     getUpcomingElections,
     getCompletedElections,
     searchElections,
-    closeElection
+    closeElection,
+    getVoteTrend,
+    getCandidatesRanking
 } = require('../controllers/electionController');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
@@ -53,6 +55,12 @@ router.put('/:id/publish-results', protect, adminOnly, publishResults);
 
 // Get results for an election
 router.get('/:id/results', protect, getElectionResults);
+
+// Get vote trend for an election (analytics)
+router.get('/:id/vote-trend', protect, getVoteTrend);
+
+// Get candidates ranking for an election (analytics)
+router.get('/:id/candidates-ranking', protect, getCandidatesRanking);
 
 // Get all candidates for an election
 router.get('/:id/candidates', protect, getElectionCandidates);

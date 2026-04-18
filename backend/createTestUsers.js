@@ -131,7 +131,7 @@ async function createTestUsers() {
     });
     console.log('└─────────────────────────────────────────────────────────────────┘');
     
-    console.log('\n🔗 Testing URL: https://www.campusballot.tech/test-routes');
+    console.log('\n🔗 Testing URL: http://localhost:5173/test-routes');
     console.log('   Login with any of the above credentials, then visit /test-routes');
 
   } catch (error) {

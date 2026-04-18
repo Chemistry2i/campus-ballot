@@ -31,7 +31,7 @@ import Results from "../components/admin/Results";
 import Help from "../components/admin/Help";
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/admin/ThemeToggle';
-import '../styles/darkmode.css';
+import '../styles/darkmode.css';// Import messages component for dropdown
 
 // Responsive sidebar state managed here and passed to Sidebar
 const SIDEBAR_WIDTH = 240;
@@ -105,7 +105,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   async function fetchStats() {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "http://localhost:5000/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -240,7 +240,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://api.campusballot.tech/api/admin/dashboard-stats",
+        "http://localhost:5000/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -274,14 +274,14 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       let res;
       try {
         res = await axios.get(
-          "https://api.campusballot.tech/api/admin/notifications",
+          "http://localhost:5000/api/admin/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } catch (err) {
         res = await axios.get(
-          "https://api.campusballot.tech/api/notifications",
+          "http://localhost:5000/api/notifications",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -334,7 +334,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     );
     try {
       await axios.put(
-        `https://api.campusballot.tech/api/notifications/${id}/read`,
+        `http://localhost:5000/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -344,7 +344,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.put(
-          `https://api.campusballot.tech/api/admin/notifications/${id}/read`,
+          `http://localhost:5000/api/admin/notifications/${id}/read`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -382,7 +382,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
 
     try {
       await axios.delete(
-        `https://api.campusballot.tech/api/notifications/${id}`,
+        `http://localhost:5000/api/notifications/${id}`,
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -395,7 +395,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // try admin path
       try {
         await axios.delete(
-          `https://api.campusballot.tech/api/admin/notifications/${id}`,
+          `http://localhost:5000/api/admin/notifications/${id}`,
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -420,7 +420,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
       try {
         await axios.put(
-          "https://api.campusballot.tech/api/notifications/mark-all-read",
+          "http://localhost:5000/api/notifications/mark-all-read",
           {},
           {
             headers: { Authorization: `Bearer ${user?.token}` },
@@ -431,7 +431,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
         await Promise.all(
           unread.map((n) =>
             axios.put(
-              `https://api.campusballot.tech/api/notifications/${
+              `http://localhost:5000/api/notifications/${
                 n._id || n.id
               }/read`,
               {},

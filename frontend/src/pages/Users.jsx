@@ -88,7 +88,7 @@ const Users = ({ user }) => {
                 role: 'student' // Only show student users to admin
             });
             
-            const response = await axios.get(`https://api.campusballot.tech/api/users?${params}`, {
+            const response = await axios.get(`http://localhost:5000/api/users?${params}`, {
                 headers: getAuthHeaders()
             });
             
@@ -167,7 +167,7 @@ const Users = ({ user }) => {
     const handleSuspendUser = async (userId) => {
         try {
             setLoadingStates(prev => ({ ...prev, suspend: userId }));
-            await axios.put(`https://api.campusballot.tech/api/users/${userId}/suspend`, {}, {
+            await axios.put(`http://localhost:5000/api/users/${userId}/suspend`, {}, {
                 headers: getAuthHeaders()
             });
             Toast.fire({ icon: 'success', title: 'User suspended successfully' });
@@ -183,7 +183,7 @@ const Users = ({ user }) => {
     const handleActivateUser = async (userId) => {
         try {
             setLoadingStates(prev => ({ ...prev, activate: userId }));
-            await axios.put(`https://api.campusballot.tech/api/users/${userId}/activate`, {}, {
+            await axios.put(`http://localhost:5000/api/users/${userId}/activate`, {}, {
                 headers: getAuthHeaders()
             });
             Toast.fire({ icon: 'success', title: 'User activated successfully' });
@@ -210,7 +210,7 @@ const Users = ({ user }) => {
         if (result.isConfirmed) {
             try {
                 setLoadingStates(prev => ({ ...prev, delete: userId }));
-                await axios.delete(`https://api.campusballot.tech/api/users/${userId}`, {
+                await axios.delete(`http://localhost:5000/api/users/${userId}`, {
                     headers: getAuthHeaders()
                 });
                 Swal.fire('Deleted!', 'User has been deleted.', 'success');
@@ -226,7 +226,7 @@ const Users = ({ user }) => {
 
     const handleChangeRole = async (userId, newRole, options = { suppressToast: false }) => {
         try {
-            await axios.put(`https://api.campusballot.tech/api/users/${userId}/role`, 
+            await axios.put(`http://localhost:5000/api/users/${userId}/role`, 
                 { role: newRole }, 
                 { headers: getAuthHeaders() }
             );
@@ -243,7 +243,7 @@ const Users = ({ user }) => {
         try {
             // Try the export endpoint first
             try {
-                const response = await axios.get('https://api.campusballot.tech/api/users/export', {
+                const response = await axios.get('http://localhost:5000/api/users/export', {
                     headers: getAuthHeaders(),
                     responseType: 'blob'
                 });
@@ -260,7 +260,7 @@ const Users = ({ user }) => {
             } catch (exportError) {
                 console.log('Export endpoint not available, fetching all users for export');
                 // If export endpoint doesn't exist, fetch all users for export
-                const response = await axios.get('https://api.campusballot.tech/api/users?limit=10000', {
+                const response = await axios.get('http://localhost:5000/api/users?limit=10000', {
                     headers: getAuthHeaders()
                 });
                 const allUsers = response.data.users || response.data || [];
@@ -310,7 +310,7 @@ const Users = ({ user }) => {
     const viewUserDetails = async (userId) => {
         try {
             setLoadingStates(prev => ({ ...prev, view: userId }));
-            const userResponse = await axios.get(`https://api.campusballot.tech/api/users/${userId}`, {
+            const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
                 headers: getAuthHeaders()
             });
             setSelectedUser(userResponse.data.user || userResponse.data);
@@ -332,7 +332,7 @@ const Users = ({ user }) => {
         try {
             const idToUpdate = editUser._id || editUser.id;
             setLoadingStates(prev => ({ ...prev, edit: idToUpdate }));
-            await axios.put(`https://api.campusballot.tech/api/users/${idToUpdate}`, editUser, {
+            await axios.put(`http://localhost:5000/api/users/${idToUpdate}`, editUser, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User updated successfully', 'success');
@@ -349,7 +349,7 @@ const Users = ({ user }) => {
     const handleVerifyToggle = async (userId, shouldVerify) => {
         try {
             setLoadingStates(prev => ({ ...prev, verify: userId }));
-            await axios.put(`https://api.campusballot.tech/api/users/${userId}`, { isVerified: shouldVerify }, {
+            await axios.put(`http://localhost:5000/api/users/${userId}`, { isVerified: shouldVerify }, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', `User ${shouldVerify ? 'verified' : 'unverified'} successfully`, 'success');

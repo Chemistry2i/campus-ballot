@@ -23,7 +23,7 @@ import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGener
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "http://localhost:5000";
 import {
   FaSignOutAlt,
   FaUserCircle,

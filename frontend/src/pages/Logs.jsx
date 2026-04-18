@@ -32,7 +32,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "http://localhost:5000";
 
 function Logs({ user }) {
   const [logs, setLogs] = useState([]);

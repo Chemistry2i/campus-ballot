@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://www.campusballot.tech/verify/${verificationToken}`;
+//         const verifyUrl = `http://localhost:5173/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://www.campusballot.tech/reset-password/${token}`;
+//         const resetUrl = `http://localhost:5173/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>

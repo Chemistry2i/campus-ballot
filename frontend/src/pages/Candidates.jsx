@@ -571,7 +571,7 @@ function Candidates({ user }) {
 
     try {
       const promises = selectedIds.map(candidateId => 
-        axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
+        axios.put(`http://localhost:5000/api/candidates/${candidateId}/approve`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
@@ -625,7 +625,7 @@ function Candidates({ user }) {
 
     try {
       const promises = selectedIds.map(candidateId => 
-        axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
+        axios.delete(`http://localhost:5000/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
@@ -679,7 +679,7 @@ function Candidates({ user }) {
 
     try {
       const promises = selectedIds.map(candidateId => 
-        axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
+        axios.put(`http://localhost:5000/api/candidates/${candidateId}/disqualify`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );
@@ -749,8 +749,8 @@ function Candidates({ user }) {
     setLoading(true);
     try {
       const url = query
-        ? `https://api.campusballot.tech/api/candidates/search?q=${encodeURIComponent(query)}`
-        : "https://api.campusballot.tech/api/candidates";
+        ? `http://localhost:5000/api/candidates/search?q=${encodeURIComponent(query)}`
+        : "http://localhost:5000/api/candidates";
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -765,7 +765,7 @@ function Candidates({ user }) {
   const approveCandidate = async (candidateId) => {
     try {
       setIsApprovingId(candidateId);
-      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
+      await axios.put(`http://localhost:5000/api/candidates/${candidateId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate approved successfully', 'success');
@@ -780,7 +780,7 @@ function Candidates({ user }) {
   const disqualifyCandidate = async (candidateId) => {
     try {
       setIsDisqualifyingId(candidateId);
-      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
+      await axios.put(`http://localhost:5000/api/candidates/${candidateId}/disqualify`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate disqualified successfully', 'success');
@@ -805,7 +805,7 @@ function Candidates({ user }) {
     if (result.isConfirmed) {
       try {
         setIsDeletingId(candidateId);
-        await axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
+        await axios.delete(`http://localhost:5000/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         Swal.fire('Success', 'Candidate deleted successfully', 'success');
@@ -821,10 +821,10 @@ function Candidates({ user }) {
   const fetchElectionsAndUsers = async () => {
     try {
       const [electionRes, userRes] = await Promise.all([
-        axios.get("https://api.campusballot.tech/api/elections", {
+        axios.get("http://localhost:5000/api/elections", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://api.campusballot.tech/api/users/all", {
+        axios.get("http://localhost:5000/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -902,7 +902,7 @@ function Candidates({ user }) {
       Object.entries(form).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
-      await axios.post("https://api.campusballot.tech/api/candidates", data, {
+      await axios.post("http://localhost:5000/api/candidates", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

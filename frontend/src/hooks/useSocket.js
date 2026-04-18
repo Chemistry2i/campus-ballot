@@ -7,7 +7,7 @@ export default function useSocket() {
 
   useEffect(() => {
     if (!socketRef.current) {
-      const url = import.meta.env.VITE_API_URL || 'https://api.campusballot.tech';
+      const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   // send token in auth payload for socket authentication
   const token = localStorage.getItem('token');
   socketRef.current = io(url, { withCredentials: true, auth: { token } });
@@ -42,7 +42,7 @@ export default function useSocket() {
       s.disconnect();
       socketRef.current = null;
     }
-    const url = import.meta.env.VITE_API_URL || 'https://api.campusballot.tech';
+    const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     socketRef.current = io(url, { withCredentials: true, auth: { token: newToken } });
     return socketRef.current;
   };

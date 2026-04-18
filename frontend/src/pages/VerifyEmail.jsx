@@ -11,7 +11,7 @@
 //   const handleVerify = async () => {
 //     setVerifying(true);
 //     try {
-//       const res = await axios.get(`https://api.campusballot.tech/api/auth/verify/${token}`);
+//       const res = await axios.get(`http://localhost:5000/api/auth/verify/${token}`);
 //       Swal.fire("Success", res.data.message, "success");
 //       setTimeout(() => {
 //         navigate("/login");
@@ -65,7 +65,7 @@ function VerifyEmail() {
   const handleVerify = async () => {
     setVerifying(true);
     try {
-      const res = await axios.get(`https://api.campusballot.tech/api/auth/verify/${token}`);
+      const res = await axios.get(`http://localhost:5000/api/auth/verify/${token}`);
       Swal.fire("Success", res.data.message, "success");
       setTimeout(() => {
         navigate("/login");
@@ -108,7 +108,7 @@ function VerifyEmail() {
     if (email) {
       setResending(true);
       try {
-        const res = await axios.post('https://api.campusballot.tech/api/auth/resend-verification', {
+        const res = await axios.post('http://localhost:5000/api/auth/resend-verification', {
           email: email
         });
         
