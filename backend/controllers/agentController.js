@@ -555,6 +555,220 @@ const getAgentPersonalStats = asyncHandler(async (req, res) => {
   }
 });
 
+// ============================================
+// PERMISSION-ENFORCED CAMPAIGN FUNCTIONS
+// ============================================
+
+/**
+ * Post a campaign message
+ * Requires: manage_candidate_messages permission
+ */
+const postCampaignMessage = asyncHandler(async (req, res) => {
+  try {
+    const { candidateId, text, visibility } = req.body;
+
+    if (!text || !candidateId) {
+      return res.status(400).json({ error: 'text and candidateId are required' });
+    }
+
+    // Verify agent is assigned to this candidate
+    const agentAssignment = await Agent.findOne({
+      user: req.user._id,
+      candidate: candidateId,
+      status: 'active'
+    });
+
+    if (!agentAssignment) {
+      return res.status(403).json({ error: 'You are not assigned to this candidate' });
+    }
+
+    // Check permission
+    if (!agentAssignment.permissions?.postUpdates) {
+      return res.status(403).json({ error: 'Permission denied: postUpdates' });
+    }
+
+    const CampaignMessage = require('../models/CampaignMessage');
+    const message = await CampaignMessage.create({
+      candidateId,
+      agentId: req.user._id,
+      text,
+      visibility: visibility || 'public',
+      status: 'published'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Campaign message posted',
+      data: message
+    });
+  } catch (error) {
+    console.error('[postCampaignMessage]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get campaign messages for a candidate
+ */
+const getCampaignMessages = asyncHandler(async (req, res) => {
+  try {
+    const { candidateId } = req.params;
+    const { limit = 50, skip = 0 } = req.query;
+
+    // Verify agent is assigned
+    const agentAssignment = await Agent.findOne({
+      user: req.user._id,
+      candidate: candidateId,
+      status: 'active'
+    });
+
+    if (!agentAssignment) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const CampaignMessage = require('../models/CampaignMessage');
+    const messages = await CampaignMessage.find({
+      candidateId,
+      status: 'published'
+    })
+      .sort({ postedAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .lean();
+
+    const total = await CampaignMessage.countDocuments({ candidateId, status: 'published' });
+
+    res.json({ success: true, count: messages.length, total, messages });
+  } catch (error) {
+    console.error('[getCampaignMessages]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Schedule a campaign event
+ * Requires: manageTasks permission
+ */
+const scheduleCampaignEvent = asyncHandler(async (req, res) => {
+  try {
+    const { candidateId, name, location, startDateTime, endDateTime } = req.body;
+
+    if (!candidateId || !name || !startDateTime) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Verify agent is assigned
+    const agentAssignment = await Agent.findOne({
+      user: req.user._id,
+      candidate: candidateId,
+      status: 'active'
+    });
+
+    if (!agentAssignment) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check permission
+    if (!agentAssignment.permissions?.manageTasks) {
+      return res.status(403).json({ error: 'Permission denied: manageTasks' });
+    }
+
+    const CampaignEvent = require('../models/CampaignEvent');
+    const event = await CampaignEvent.create({
+      candidateId,
+      name,
+      location,
+      startDateTime: new Date(startDateTime),
+      endDateTime: endDateTime ? new Date(endDateTime) : undefined,
+      scheduledBy: {
+        agentId: req.user._id,
+        agentName: req.user.name,
+        scheduledAt: new Date()
+      },
+      status: 'scheduled'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Event scheduled',
+      data: event
+    });
+  } catch (error) {
+    console.error('[scheduleCampaignEvent]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get campaign events for a candidate
+ */
+const getCampaignEvents = asyncHandler(async (req, res) => {
+  try {
+    const { candidateId } = req.params;
+
+    // Verify agent is assigned
+    const agentAssignment = await Agent.findOne({
+      user: req.user._id,
+      candidate: candidateId,
+      status: 'active'
+    });
+
+    if (!agentAssignment) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const CampaignEvent = require('../models/CampaignEvent');
+    const events = await CampaignEvent.find({ candidateId })
+      .sort({ startDateTime: 1 })
+      .lean();
+
+    res.json({ success: true, count: events.length, events });
+  } catch (error) {
+    console.error('[getCampaignEvents]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get agent analytics
+ * Requires: viewStatistics permission
+ */
+const getAgentAnalytics = asyncHandler(async (req, res) => {
+  try {
+    const agentUser = await Agent.findOne({ user: req.user._id, status: 'active' });
+
+    if (!agentUser) {
+      return res.status(400).json({ error: 'Not an active agent' });
+    }
+
+    if (!agentUser.permissions?.viewStatistics) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    const CampaignMessage = require('../models/CampaignMessage');
+    const CampaignEvent = require('../models/CampaignEvent');
+    const Vote = require('../models/Vote');
+
+    const messages = await CampaignMessage.countDocuments({ agentId: req.user._id });
+    const events = await CampaignEvent.countDocuments({ candidateId: agentUser.candidate });
+    const votes = await Vote.countDocuments({ candidateId: agentUser.candidate });
+
+    res.json({
+      success: true,
+      analytics: {
+        messagesPosted: messages,
+        eventsScheduled: events,
+        candidateVotes: votes,
+        tasksPending: agentUser.tasksActive,
+        tasksCompleted: agentUser.tasksCompleted
+      }
+    });
+  } catch (error) {
+    console.error('[getAgentAnalytics]', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = {
   getMyAgents,
   searchStudentsForAgent,
@@ -564,5 +778,11 @@ module.exports = {
   removeAgent,
   getAgentStats,
   getAgentDashboard,
-  getAgentPersonalStats
+  getAgentPersonalStats,
+  // New permission-enforced functions
+  postCampaignMessage,
+  getCampaignMessages,
+  scheduleCampaignEvent,
+  getCampaignEvents,
+  getAgentAnalytics
 };

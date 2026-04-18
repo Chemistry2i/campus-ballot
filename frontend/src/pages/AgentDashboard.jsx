@@ -34,6 +34,8 @@ import TaskManagement from '../components/agent/TaskManagement';
 import VoterOutreach from '../components/agent/VoterOutreach';
 import AgentCandidates from '../components/agent/AgentCandidates';
 import AgentAnalytics from '../components/agent/AgentAnalytics';
+import AgentPermissions from '../components/agent/AgentPermissions';
+import CampaignAnalytics from '../components/agent/CampaignAnalytics';
 
 // Import candidate components for reuse in agent dashboard
 import CampaignMaterials from '../components/candidacy/CampaignMaterials';
