@@ -21,7 +21,7 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
-
+import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
 // Set axios base URL
 axios.defaults.baseURL = "https://api.campusballot.tech";
 import {
@@ -2331,9 +2331,9 @@ function StudentDashboard({ user: initialUser }) {
             >
               <FaBars />
             </button>
-            <FaUserGraduate size={22} className="text-white" />
-            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Student Portal</span>
-            <span className="fw-bold d-md-none text-white" style={{ fontSize: '1rem' }}>Portal</span>
+            <img src={kyuLogo} alt="Kyambogo University Logo" className="img-fluid" style={{ height: '50px', width: '50px' }} />
+            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Campus Ballot</span>
+            <span className="fw-bold d-md-none text-white" style={{ fontSize: '1rem' }}>Campus Ballot</span>
           </span>
           
           {/* User Actions */}

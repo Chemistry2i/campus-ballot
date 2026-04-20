@@ -116,14 +116,14 @@ const ContactSupport = () => {
                 <h3>Phone Support</h3>
                 <p>
                   <strong>Main Line:</strong><br />
-                  <a href="tel:+256-XXX-XXX-XXX">+256-XXX-XXX-XXX</a>
+                  <a href="tel:+256 742 685 864">+256 742 685 864</a>
                 </p>
                 <p>
                   <strong>Hours:</strong> Monday - Friday, 8 AM - 5 PM EAT
                 </p>
                 <p>
                   <strong>Emergency Line:</strong><br />
-                  <a href="tel:+256-XXX-XXX-XXX">+256-XXX-XXX-XXX (24/7)</a>
+                  <a href="tel:+256 742 685 864">+256 742 685 864 (24/7)</a>
                 </p>
                 <p className="response-time">
                   <FaClock /> Average wait time: 5-10 minutes
