@@ -108,6 +108,10 @@ const AgentDashboard = ({ user, onLogout }) => {
       <div
         className={`shadow-sm border-end position-fixed d-lg-none${sidebarOpen ? '' : ' d-none'}`}
         style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          height: '100vh', 
           width: '80vw',
           maxWidth: '320px',
           zIndex: 9999, // Ensure always on top
@@ -116,10 +120,7 @@ const AgentDashboard = ({ user, onLogout }) => {
           boxShadow: sidebarOpen ? '2px 0 16px rgba(0,0,0,0.08)' : 'none',
           background: isDarkMode ? colors.surface : '#fff',
           borderColor: isDarkMode ? colors.border : '#dee2e6',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          height: '100vh', // Cover full viewport including header
+          // Cover full viewport including header
         }}
       >
         <div className="p-3">
