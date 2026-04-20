@@ -329,7 +329,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
           style={{
             position: 'fixed',
             left: 0,
-            top: '60px',
+            top: '0px',
             width: '80vw',
             maxWidth: '320px',
             height: 'calc(100vh - 60px)',
