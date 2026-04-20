@@ -328,11 +328,12 @@ const CandidateDashboard = ({ user, onLogout }) => {
         <div
           style={{
             position: 'fixed',
-            left: 0,
+            left: '0px',
             top: '0px',
             width: '80vw',
             maxWidth: '320px',
-            height: 'calc(100vh - 60px)',
+            // height: 'calc(100vh - 60px)',
+            height: '100vh',
             zIndex: 2000,
             transition: 'transform 0.3s',
             transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -535,7 +536,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
             position: 'fixed',
             background: 'rgba(0,0,0,0.2)', 
             zIndex: 1999,
-            top: '60px',
+            top: '0px',
             left: 0,
             right: 0,
             bottom: 0,
