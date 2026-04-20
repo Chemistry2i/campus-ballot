@@ -106,7 +106,7 @@ const AgentDashboard = ({ user, onLogout }) => {
     }}>
       {/* Mobile Sidebar */}
       <div
-        className={`shadow-sm border-end position-fixed top-0 start-0 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
+        className={`shadow-sm border-end position-fixed d-lg-none${sidebarOpen ? '' : ' d-none'}`}
         style={{
           width: '80vw',
           maxWidth: '320px',
@@ -119,7 +119,7 @@ const AgentDashboard = ({ user, onLogout }) => {
           position: 'fixed',
           top: 0,
           left: 0,
-          height: '100vh', // Start from very top
+          height: '100vh', // Cover full viewport including header
         }}
       >
         <div className="p-3">
@@ -310,8 +310,8 @@ const AgentDashboard = ({ user, onLogout }) => {
       {/* Backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-lg-none"
-          style={{ background: 'rgba(0,0,0,0.2)', zIndex: 9998, position: 'fixed' }}
+          className="position-fixed d-lg-none"
+          style={{ background: 'rgba(0,0,0,0.2)', zIndex: 9998, position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
