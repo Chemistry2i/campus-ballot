@@ -524,7 +524,7 @@ function Register() {
       className="form-control"
       name="password"
       type={showPassword ? "text" : "password"} // Toggle password visibility
-      placeholder="Password (min. 6 characters)"
+      placeholder="Password (min. 8 characters)"
       value={form.password}
       onChange={handleChange}
       required
