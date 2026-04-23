@@ -226,6 +226,27 @@ const deleteCandidate = asyncHandler(async (req, res) => {
       { $pull: { candidates: candidate._id } }
     );
 
+    // Remove 'candidate' from user's additionalRoles and clear candidateInfo
+    await User.findByIdAndUpdate(candidate.user, {
+      $pull: { additionalRoles: "candidate" },
+      $unset: { candidateInfo: "" }
+    });
+
+    // Remove 'agent' from all users who are agents for this candidate and clear agentInfo
+    const agents = await Agent.find({ candidate: candidate.user });
+    const agentUserIds = agents.map(agent => agent.user);
+    if (agentUserIds.length > 0) {
+      await User.updateMany(
+        { _id: { $in: agentUserIds } },
+        {
+          $pull: { additionalRoles: "agent" },
+          $unset: { agentInfo: "" }
+        }
+      );
+    }
+    // Delete all Agent records for this candidate
+    await Agent.deleteMany({ candidate: candidate.user });
+
     await candidate.deleteOne();
     try {
       const io = req.app.get('io');
