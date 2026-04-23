@@ -12,7 +12,8 @@ import {
     faTimes,
     faCheckCircle,
     faTrash,
-    faUserCog
+    faUserCog,
+    faDownload
 } from "@fortawesome/free-solid-svg-icons";
 import './users-actions.css';
 
