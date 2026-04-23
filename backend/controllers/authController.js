@@ -462,6 +462,7 @@ const login = asyncHandler(async (req, res) => {
       .select("+password")
       .populate("organization", "_id name code type parent");
 
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -470,6 +471,11 @@ const login = asyncHandler(async (req, res) => {
       return res
         .status(403)
         .json({ message: "Please verify your email before logging in." });
+    }
+
+    // Block login for suspended users
+    if (user.accountStatus === 'suspended') {
+      return res.status(403).json({ message: "Your account is suspended. Please contact support." });
     }
 
     user.lastLogin = new Date();

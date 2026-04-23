@@ -100,6 +100,12 @@ const protect = asyncHandler(async (req, res, next) => {
       return res.status(401).json({ message: "Session expired or logged in on another device." });
     }
 
+    // Block access for suspended users
+    if (user.accountStatus === 'suspended') {
+      console.log("[AUTH] 🚫 User account is suspended");
+      return res.status(403).json({ message: "Account suspended. Please contact support." });
+    }
+
     req.user = user;
     // Update lastSeen for active user tracking
     if (user) {
