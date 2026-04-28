@@ -36,12 +36,27 @@ const logSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Add indexes for performance
-logSchema.index({ user: 1 });
-logSchema.index({ action: 1 });
+// -------------------------------------------------------------------------
+// Indexes — covering audit log query patterns in admin/super-admin dashboards
+// -------------------------------------------------------------------------
+
+// Single-field
+logSchema.index({ user:       1 });
+logSchema.index({ action:     1 });
 logSchema.index({ entityType: 1 });
-logSchema.index({ entityId: 1 });
-logSchema.index({ status: 1 });
+logSchema.index({ entityId:   1 });
+logSchema.index({ status:     1 });
+
+// Newest-first sort — used in every log listing
 logSchema.index({ createdAt: -1 });
+
+// Compound: "activity log for a specific user, sorted by time"
+logSchema.index({ user: 1, createdAt: -1 });
+
+// Compound: "all vote actions for audit trail" — used in election integrity reports
+logSchema.index({ action: 1, entityType: 1, createdAt: -1 });
+
+// Compound: "find logs for a specific entity" — used in per-election audit view
+logSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Log', logSchema);

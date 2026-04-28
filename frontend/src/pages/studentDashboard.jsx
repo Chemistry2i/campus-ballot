@@ -22,8 +22,7 @@ import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
-// Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+// baseURL is set centrally in axiosInstance.js — do not override here
 import {
   FaSignOutAlt,
   FaUserCircle,

@@ -28,13 +28,29 @@ const voteSchema = new mongoose.Schema({
     }
 }, {timestamps: true});
 
-// Prevent double voting per user per election per position
+// -------------------------------------------------------------------------
+// Indexes — the unique compound index is the double-vote prevention mechanism.
+// All other indexes support reporting and analytics queries.
+// -------------------------------------------------------------------------
+
+// UNIQUE: prevents double voting at the database level — this is the primary
+// concurrency guard that makes MongoDB transactions unnecessary.
 voteSchema.index({ user: 1, election: 1, position: 1 }, { unique: true });
+
+// Candidate-specific vote lookup
 voteSchema.index({ candidate: 1 });
+
+// Status filtering (valid / invalid)
 voteSchema.index({ status: 1 });
-voteSchema.index({ election: 1 });
-voteSchema.index({ position: 1 });
-voteSchema.index({ createdAt: 1 });
+
+// Compound: "all votes in this election" — used in vote counting
+voteSchema.index({ election: 1, position: 1 });
+
+// Compound: "votes by this user across all elections" — used in /votes/me
+voteSchema.index({ user: 1, createdAt: -1 });
+
+// Compound: election vote timeline — used in analytics/observer dashboards
+voteSchema.index({ election: 1, createdAt: -1 });
 
 const Vote = mongoose.model('Vote', voteSchema);
 module.exports = Vote;
