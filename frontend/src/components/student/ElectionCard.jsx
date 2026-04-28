@@ -244,15 +244,15 @@ export default function ElectionCard({
                               {/* Candidate Position - prominent and responsive */}
                               <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
                                 {candidate.position || candidate.role || candidate.post ? (
-                                  <span className="badge bg-info text-dark px-2 py-1" style={{ fontSize: '0.72rem', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                                  <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
                                     {(candidate.position || candidate.role || candidate.post)}
                                   </span>
                                 ) : null}
                                 {/* Candidate Symbol (if any) */}
                                 {candidate.symbol && (
-                                  <span className="badge bg-secondary px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.7rem', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-                                    <FaStar className="me-1 text-warning" size={10} />
-                                    {candidate.symbol}
+                                  <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
+                                    <FaStar className="me-1" size={12} style={{ color: '#f59e42' }} />
+                                    <span style={{ fontWeight: 700 }}>{candidate.symbol}</span>
                                   </span>
                                 )}
                               </div>
