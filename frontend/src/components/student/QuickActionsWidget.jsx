@@ -62,26 +62,33 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
               Quick Actions
             </h6>
             
-            {activeElections.slice(0, 3).map((election) => (
-              <button
-                key={election._id}
-                className="btn btn-outline-primary w-100 mb-2 text-start d-flex align-items-center gap-2"
-                onClick={() => {
-                  onVote(election);
-                  setIsOpen(false);
-                }}
-                style={{
-                  borderColor: isDarkMode ? colors.border : '#dee2e6',
-                  color: isDarkMode ? colors.text : '#212529'
-                }}
-              >
-                <FaVoteYea />
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div className="small fw-semibold text-truncate">{election.title}</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Vote Now</div>
-                </div>
-              </button>
-            ))}
+            {activeElections.slice(0, 3).map((election) => {
+              const now = new Date();
+              const isUpcoming = election.startDate && new Date(election.startDate) > now;
+              
+              return (
+                <button
+                  key={election._id}
+                  className={`btn ${isUpcoming ? 'btn-outline-warning' : 'btn-outline-primary'} w-100 mb-2 text-start d-flex align-items-center gap-2`}
+                  onClick={() => {
+                    onVote(election);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    borderColor: isDarkMode ? colors.border : '#dee2e6',
+                    color: isDarkMode ? colors.text : '#212529'
+                  }}
+                >
+                  {isUpcoming ? <FaBell className="text-warning" /> : <FaVoteYea className="text-primary" />}
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <div className="small fw-semibold text-truncate">{election.title}</div>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      {isUpcoming ? 'Starts Soon' : 'Vote Now'}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
 
             <hr style={{ borderColor: isDarkMode ? colors.border : '#e9ecef' }} />
 

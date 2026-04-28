@@ -639,6 +639,18 @@ function StudentDashboard({ user: initialUser }) {
       'isEligible:', isEligible);
     
     return matchesSearch && matchesStatus && isEligible;
+  }).sort((a, b) => {
+    const statusA = getElectionStatus(a).status;
+    const statusB = getElectionStatus(b).status;
+    
+    const priority = { 'active': 0, 'upcoming': 1, 'completed': 2 };
+    
+    if (priority[statusA] !== priority[statusB]) {
+      return priority[statusA] - priority[statusB];
+    }
+    
+    // Within same status, show newest first
+    return new Date(b.startDate) - new Date(a.startDate);
   });
 
 
@@ -4320,8 +4332,8 @@ function StudentDashboard({ user: initialUser }) {
       {/* Quick Actions Widget */}
       <QuickActionsWidget 
         activeElections={elections.filter(e => {
-          const status = getElectionStatus(e);
-          return status.status === 'active' && isUserEligibleForElection(e);
+          const status = getElectionStatus(e).status;
+          return (status === 'active' || status === 'upcoming') && isUserEligibleForElection(e);
         })}
         onNavigate={(action) => {
           if (action === 'apply') {
