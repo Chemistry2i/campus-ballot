@@ -215,8 +215,8 @@ export default function ElectionCard({
                                 src={(function(){ const s = getImageUrl(candidate.photo || '/default-avatar.png'); return s; })()}
                                 alt={candidate.name}
                                 style={{
-                                  width: 40,
-                                  height: 40,
+                                  width: 60,
+                                  height: 60,
                                   objectFit: 'cover',
                                   borderRadius: '50%',
                                   border: `2px solid ${voted ? '#28a745' : '#0d6efd'}`,
