@@ -6,19 +6,28 @@ const Notification = require('../models/Notification');
 // @access  Private
 const getAllNotifications = asyncHandler(async (req, res) => {
     try {
+        const audience = req.user.role === 'admin' || req.user.role === 'super_admin'
+            ? 'admins'
+            : 'students';
+
+        // Only fetch active notifications for this user's audience.
+        // Limit to 50 most recent — the old unbounded fetch returned ALL
+        // notifications ever created, which could be thousands.
+        // The compound index { targetAudience, isActive, createdAt } covers this query.
         const notifications = await Notification.find({
+            isActive: true,
             $or: [
                 { targetAudience: 'all' },
-                { targetAudience: req.user.role === 'admin' ? 'admins' : 'students' }
+                { targetAudience: audience }
             ]
-        }).sort({ createdAt: -1 });
+        })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean();
 
-        console.log({ message: 'Fetched all notifications' });
         res.status(200).json(notifications);
     } catch (error) {
-        console.error('Error fetching notifications:', error);
-        // Include stack in logs for debugging
-        if (process.env.NODE_ENV === 'development') console.error(error.stack);
+        console.error('Error fetching notifications:', error.message);
         res.status(500).json({ message: 'Failed to fetch notifications', error: error.message });
     }
 });
@@ -98,35 +107,34 @@ const getNotificationById = asyncHandler(async (req, res) => {
 // @access  Private
 const markAsRead = asyncHandler(async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
+        // Use findByIdAndUpdate with $addToSet to atomically add the userId
+        // to readBy without loading the full document.
+        // $addToSet guarantees no duplicates without a separate includes() check.
+        const notification = await Notification.findByIdAndUpdate(
+            req.params.id,
+            { $addToSet: { readBy: req.user._id } },
+            { new: false }  // We don't need the updated doc returned
+        );
 
-        if (notification) {
-            if (!notification.readBy.includes(req.user._id)) {
-                notification.readBy.push(req.user._id);
-                await notification.save();
-            }
-            // Emit socket event to notify that this notification was read
-            try {
-                const io = req.app.get('io');
-                if (io) {
-                    io.to(req.user._id.toString()).emit('notification:read', { notificationId: notification._id, userId: req.user._id });
-                }
-            } catch (emitErr) {
-                console.log('Socket emit error (markAsRead):', emitErr.message);
-            }
-
-            console.log({ message: 'Notification marked as read' });
-            res.status(200).json({ message: 'Notification marked as read' });
-        } else {
-            console.log({ message: 'Notification not found' });
-            res.status(404).json({ message: 'Notification not found' });
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
         }
+
+        try {
+            const io = req.app.get('io');
+            if (io) {
+                io.to(req.user._id.toString()).emit('notification:read', {
+                    notificationId: notification._id,
+                    userId: req.user._id
+                });
+            }
+        } catch (emitErr) {
+            console.log('Socket emit error (markAsRead):', emitErr.message);
+        }
+
+        res.status(200).json({ message: 'Notification marked as read' });
     } catch (error) {
-        console.error('Error marking notification as read:', error);
-        if (error.name === 'ValidationError') {
-            const details = Object.values(error.errors).map(e => e.message);
-            return res.status(400).json({ message: 'Validation error', details });
-        }
+        console.error('Error marking notification as read:', error.message);
         res.status(500).json({ message: error.message });
     }
 });

@@ -269,16 +269,16 @@ const deleteUserById = asyncHandler(async (req, res) => {
 // @access  Admin only
 const suspendUser = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      console.log({ message: "User not found" });
-      return res.status(404).json({ message: "User not found" });
-    }
-    user.accountStatus = "suspended";
-    await user.save();
-    
-    // Log activity
-    await logActivity({
+    // Atomic targeted update — no full document load or save required
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: { accountStatus: 'suspended' } },
+      { new: true, select: '_id email' }
+    );
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Fire-and-forget audit log
+    logActivity({
       userId: req.user._id,
       action: 'update',
       entityType: 'User',
@@ -287,18 +287,16 @@ const suspendUser = asyncHandler(async (req, res) => {
       status: 'success',
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
-    });
-    
-    console.log({ message: "User suspended" });
+    }).catch(err => console.error('[USER] suspendUser log failed:', err.message));
+
     try {
       const io = req.app.get('io');
       if (io) io.emit('user:suspended', { id: user._id });
     } catch (e) {
       console.error('Socket emit error (user suspended):', e.message);
     }
-    res.json({ message: "User suspended" });
+    res.json({ message: 'User suspended' });
   } catch (error) {
-    console.log({ message: "Error suspending user", error: error.message });
     res.status(500).json({ message: error.message });
   }
 });
@@ -308,16 +306,16 @@ const suspendUser = asyncHandler(async (req, res) => {
 // @access  Admin only
 const activateUser = asyncHandler(async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      console.log({ message: "User not found" });
-      return res.status(404).json({ message: "User not found" });
-    }
-    user.accountStatus = "active";
-    await user.save();
-    
-    // Log activity
-    await logActivity({
+    // Atomic targeted update — no full document load or save required
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: { accountStatus: 'active' } },
+      { new: true, select: '_id email' }
+    );
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Fire-and-forget audit log
+    logActivity({
       userId: req.user._id,
       action: 'update',
       entityType: 'User',
@@ -326,18 +324,16 @@ const activateUser = asyncHandler(async (req, res) => {
       status: 'success',
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
-    });
-    
-    console.log({ message: "User activated" });
+    }).catch(err => console.error('[USER] activateUser log failed:', err.message));
+
     try {
       const io = req.app.get('io');
       if (io) io.emit('user:activated', { id: user._id });
     } catch (e) {
       console.error('Socket emit error (user activated):', e.message);
     }
-    res.json({ message: "User activated" });
+    res.json({ message: 'User activated' });
   } catch (error) {
-    console.log({ message: "Error activating user", error: error.message });
     res.status(500).json({ message: error.message });
   }
 });
@@ -347,17 +343,16 @@ const activateUser = asyncHandler(async (req, res) => {
 // @access  User
 const getCurrentUserProfile = asyncHandler(async (req, res) => {
   try {
+    // .lean() returns a plain JS object instead of a Mongoose Document.
+    // Since we immediately serialize this to JSON, the Mongoose overhead
+    // (getters, virtuals tracking, change detection) is wasted work.
     const user = await User.findById(req.user._id)
-      .select("-password")
-      .populate("organization", "_id name code type parent");
-    if (!user) {
-      console.log({ message: "User not found" });
-      return res.status(404).json({ message: "User not found" });
-    }
-    console.log({ message: "Fetched own profile" });
+      .select('-password')
+      .populate('organization', '_id name code type parent')
+      .lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
-    console.log({ message: "Error fetching own profile", error: error.message });
     res.status(500).json({ message: error.message });
   }
 });
@@ -520,12 +515,15 @@ const reactivateOwnAccount = asyncHandler(async (req, res) => {
 // @access  Admin only
 const exportUsers = asyncHandler(async (req, res) => {
   try {
-    const users = await User.find().select("-password");
-    // You can format/export as CSV or Excel here if needed
-    console.log({ message: "Exported users" });
+    // Hard cap at 10,000 rows with .lean() to prevent OOM.
+    // The original unbounded User.find() could return 50,000+ Mongoose
+    // documents eating gigabytes of RAM during peak elections.
+    const users = await User.find()
+      .select('-password')
+      .limit(10000)
+      .lean();
     res.json(users);
   } catch (error) {
-    console.log({ message: "Error exporting users", error: error.message });
     res.status(500).json({ message: error.message });
   }
 });

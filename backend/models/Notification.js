@@ -37,8 +37,21 @@ const notificationSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-notificationSchema.index({ targetAudience: 1, createdAt: -1 });
+// -------------------------------------------------------------------------
+// Indexes — covering the student dashboard notification fetch pattern
+// -------------------------------------------------------------------------
+
+// Compound: the student dashboard fetches active notifications for their audience,
+// sorted newest first — this single index covers the full query without a collection scan.
+notificationSchema.index({ targetAudience: 1, isActive: 1, createdAt: -1 });
+
+// readBy: used when marking individual notifications as read
 notificationSchema.index({ readBy: 1 });
+
+// Admin: notification history by creator
+notificationSchema.index({ createdBy: 1, createdAt: -1 });
+
+// Quick toggle: isActive used for soft-deleting/deactivating notifications
+notificationSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

@@ -129,14 +129,27 @@ const candidateSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Add indexes for performance
-candidateSchema.index({ user: 1 });
-candidateSchema.index({ election: 1 });
-candidateSchema.index({ position: 1 });
-candidateSchema.index({ status: 1 });
+// -------------------------------------------------------------------------
+// Indexes — optimised for vote path, leaderboard, and admin queries
+// -------------------------------------------------------------------------
+
+// Single-field
+candidateSchema.index({ user:      1 });
+candidateSchema.index({ status:    1 });
+candidateSchema.index({ name:      1 });
 candidateSchema.index({ studentId: 1 });
-candidateSchema.index({ votes: -1 });
-candidateSchema.index({ name: 1 });
+
+// Compound: used on the hot vote path — castVote does:
+//   Candidate.findOne({ _id: candidateId, election: electionId, position })
+candidateSchema.index({ election: 1, position: 1 });
+
+// Compound: "approved candidates for this election" — most common list query
+candidateSchema.index({ election: 1, status: 1 });
+
+// Compound: live leaderboard sort — candidates ranked by votes within election
+candidateSchema.index({ election: 1, votes: -1 });
+
+// Year of study filtering used in analytics
 candidateSchema.index({ yearOfStudy: 1 });
 
 const Candidate = mongoose.model('Candidate', candidateSchema);
