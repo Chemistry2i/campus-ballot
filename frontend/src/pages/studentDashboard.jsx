@@ -2580,7 +2580,7 @@ function StudentDashboard({ user: initialUser }) {
           zIndex: 2000,
           left: 0,
           top: 0,
-          display: 'none'
+          display: sidebarOpen ? 'block' : 'none'
         }}
         className="d-lg-none"
       >
