@@ -2580,7 +2580,8 @@ function StudentDashboard({ user: initialUser }) {
           zIndex: 2000,
           left: 0,
           top: 0,
-          display: sidebarOpen ? 'block' : 'none'
+          // display: sidebarOpen ? 'block' : 'none'
+          display: 'none'
         }}
         className="d-lg-none"
       >
@@ -3755,7 +3756,7 @@ function StudentDashboard({ user: initialUser }) {
                 <>
                   <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
                     <div className="d-flex align-items-center gap-3">
-                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 40, height: 40, background: 'rgba(59, 130, 246, 0.1)' }}>
+                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 60, height: 60, background: 'rgba(59, 130, 246, 0.1)' }}>
                         <FaVoteYea className="text-primary" size={16} />
                       </div>
                       <div>
@@ -3788,10 +3789,18 @@ function StudentDashboard({ user: initialUser }) {
                         }}
                       />
                       <h3 className="fw-bold mt-3 mb-1" style={{ fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem' }}>{selectedCandidateForVoting.name}</h3>
-                      <p className="text-primary mb-0" style={{ fontSize: window.innerWidth <= 768 ? '0.85rem' : '1rem' }}>{selectedCandidateForVoting.party || 'Independent'}</p>
-                      {selectedCandidateForVoting.position && (
-                        <span className="badge bg-success mt-2" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>{selectedCandidateForVoting.position}</span>
-                      )}
+                      <p className="text-primary mb-0" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '1rem' }}>{selectedCandidateForVoting.party || 'Independent'}</p>
+                      <div className="d-flex flex-row align-items-center justify-content-center gap-2 mt-2 mb-2" style={{ minHeight: window.innerWidth <= 768 ? 28 : 36 }}>
+                        {selectedCandidateForVoting.position && (
+                          <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '0.85rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>{selectedCandidateForVoting.position}</span>
+                        )}
+                        {selectedCandidateForVoting.symbol && (
+                          <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.8rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
+                            <FaStar className="me-1" size={window.innerWidth <= 768 ? 12 : 14} style={{ color: '#f59e42' }} />
+                            <span style={{ fontWeight: 700 }}>{selectedCandidateForVoting.symbol}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Election Info */}
