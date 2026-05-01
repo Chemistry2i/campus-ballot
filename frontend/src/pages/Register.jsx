@@ -484,7 +484,7 @@ function Register() {
           <Link
             to="/"
             className="btn btn-light fw-bold px-4 mb-3"
-            style={{ color: "#2563eb", marginBottom: 24 }}
+            style={{ color: "#2563eb", marginBottom: 24, display: "grid", placeItems: "center" }}
           >
             Go Back
           </Link>
