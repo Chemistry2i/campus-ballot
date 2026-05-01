@@ -2328,10 +2328,10 @@ function StudentDashboard({ user: initialUser }) {
         }}
       >
         <div className="container-fluid" style={{ maxWidth: "100%", padding: "0 0.5rem", margin: 0 }}>
-          <span className="navbar-brand d-flex align-items-center gap-2">
+          <span className="navbar-brand d-flex align-items-center gap-1">
             {/* Hamburger menu for mobile */}
             <button
-              className="btn btn-sm me-2 d-lg-none"
+              className="btn btn-sm me-0 d-lg-none"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar menu"
               style={{
@@ -2342,7 +2342,7 @@ function StudentDashboard({ user: initialUser }) {
             >
               <FaBars />
             </button>
-            <img src={kyuLogo} alt="Kyambogo University Logo" className="img-fluid" style={{ height: '50px', width: '80px' }} />
+            <img src={kyuLogo} alt="Kyambogo University Logo" className="img-fluid" style={{ height: '50px', width: '90px' }} />
             <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.3rem' }}>Campus Ballot</span>
             {/* <span className="fw-bold d-md-none text-white" style={{ fontSize: '0.8em', marginLeft: '0.5rem' }}>Campus Ballot</span> */}
           </span>
