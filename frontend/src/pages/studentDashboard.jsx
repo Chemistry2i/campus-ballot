@@ -21,7 +21,7 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 // baseURL is set centrally in axiosInstance.js — do not override here
 import {
   FaSignOutAlt,

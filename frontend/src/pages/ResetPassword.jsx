@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLock, faKey } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 
 function ResetPassword() {
   const [password, setPassword] = useState("");
