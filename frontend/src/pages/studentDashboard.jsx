@@ -2331,7 +2331,7 @@ function StudentDashboard({ user: initialUser }) {
           <span className="navbar-brand d-flex align-items-center gap-1">
             {/* Hamburger menu for mobile */}
             <button
-              className="btn btn-sm me-0 d-lg-none"
+              className="btn btn-sm ms-n3 d-lg-none"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar menu"
               style={{
