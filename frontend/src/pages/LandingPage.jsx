@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import "./LandingPage.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Swal from "sweetalert2";

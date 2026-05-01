@@ -19,7 +19,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Register.module.css";
 import { useNavigate, Link } from "react-router-dom";
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 
 // Sample data for faculties and courses
 const facultyCourses = {

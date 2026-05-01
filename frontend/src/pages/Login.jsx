@@ -7,7 +7,7 @@ import { faEnvelope, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-s
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import useSocket from '../hooks/useSocket';
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 import RoleSelectionModal from '../components/common/RoleSelectionModal';
 
 function Login({ setCurrentUser }) {
