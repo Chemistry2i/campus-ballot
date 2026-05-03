@@ -33,9 +33,7 @@ const getPartyInfo = (partyName) => {
 
 export default function ElectionCard({
   election,
-  user,
   myVotes = [],
-  handleVote,
   openElectionDetails,
   getElectionStatus,
   formatTimeRemaining,
@@ -45,11 +43,50 @@ export default function ElectionCard({
   setVotingStep,
 }) {
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
-  
-  // Check if user's faculty is eligible for this election
-  const isEligibleByFaculty = !election.allowedFaculties || 
-    election.allowedFaculties.length === 0 || 
-    (user?.faculty && election.allowedFaculties.includes(user.faculty));
+
+  const getCandidatePosition = (candidate) => {
+    const position = candidate?.position || candidate?.role || candidate?.post || 'Unspecified Position';
+    return String(position).trim() || 'Unspecified Position';
+  };
+
+  const groupedCandidates = (() => {
+    const byPosition = new Map();
+
+    approvedCandidates.forEach((candidate) => {
+      const position = getCandidatePosition(candidate);
+      if (!byPosition.has(position)) {
+        byPosition.set(position, []);
+      }
+      byPosition.get(position).push(candidate);
+    });
+
+    const orderedGroups = [];
+    const seenPositions = new Set();
+
+    if (Array.isArray(election.positions)) {
+      election.positions.forEach((position) => {
+        const normalizedPosition = String(position).trim();
+        if (byPosition.has(normalizedPosition)) {
+          orderedGroups.push({
+            position: normalizedPosition,
+            candidates: byPosition.get(normalizedPosition).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+          });
+          seenPositions.add(normalizedPosition);
+        }
+      });
+    }
+
+    byPosition.forEach((candidates, position) => {
+      if (!seenPositions.has(position)) {
+        orderedGroups.push({
+          position,
+          candidates: candidates.sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+        });
+      }
+    });
+
+    return orderedGroups;
+  })();
   
   // More precise vote checking - check if user voted for this specific election and position
   const voted = myVotes.some((vote) => {
@@ -173,7 +210,7 @@ export default function ElectionCard({
                 <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
                   <FaUsers size={12} />
                 </div>
-                Candidates ({approvedCandidates.length})
+                Candidates by Position ({approvedCandidates.length})
               </h6>
               {status === 'active' && !voted && (
                 <span className="badge d-flex align-items-center gap-1 px-2 py-1" style={{ 
@@ -186,155 +223,148 @@ export default function ElectionCard({
               )}
             </div>
 
-            {approvedCandidates.length > 0 ? (
-              <div className="row g-2">
-                {approvedCandidates.map((candidate) => {
-                  const partyInfo = getPartyInfo(candidate.party);
-                  const PartyIcon = partyInfo.icon;
-                  
-                  return (
-                    <div className="col-sm-6" key={candidate._id || candidate.id}>
-                      <div className="card border shadow-sm h-100" style={{ 
-                        borderRadius: '8px', 
-                        background: voted ? '#f8f9fa' : 'white',
-                        borderColor: voted ? '#28a745' : '#0d6efd',
-                        borderWidth: '2px',
-                        transition: 'all 0.2s ease'
-                      }}>
-                        {/* Blue Color Strip */}
-                        <div className="w-100" style={{ 
-                          height: '3px', 
-                          background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)'
-                        }}></div>
-                        
-                        <div className="card-body p-3">
-                          {/* Candidate Header */}
-                          <div className="d-flex align-items-center mb-2">
-                            <div className="position-relative me-2">
-                              <img
-                                src={(function(){ const s = getImageUrl(candidate.photo || '/default-avatar.png'); return s; })()}
-                                alt={candidate.name}
-                                style={{
-                                  width: 60,
-                                  height: 60,
-                                  objectFit: 'cover',
-                                  borderRadius: '50%',
-                                  border: `2px solid ${voted ? '#28a745' : '#0d6efd'}`,
-                                }}
-                                className="flex-shrink-0"
-                              />
-                              {/* Party Symbol Badge with Blue Theme */}
-                              <div 
-                                className="position-absolute bottom-0 end-0 rounded-circle d-flex align-items-center justify-content-center"
-                                style={{
-                                  width: '18px',
-                                  height: '18px',
-                                  background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
-                                  border: '2px solid white'
-                                }}
-                              >
-                                <PartyIcon size={8} color="white" />
-                              </div>
-                            </div>
-                            
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <div className="fw-bold text-truncate mb-1" title={candidate.name} style={{ fontSize: '0.95rem', lineHeight: 1.2 }}>
-                                {candidate.name}
-                              </div>
-                              {/* Candidate Position - prominent and responsive */}
-                              <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
-                                {candidate.position || candidate.role || candidate.post ? (
-                                  <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
-                                    {(candidate.position || candidate.role || candidate.post)}
-                                  </span>
-                                ) : null}
-                                {/* Candidate Symbol (if any) */}
-                                {candidate.symbol && (
-                                  <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
-                                    <FaStar className="me-1" size={12} style={{ color: '#f59e42' }} />
-                                    <span style={{ fontWeight: 700 }}>{candidate.symbol}</span>
-                                  </span>
-                                )}
-                              </div>
-                              {/* Party badge */}
-                              <div className="d-flex align-items-center gap-1 mb-1">
-                                <div 
-                                  className="px-2 py-1 rounded-pill d-flex align-items-center gap-1"
-                                  style={{ 
-                                    background: voted ? '#d4edda' : 'linear-gradient(135deg, #e7f1ff 0%, #cce7ff 100%)',
-                                    color: voted ? '#155724' : '#0d6efd',
-                                    fontSize: '0.7rem',
-                                    fontWeight: '600',
-                                    border: `1px solid ${voted ? '#c3e6cb' : '#b3d7ff'}`
-                                  }}
-                                >
-                                  <PartyIcon size={8} />
-                                  {candidate.party || 'Independent'}
-                                </div>
-                              </div>
-                              {typeof candidate.votes === 'number' && (
-                                <div className="d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
-                                  <FaTrophy className="text-warning" size={10} />
-                                  <span className="text-muted">{candidate.votes} votes</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Action Button */}
-                          <div className="mt-2">
-                            {voted ? (
-                              <button className="btn btn-success btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
-                                <FaCheckCircle className="me-1" size={12} /> 
-                                <span className="fw-semibold">Voted</span>
-                              </button>
-                            ) : status === 'active' ? (
-                              <button
-                                className="btn btn-primary btn-sm w-100"
-                                style={{ 
-                                  borderRadius: '4px',
-                                  background: 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
-                                  border: 'none'
-                                }}
-                                onClick={() => {
-                                  // Debug candidate data to see what's available
-                                  console.log('Candidate data:', candidate);
-                                  console.log('Election data:', election);
-                                  
-                                  // Get position from multiple possible sources
-                                  const candidatePosition = candidate.position || candidate.role || candidate.post;
-                                  const electionPosition = Array.isArray(election.positions) && election.positions.length === 1 ? election.positions[0] : null;
-                                  const electionFirstPosition = Array.isArray(election.positions) && election.positions.length > 0 ? election.positions[0] : null;
-                                  
-                                  console.log('Position sources:', {
-                                    candidatePosition,
-                                    electionPosition,
-                                    electionFirstPosition,
-                                    electionPositions: election.positions
-                                  });
-                                  
-                                  // Set modal state first, then call vote function
-                                  setSelectedElection(election);
-                                  setSelectedCandidateForVoting(candidate);
-                                  setShowVotingModal(true);
-                                  setVotingStep(1);
-                                }}
-                              >
-                                <FaVoteYea className="me-1" size={12} /> 
-                                <span className="fw-semibold">Vote Now</span>
-                              </button>
-                            ) : (
-                              <button className="btn btn-secondary btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
-                                <FaLock className="me-1" size={12} /> 
-                                {status === 'upcoming' ? 'Coming Soon' : 'Election Ended'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+            {groupedCandidates.length > 0 ? (
+              <div className="d-flex flex-column gap-4">
+                {groupedCandidates.map((group) => (
+                  <div key={group.position}>
+                    <div className="d-flex align-items-center justify-content-between mb-2">
+                      <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <span className="badge bg-primary px-3 py-2" style={{ fontSize: '0.8rem' }}>
+                          {group.position}
+                        </span>
+                      </h6>
+                      <span className="text-muted small">{group.candidates.length} candidate{group.candidates.length !== 1 ? 's' : ''}</span>
                     </div>
-                  );
-                })}
+
+                    <div className="row g-2">
+                      {group.candidates.map((candidate) => {
+                        const partyInfo = getPartyInfo(candidate.party);
+                        const PartyIcon = partyInfo.icon;
+                        const candidatePosition = getCandidatePosition(candidate);
+
+                        return (
+                          <div className="col-12 col-lg-6" key={candidate._id || candidate.id}>
+                            <div className="card border shadow-sm h-100" style={{ 
+                              borderRadius: '8px', 
+                              background: voted ? '#f8f9fa' : 'white',
+                              borderColor: voted ? '#28a745' : '#0d6efd',
+                              borderWidth: '2px',
+                              transition: 'all 0.2s ease'
+                            }}>
+                              <div className="w-100" style={{ 
+                                height: '3px', 
+                                background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)'
+                              }}></div>
+
+                              <div className="card-body p-3">
+                                <div className="d-flex align-items-center mb-2">
+                                  <div className="position-relative me-2">
+                                    <img
+                                      src={getImageUrl(candidate.photo || '/default-avatar.png')}
+                                      alt={candidate.name}
+                                      style={{
+                                        width: 60,
+                                        height: 60,
+                                        objectFit: 'cover',
+                                        borderRadius: '50%',
+                                        border: `2px solid ${voted ? '#28a745' : '#0d6efd'}`,
+                                      }}
+                                      className="flex-shrink-0"
+                                    />
+                                    <div 
+                                      className="position-absolute bottom-0 end-0 rounded-circle d-flex align-items-center justify-content-center"
+                                      style={{
+                                        width: '18px',
+                                        height: '18px',
+                                        background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
+                                        border: '2px solid white'
+                                      }}
+                                    >
+                                      <PartyIcon size={8} color="white" />
+                                    </div>
+                                  </div>
+
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div className="fw-bold text-truncate mb-1" title={candidate.name} style={{ fontSize: '0.95rem', lineHeight: 1.2 }}>
+                                      {candidate.name}
+                                    </div>
+                                    <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
+                                      <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
+                                        {candidatePosition}
+                                      </span>
+                                      {candidate.symbol && (
+                                        <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
+                                          <FaStar className="me-1" size={12} style={{ color: '#f59e42' }} />
+                                          <span style={{ fontWeight: 700 }}>{candidate.symbol}</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="d-flex align-items-center gap-1 mb-1">
+                                      <div 
+                                        className="px-2 py-1 rounded-pill d-flex align-items-center gap-1"
+                                        style={{ 
+                                          background: voted ? '#d4edda' : 'linear-gradient(135deg, #e7f1ff 0%, #cce7ff 100%)',
+                                          color: voted ? '#155724' : '#0d6efd',
+                                          fontSize: '0.7rem',
+                                          fontWeight: '600',
+                                          border: `1px solid ${voted ? '#c3e6cb' : '#b3d7ff'}`
+                                        }}
+                                      >
+                                        <PartyIcon size={8} />
+                                        {candidate.party || 'Independent'}
+                                      </div>
+                                    </div>
+                                    {typeof candidate.votes === 'number' && (
+                                      <div className="d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
+                                        <FaTrophy className="text-warning" size={10} />
+                                        <span className="text-muted">{candidate.votes} votes</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="mt-2">
+                                  {voted ? (
+                                    <button className="btn btn-success btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
+                                      <FaCheckCircle className="me-1" size={12} /> 
+                                      <span className="fw-semibold">Voted</span>
+                                    </button>
+                                  ) : status === 'active' ? (
+                                    <button
+                                      className="btn btn-primary btn-sm w-100"
+                                      style={{ 
+                                        borderRadius: '4px',
+                                        background: 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
+                                        border: 'none'
+                                      }}
+                                      onClick={() => {
+                                        console.log('Candidate data:', candidate);
+                                        console.log('Election data:', election);
+
+                                        setSelectedElection(election);
+                                        setSelectedCandidateForVoting(candidate);
+                                        setShowVotingModal(true);
+                                        setVotingStep(1);
+                                      }}
+                                    >
+                                      <FaVoteYea className="me-1" size={12} /> 
+                                      <span className="fw-semibold">Vote Now</span>
+                                    </button>
+                                  ) : (
+                                    <button className="btn btn-secondary btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
+                                      <FaLock className="me-1" size={12} /> 
+                                      {status === 'upcoming' ? 'Coming Soon' : 'Election Ended'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-center py-4 border rounded" style={{ 
