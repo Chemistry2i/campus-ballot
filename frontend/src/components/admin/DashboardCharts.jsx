@@ -106,11 +106,19 @@ function DashboardCharts() {
     // Fetch dashboard stats from your backend
     const fetchDashboardStats = async () => {
       try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          console.warn('No auth token for dashboard stats');
+          return;
+        }
+
         // Set proper headers and check for correct URL
-        const response = await axios.get("/api/admin/dashboard-stats", {
+        const response = await axios.get("https://api.campusballot.tech/api/admin/dashboard-stats", {
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         });
         
@@ -229,7 +237,7 @@ function DashboardCharts() {
     const fetchCandidateVotes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get("/api/candidates", {
+        const response = await axios.get("https://api.campusballot.tech/api/candidates", {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

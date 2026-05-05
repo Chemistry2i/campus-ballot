@@ -109,14 +109,23 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
 
   async function fetchStats() {
     try {
+      const token = user?.token || localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No authentication token available');
+        setLoading(false);
+        return;
+      }
+
       const res = await axios.get(
         "https://api.campusballot.tech/api/admin/dashboard-stats",
         {
-          headers: { Authorization: `Bearer ${user?.token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setStats(res.data);
     } catch (err) {
+      console.error('Dashboard stats error:', err);
       Swal.fire("Error", "Failed to load dashboard stats", "error");
     } finally {
       setLoading(false);
