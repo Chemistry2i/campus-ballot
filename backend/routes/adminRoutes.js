@@ -14,6 +14,9 @@ const settingsController = require('../controllers/settingsController');
 const bulkUploadController = require('../controllers/bulkUploadController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
+// Apply protection to all admin routes
+router.use(protect);
+
 // Configure multer for file uploads (memory storage for processing)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -107,7 +110,7 @@ router.get('/dashboard-stats', async (req, res) => {
 });
 
 // Get detailed election stats with candidates and votes grouped by position
-router.get('/election/:electionId/detailed-stats', async (req, res) => {
+router.get('/election/:electionId/detailed-stats', protect, async (req, res) => {
   try {
     const { electionId } = req.params;
     
