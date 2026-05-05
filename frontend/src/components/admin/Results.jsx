@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 // IMPORTATION OF THE icons from the fontaswsome icons
-import { FaFileCsv, FaFilePdf, FaFileExcel, FaTrophy, FaUsers, FaVoteYea, FaCrown, FaMicrophone, FaMoneyBillWave, FaClipboardList, FaBullseye, FaChartBar, FaLink, FaCity, FaBell } from 'react-icons/fa';
+import { FaFileCsv, FaFilePdf, FaFileExcel, FaTrophy, FaUsers, FaVoteYea, FaCrown, FaMicrophone, FaMoneyBillWave, FaClipboardList, FaBullseye, FaChartBar, FaLink, FaCity, FaBell, FaSearch } from 'react-icons/fa';
 import useSocket from '../../hooks/useSocket';
 import ErrorBoundary from '../common/ErrorBoundary';
 import { PositionCardSkeleton } from './SkeletonLoaders';
@@ -481,7 +481,8 @@ function Results({ user }) {
                 ? `linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)`
                 : `linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)`,
               color: '#fff',
-              borderRadius: '12px'
+              borderRadius: '5px',
+              padding: '1.5rem'
             }}
           >
             <div className="card-body">
@@ -517,7 +518,7 @@ function Results({ user }) {
                       }}
                       defaultValue=""
                     >
-                      <option value="">📋 Select an election...</option>
+                      <option value=""> <FaSearch className="me-2" /> Select an election...</option>
                       {Array.isArray(elections) && elections.length > 0
                         ? elections.map(el => {
                           const id = el._id || el.id || el;
@@ -616,7 +617,7 @@ function Results({ user }) {
           <div className="col-12">
             <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg }}>
               <div className="card-header" style={{
-                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
                 color: '#fff',
                 padding: '1.5rem',
                 borderRadius: '12px 12px 0 0'
