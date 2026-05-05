@@ -39,11 +39,11 @@ function AdminDashboard() {
           }
         );
         
-        // Handle different response structures
-        const electionsList = Array.isArray(response.data) 
-          ? response.data 
-          : (response.data?.elections || []);
+        // API returns { elections, total, page, limit }
+        const electionsList = response.data?.elections || [];
         
+        console.log('Elections response:', response.data);
+        console.log('Extracted elections list:', electionsList);
         setElections(electionsList);
         
         // Auto-select first election if available
