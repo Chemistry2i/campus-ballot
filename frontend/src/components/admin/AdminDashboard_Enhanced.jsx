@@ -24,15 +24,35 @@ function AdminDashboard() {
     const fetchElections = async () => {
       try {
         setLoadingElections(true);
-        const response = await axios.get('/api/elections');
-        setElections(response.data);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          console.warn('No auth token available');
+          setLoadingElections(false);
+          return;
+        }
+
+        const response = await axios.get(
+          'https://api.campusballot.tech/api/elections',
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        // Handle different response structures
+        const electionsList = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.elections || []);
+        
+        setElections(electionsList);
         
         // Auto-select first election if available
-        if (response.data.length > 0) {
-          setSelectedElectionId(response.data[0]._id);
+        if (electionsList.length > 0) {
+          setSelectedElectionId(electionsList[0]._id);
         }
       } catch (err) {
         console.error('Failed to fetch elections:', err);
+        console.error('Error details:', err.response?.data || err.message);
       } finally {
         setLoadingElections(false);
       }
