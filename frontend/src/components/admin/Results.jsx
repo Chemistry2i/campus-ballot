@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { FaFileCsv, FaFilePdf, FaFileExcel, FaTrophy, FaUsers, FaVoteYea } from 'react-icons/fa';
+// IMPORTATION OF THE icons from the fontaswsome icons
+import { FaFileCsv, FaFilePdf, FaFileExcel, FaTrophy, FaUsers, FaVoteYea, FaCrown, FaMicrophone, FaMoneyBillWave, FaClipboardList, FaBullseye, FaChartBar, FaLink, FaCity, FaBell } from 'react-icons/fa';
 import useSocket from '../../hooks/useSocket';
 import ErrorBoundary from '../common/ErrorBoundary';
 import { PositionCardSkeleton } from './SkeletonLoaders';
@@ -18,16 +19,16 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemedTable from '../common/ThemedTable';
 
-// Position icons mapping
-const POSITION_ICONS = {
-  'President': '👑',
-  'Vice President': '🎤',
-  'Treasurer': '💰',
-  'Secretary': '📝',
-  'Chairperson': '🎯',
-  'Director': '📊',
-  'Coordinator': '🔗',
-  'Representative': '🗳️'
+// Position icons mapping using Font Awesome
+const POSITION_ICONS_MAP = {
+  'President': FaCrown,
+  'Vice President': FaMicrophone,
+  'Treasurer': FaMoneyBillWave,
+  'Secretary': FaClipboardList,
+  'Chairperson': FaBullseye,
+  'Director': FaChartBar,
+  'Coordinator': FaLink,
+  'Representative': FaCity
 };
 
 // Distinct color palettes per position
@@ -79,9 +80,10 @@ function Results({ user }) {
     return POSITION_COLORS[index % Object.keys(POSITION_COLORS).length];
   };
 
-  // Get icon for position name
+  // Get Font Awesome icon component for position
   const getPositionIcon = (position) => {
-    return POSITION_ICONS[position] || '📌';
+    const IconComponent = POSITION_ICONS_MAP[position];
+    return IconComponent ? <IconComponent style={{ marginRight: '0.5rem' }} /> : <FaCity style={{ marginRight: '0.5rem' }} />;
   };
 
   // Group results by position and find winner per position
@@ -230,6 +232,121 @@ function Results({ user }) {
       // await axios.post('/api/audit-logs', logData, { headers: { Authorization: `Bearer ${token}` } });
     } catch (err) {
       console.error('Audit logging failed:', err);
+    }
+  };
+
+  // Notify winners via multiple channels
+  const notifyWinners = async (winners, position) => {
+    try {
+      const token = localStorage.getItem('token');
+      const winnerEmails = winners.map(w => w.email).filter(Boolean);
+      
+      if (winnerEmails.length === 0) {
+        console.warn('No email addresses found for winners');
+        return;
+      }
+
+
+      // Send notification to backend for processing and return success/failure
+      await axios.post(
+        'https://api.campusballot.tech/api/elections/notify-winners',
+        {
+          winners,
+          position,
+          electionId: selectedElectionId,
+          electionTitle: selectedElection,
+          recipientEmails: winnerEmails
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Audit log winner notification
+      await auditLog('NOTIFY_WINNERS', {
+        position,
+        winnerCount: winners.length,
+        emailsSent: winnerEmails.length
+      });
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `✉️ ${position} winner(s) notified`,
+        timer: 3000
+      });
+    } catch (err) {
+      console.error('Failed to notify winners:', err);
+      Swal.fire('Notification Error', `Could not notify ${position} winner(s)`, 'warning');
+    }
+  };
+
+  // Export only winners as CSV
+  const exportWinnersOnlyCSV = async () => {
+    try {
+      setExportLoading(true);
+
+      // Audit log the export action
+      await auditLog('EXPORT_WINNERS_ONLY', {
+        format: 'CSV',
+        electionTitle: selectedElection
+      });
+
+      const electionTitle = selectedElection || 'Election Winners';
+      let csv = `${electionTitle} - WINNERS ONLY\n`;
+      csv += `Exported: ${new Date().toLocaleString()}\n`;
+      csv += `Exported by: ${user?.name || user?.email || 'Admin'}\n\n`;
+
+      csv += `Position,Winner Name,Votes,Photo URL,Contact Email,Party\n`;
+
+      // Collect all winners across all positions
+      const allWinners = [];
+      Object.keys(groupedResults).forEach((position) => {
+        const positionCandidates = groupedResults[position];
+        const winners = getPositionWinners(positionCandidates);
+        
+        winners.forEach((winner) => {
+          allWinners.push({
+            position,
+            name: winner.name || 'Unknown',
+            votes: winner.votes || 0,
+            photo: winner.photo || '',
+            email: winner.email || '',
+            party: winner.party || ''
+          });
+        });
+      });
+
+      // Add winners to CSV
+      allWinners.forEach((winner) => {
+        const photoUrl = winner.photo ? `"${winner.photo}"` : '(No photo)';
+        csv += `"${winner.position}","${sanitizeName(winner.name)}",${winner.votes},${photoUrl},"${winner.email}","${winner.party}"\n`;
+      });
+
+      csv += `\n\nTotal Winners: ${allWinners.length}\n`;
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `election-winners-${selectedElectionId}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported ${allWinners.length} winner(s)`,
+        timer: 2000
+      });
+    } catch (err) {
+      console.error('Export winners failed', err);
+      Swal.fire('Error', 'Failed to export winners', 'error');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -413,7 +530,34 @@ function Results({ user }) {
                         })
                         : null}
                     </select>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 flex-wrap">
+                      <button
+                        className="btn btn-info btn-sm"
+                        onClick={() => {
+                          Object.keys(groupedResults).forEach(async (position) => {
+                            const positionWinners = getPositionWinners(groupedResults[position]);
+                            if (positionWinners.length > 0) {
+                              await notifyWinners(positionWinners, position);
+                            }
+                          });
+                        }}
+                        disabled={!results.length || results.length === 0}
+                        title="Send notifications to all position winners"
+                      >
+                        <FaBell className="me-2" /> Notify Winners
+                      </button>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={exportWinnersOnlyCSV}
+                        disabled={!results.length || exportLoading}
+                        title="Export winners only (with contact details)"
+                      >
+                        {exportLoading ? (
+                          <><span className="spinner-border spinner-border-sm me-2" /> Exporting...</>
+                        ) : (
+                          <><FaTrophy className="me-2" /> Winners Only</>
+                        )}
+                      </button>
                       <button
                         className="btn btn-light btn-sm"
                         onClick={exportResultsCSV}
@@ -466,6 +610,119 @@ function Results({ user }) {
         </div>
       )}
 
+      {/* Winners Gallery Section */}
+      {!loading && !unpublished && positions.length > 0 && (
+        <div className="row mb-5">
+          <div className="col-12">
+            <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg }}>
+              <div className="card-header" style={{
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                color: '#fff',
+                padding: '1.5rem',
+                borderRadius: '12px 12px 0 0'
+              }}>
+                <h4 className="mb-0"><FaTrophy className="me-2" /> Election Winners Showcase</h4>
+              </div>
+              <div className="card-body p-4">
+                <div className="row">
+                  {positions.map((position, posIndex) => {
+                    const positionCandidates = groupedResults[position];
+                    const winners = getPositionWinners(positionCandidates);
+                    const posColor = getPositionColor(posIndex);
+
+                    return (
+                      <div key={position} className="col-md-6 col-lg-3 mb-4">
+                        {winners.length > 0 ? (
+                          <div className="text-center">
+                            <h6 style={{ color: posColor, fontWeight: 'bold', marginBottom: '1rem' }}>
+                              {getPositionIcon(position)} {position}
+                            </h6>
+                            {winners.map((winner) => (
+                              <div key={winner._id} className="mb-3">
+                                <div className="position-relative" style={{ display: 'inline-block' }}>
+                                  {winner.photo ? (
+                                    <img
+                                      src={winner.photo}
+                                      alt={winner.name}
+                                      style={{
+                                        width: 120,
+                                        height: 120,
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: `4px solid ${posColor}`,
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: 120,
+                                        height: 120,
+                                        borderRadius: '50%',
+                                        backgroundColor: posColor,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        fontSize: '2.5rem',
+                                        border: '4px solid ' + posColor,
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                      }}
+                                    >
+                                      {winner.name?.charAt(0) || '?'}
+                                    </div>
+                                  )}
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '-8px',
+                                    right: '-8px',
+                                    fontSize: '2rem',
+                                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                                  }}>
+                                    🏆
+                                  </div>
+                                </div>
+                                <div className="mt-3">
+                                  <strong style={{ color: colors.text, display: 'block' }}>
+                                    {sanitizeName(winner.name)}
+                                  </strong>
+                                  {winner.party && (
+                                    <small style={{ color: colors.textSecondary, display: 'block' }}>
+                                      {sanitizeName(winner.party)}
+                                    </small>
+                                  )}
+                                  <small style={{
+                                    color: posColor,
+                                    display: 'block',
+                                    fontWeight: 'bold',
+                                    marginTop: '0.5rem'
+                                  }}>
+                                    {winner.votes} votes
+                                  </small>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{
+                            padding: '2rem 1rem',
+                            textAlign: 'center',
+                            color: colors.textSecondary
+                          }}>
+                            <p style={{ fontSize: '0.9rem' }}>No votes yet</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Position Sections */}
       {!loading && !unpublished && positions.length > 0 && (
         <div className="row">
@@ -499,16 +756,16 @@ function Results({ user }) {
                     }}
                   >
                     <div>
-                      <h5 className="fw-bold mb-1">
+                      <h5 className="fw-bold mb-1" style={{ display: 'flex', alignItems: 'center' }}>
                         {getPositionIcon(position)} {position}
                       </h5>
                       <small>
-                        👥 {positionCandidates.length} candidates | 🗳️ {totalPositionVotes} votes
+                        <FaUsers style={{ marginRight: '0.3rem' }} /> {positionCandidates.length} candidates | <FaVoteYea style={{ marginRight: '0.3rem' }} /> {totalPositionVotes} votes
                       </small>
                     </div>
                     {winners.length > 0 && (
                       <div className="text-center">
-                        <div style={{ fontSize: '2rem' }}>🏆</div>
+                        <div style={{ fontSize: '1.8rem' }}><FaTrophy /></div>
                         <small>{winners.length === 1 ? 'Winner' : `${winners.length} Co-Winners`}</small>
                       </div>
                     )}
