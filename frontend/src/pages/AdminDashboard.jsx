@@ -17,6 +17,7 @@ import {
 import Sidebar from "../components/admin/Slidebar";
 import OverviewCards from "../components/admin/OverviewCards";
 import DashboardCharts from "../components/admin/DashboardCharts";
+import ElectionDetailedCharts from "../components/admin/ElectionDetailedCharts";
 import useRealtimeDashboard from "../hooks/useRealtimeDashboard";
 import useSocket from "../hooks/useSocket";
 import CreateElection from "../components/admin/CreateElection";
@@ -49,6 +50,10 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   const [showNotificationsDropdown, setShowNotificationsDropdown] =
     useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [chartView, setChartView] = useState('overview'); // 'overview' or 'detailed'
+  const [elections, setElections] = useState([]);
+  const [selectedElectionId, setSelectedElectionId] = useState(null);
+  const [loadingElections, setLoadingElections] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messages] = useState([
     {
@@ -117,6 +122,30 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       setLoading(false);
     }
   }
+
+  // Fetch available elections for the detailed charts view
+  useEffect(() => {
+    const fetchElections = async () => {
+      try {
+        setLoadingElections(true);
+        const response = await axios.get('/api/elections');
+        setElections(response.data);
+        
+        // Auto-select first election if available
+        if (response.data.length > 0 && !selectedElectionId) {
+          setSelectedElectionId(response.data[0]._id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch elections:', err);
+      } finally {
+        setLoadingElections(false);
+      }
+    };
+
+    if (user?.role === "admin") {
+      fetchElections();
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -816,9 +845,99 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                       }}
                     />
                   </div>
-                  <h4 className="mb-4 fw-bold text-primary">System Overview</h4>
-                  <OverviewCards stats={stats} />
-                  <DashboardCharts stats={stats} />
+                  {/* Chart View Toggle */}
+                  <div className="row mb-4">
+                    <div className="col-md-4">
+                      <div
+                        className="card border-0 shadow-sm"
+                        style={{ backgroundColor: colors.cardBg }}
+                      >
+                        <div className="card-body">
+                          <label className="form-label fw-bold mb-2">Dashboard View</label>
+                          <div className="btn-group w-100" role="group">
+                            <input
+                              type="radio"
+                              className="btn-check"
+                              name="dashboardView"
+                              id="overviewView"
+                              value="overview"
+                              checked={chartView === 'overview'}
+                              onChange={(e) => setChartView(e.target.value)}
+                            />
+                            <label className="btn btn-outline-primary" htmlFor="overviewView">
+                              Overview
+                            </label>
+
+                            <input
+                              type="radio"
+                              className="btn-check"
+                              name="dashboardView"
+                              id="detailedView"
+                              value="detailed"
+                              checked={chartView === 'detailed'}
+                              onChange={(e) => setChartView(e.target.value)}
+                            />
+                            <label className="btn btn-outline-primary" htmlFor="detailedView">
+                              Election Results
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {chartView === 'detailed' && (
+                      <div className="col-md-8">
+                        <div
+                          className="card border-0 shadow-sm"
+                          style={{ backgroundColor: colors.cardBg }}
+                        >
+                          <div className="card-body">
+                            <label className="form-label fw-bold mb-2">Select Election</label>
+                            {loadingElections ? (
+                              <div className="text-center">
+                                <FontAwesomeIcon icon={faCircle} spin className="me-2" />
+                                Loading elections...
+                              </div>
+                            ) : elections.length > 0 ? (
+                              <select
+                                className="form-select"
+                                value={selectedElectionId || ''}
+                                onChange={(e) => setSelectedElectionId(e.target.value)}
+                              >
+                                <option value="">-- Choose an election --</option>
+                                {elections.map((election) => (
+                                  <option key={election._id} value={election._id}>
+                                    {election.title} ({election.status})
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className="alert alert-info mb-0">
+                                No elections available yet
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <h4 className="mb-4 fw-bold text-primary">
+                    {chartView === 'overview' ? 'System Overview' : 'Election Results & Analysis'}
+                  </h4>
+                  
+                  {chartView === 'overview' ? (
+                    <>
+                      <OverviewCards stats={stats} />
+                      <DashboardCharts stats={stats} />
+                    </>
+                  ) : selectedElectionId ? (
+                    <ElectionDetailedCharts electionId={selectedElectionId} />
+                  ) : (
+                    <div className="alert alert-warning text-center">
+                      Please select an election to view results
+                    </div>
+                  )}
                 </>
               }
             />
