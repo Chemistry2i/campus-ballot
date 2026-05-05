@@ -991,7 +991,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
                         </div>
                       )}
                     </>
-                  )
+                  )}
                 </>
               }
             />
