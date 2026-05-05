@@ -137,18 +137,31 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
     const fetchElections = async () => {
       try {
         setLoadingElections(true);
+        const token = user?.token || localStorage.getItem('token');
+        
+        if (!token) {
+          console.warn('No auth token for elections fetch');
+          setLoadingElections(false);
+          return;
+        }
+
         const response = await axios.get(
           "https://api.campusballot.tech/api/elections",
           {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         console.log('Elections fetched:', response.data);
-        setElections(response.data);
+        
+        // API returns { elections, total, page, limit }
+        const electionsList = response.data.elections || [];
+        console.log('Extracted elections:', electionsList);
+        setElections(electionsList);
         
         // Auto-select first election if available
-        if (response.data.length > 0 && !selectedElectionId) {
-          setSelectedElectionId(response.data[0]._id);
+        if (electionsList.length > 0 && !selectedElectionId) {
+          setSelectedElectionId(electionsList[0]._id);
+          console.log('Auto-selected first election:', electionsList[0]._id);
         }
       } catch (err) {
         console.error('Failed to fetch elections:', err);
@@ -158,10 +171,10 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
       }
     };
 
-    if (user?.role === "admin" && user?.token) {
+    if (user?.role === "admin") {
       fetchElections();
     }
-  }, [user?.role, user?.token]);
+  }, [user?.role]);
 
   useEffect(() => {
     if (user?.role === "admin") {
