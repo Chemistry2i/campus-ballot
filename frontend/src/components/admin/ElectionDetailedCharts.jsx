@@ -58,8 +58,19 @@ function ElectionDetailedCharts({ electionId }) {
       setError(null);
       
       try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          setError('Not authenticated. Please log in again.');
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.get(
-          `/api/admin/election/${electionId}/detailed-stats`
+          `https://api.campusballot.tech/api/admin/election/${electionId}/detailed-stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
         );
         
         console.log('Election detailed stats:', response.data);
@@ -71,6 +82,7 @@ function ElectionDetailedCharts({ electionId }) {
         }
       } catch (err) {
         console.error('Error fetching election stats:', err);
+        console.error('Error details:', err.response?.data || err.message);
         setError(`Failed to load election data: ${err.message}`);
       } finally {
         setLoading(false);
