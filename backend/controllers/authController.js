@@ -837,6 +837,60 @@ const resendVerification = asyncHandler(async (req, res) => {
   }
 });
 
+/* -------------------------------------------------------
+   @desc   Validate session - check if token and user session are still valid
+           Called by frontend on app init to prevent stale sessions
+--------------------------------------------------------- */
+const validateSession = asyncHandler(async (req, res) => {
+  try {
+    // If authMiddleware (protect) allowed us here, token is valid and user exists
+    const user = req.user;
+    
+    if (!user) {
+      return res.status(401).json({ 
+        message: "No valid session",
+        isValid: false 
+      });
+    }
+
+    // Verify user still exists in database
+    const freshUser = await User.findById(user._id).select("-password");
+    if (!freshUser) {
+      return res.status(401).json({ 
+        message: "User no longer exists",
+        isValid: false 
+      });
+    }
+
+    // Check if user is still verified
+    if (!freshUser.isVerified) {
+      return res.status(403).json({ 
+        message: "User email not verified",
+        isValid: false 
+      });
+    }
+
+    // Session is valid
+    res.json({ 
+      message: "Session valid",
+      isValid: true,
+      user: {
+        _id: freshUser._id,
+        name: freshUser.name,
+        email: freshUser.email,
+        role: freshUser.role,
+        isVerified: freshUser.isVerified
+      }
+    });
+  } catch (error) {
+    console.error("[VALIDATE SESSION ERROR]:", error.message);
+    res.status(500).json({ 
+      message: "Error validating session",
+      isValid: false 
+    });
+  }
+});
+
 module.exports = {
     register,
     login,
@@ -848,5 +902,6 @@ module.exports = {
     updateProfile,
     changePassword,
     resendPasswordReset,
-    resendVerification
+    resendVerification,
+    validateSession
 };

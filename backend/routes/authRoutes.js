@@ -13,6 +13,7 @@ const {
     changePassword,
     resendVerification,
     resendPasswordReset,
+    validateSession,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -27,6 +28,9 @@ router.post('/login', login);
 
 // Logout user
 router.post('/logout', protect, logout);
+
+// Validate session - check if token is still valid (called on app init)
+router.get('/validate-session', protect, validateSession);
 
 // Email verification
 router.get('/verify/:token', verifyEmail);

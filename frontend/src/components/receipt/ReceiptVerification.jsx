@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faCheckCircle, faTimesCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faCheckCircle, faTimesCircle, faSpinner, faShieldAlt, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 import axios from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import ReceiptDisplay from './ReceiptDisplay';
@@ -74,8 +74,10 @@ function ReceiptVerification() {
         <div className={styles['search-section']}>
           {/* Header */}
           <div className={styles['header']}>
-            <h1>🔍 Verify Your Receipt</h1>
-            <p>Enter your receipt ID below to verify your vote</p>
+            <h1>
+              <FontAwesomeIcon icon={faShieldAlt} /> Verify Your Receipt
+            </h1>
+            <p>Enter your receipt ID to verify your vote integrity</p>
           </div>
 
           {/* Search Form */}
@@ -101,7 +103,7 @@ function ReceiptVerification() {
                   </>
                 ) : (
                   <>
-                    <FontAwesomeIcon icon={faSearch} /> Verify
+                    <FontAwesomeIcon icon={faSearch} /> Verify Receipt
                   </>
                 )}
               </button>
@@ -212,10 +214,10 @@ function ReceiptVerification() {
           {/* Info Box */}
           {!receipt && (
             <div className={styles['info-box']}>
-              <h3>How to Verify Your Receipt</h3>
+              <h3><FontAwesomeIcon icon={faFileAlt} /> How to Verify Your Receipt</h3>
               <ol>
                 <li>Enter your unique Receipt ID in the search box above</li>
-                <li>Click "Verify" to check the receipt signature</li>
+                <li>Click "Verify Receipt" to check the receipt signature</li>
                 <li>Your receipt must be cryptographically valid</li>
                 <li>Receipts are valid for 30 days from voting date</li>
                 <li>Share your Receipt ID with election observers if needed</li>

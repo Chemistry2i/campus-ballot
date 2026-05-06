@@ -34,8 +34,25 @@ function Login({ setCurrentUser }) {
         if (tokenParts.length !== 3) {
           // Invalid token format - clear it and stay on login
           console.warn('Invalid token format detected, clearing storage');
-          localStorage.removeItem("currentUser");
-          localStorage.removeItem("token");
+          localStorage.clear();
+          sessionStorage.clear();
+          return;
+        }
+        
+        // Decode and check expiration
+        try {
+          const decoded = JSON.parse(atob(tokenParts[1]));
+          if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+            console.warn('Token expired, clearing storage');
+            localStorage.clear();
+            sessionStorage.clear();
+            return;
+          }
+        } catch (e) {
+          // Can't decode token, clear it
+          console.warn('Cannot decode token, clearing storage');
+          localStorage.clear();
+          sessionStorage.clear();
           return;
         }
         
@@ -54,8 +71,8 @@ function Login({ setCurrentUser }) {
       } catch (e) {
         console.error("Failed to parse stored user or validate token:", e);
         // Clear invalid data
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("token");
+        localStorage.clear();
+        sessionStorage.clear();
       }
     }
     
