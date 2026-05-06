@@ -446,36 +446,76 @@ export default function ElectionCard({
               </div>
             )}
 
-            {/* ✅ Submit Button for Multi-Position Checkbox Voting */}
-            {isMultiPositionElection && !voted && status === 'active' && Object.keys(selectedVotes).length > 0 && (
-              <div className="mt-4 pt-3 border-top">
-                <div className="d-flex gap-2 justify-content-center align-items-center">
+            {/* ✅ Sticky Footer with Submit/Clear Buttons - Always Visible */}
+            {isMultiPositionElection && !voted && status === 'active' && (
+              <div 
+                className="mt-4 pt-3 border-top"
+                style={{
+                  background: '#f8f9fa',
+                  padding: '12px 0',
+                  marginLeft: '-12px',
+                  marginRight: '-12px',
+                  marginBottom: '-12px',
+                  paddingLeft: '12px',
+                  paddingRight: '12px',
+                  borderBottomLeftRadius: '8px',
+                  borderBottomRightRadius: '8px',
+                  borderTop: '1px solid #dee2e6'
+                }}
+              >
+                {/* Selection Counter */}
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <div className="d-flex align-items-center gap-2">
+                    <FaVoteYea size={14} style={{ color: '#28a745' }} />
+                    <span className="fw-semibold" style={{ fontSize: '0.95rem', color: '#28a745' }}>
+                      {Object.keys(selectedVotes).length} {Object.keys(selectedVotes).length === 1 ? 'position' : 'positions'} selected
+                    </span>
+                  </div>
+                  <small className="text-muted">{groupedCandidates.length - Object.keys(selectedVotes).length} to go</small>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="d-flex gap-2 justify-content-end">
+                  {/* Clear Button */}
                   <button
-                    className="btn btn-success"
+                    className="btn btn-outline-secondary btn-sm"
                     style={{ 
                       borderRadius: '4px',
-                      background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                      border: 'none',
-                      padding: '10px 20px'
+                      borderColor: '#6c757d',
+                      color: '#6c757d'
                     }}
-                    disabled={isSubmitting}
+                    onClick={() => setSelectedVotes({})}
+                    disabled={Object.keys(selectedVotes).length === 0}
+                  >
+                    Clear
+                  </button>
+
+                  {/* Submit Button */}
+                  <button
+                    className="btn btn-success btn-sm"
+                    style={{ 
+                      borderRadius: '4px',
+                      background: Object.keys(selectedVotes).length > 0 
+                        ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' 
+                        : '#ccc',
+                      border: 'none',
+                      cursor: Object.keys(selectedVotes).length > 0 ? 'pointer' : 'not-allowed'
+                    }}
+                    disabled={isSubmitting || Object.keys(selectedVotes).length === 0}
                     onClick={handleSubmitBatchVotes}
                   >
                     {isSubmitting ? (
                       <>
-                        <FaSpinner className="me-2 spinner-border-sm" spin /> 
+                        <FaSpinner className="me-2" size={12} /> 
                         Submitting...
                       </>
                     ) : (
                       <>
-                        <FaVoteYea className="me-2" size={14} />
-                        Submit {Object.keys(selectedVotes).length} Vote{Object.keys(selectedVotes).length !== 1 ? 's' : ''}
+                        <FaVoteYea className="me-2" size={12} />
+                        Submit {Object.keys(selectedVotes).length}
                       </>
                     )}
                   </button>
-                  <small className="text-muted d-flex align-items-center">
-                    ✓ All at once
-                  </small>
                 </div>
               </div>
             )}
