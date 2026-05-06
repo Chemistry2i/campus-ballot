@@ -28,6 +28,7 @@ const EULA = lazy(() => import('./pages/EULA'));
 const SecurityPolicy = lazy(() => import('./pages/SecurityPolicy'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
+const ReceiptVerificationPage = lazy(() => import('./pages/ReceiptVerificationPage'));
 const TechnicalSupport = lazy(() => import('./pages/TechnicalSupport'));
 
 // Lazy load complex components
@@ -254,6 +255,9 @@ function App() {
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/technical-support" element={<TechnicalSupport />} />
+          
+          {/* Receipt Verification - Public Route */}
+          <Route path="/verify-receipt" element={<ReceiptVerificationPage />} />
           
           <Route
             path="/admin/*"
