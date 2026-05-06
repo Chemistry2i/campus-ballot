@@ -4,6 +4,7 @@ const Ballot = require("../models/Ballot");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
+const { createReceipt, sendReceiptEmail } = require("./receiptController");
 
 // ---------------------------------------------------------------------------
 // Dashboard stats cache — decoupled from the hot vote path.
@@ -165,6 +166,24 @@ const castVote = asyncHandler(async (req, res) => {
     // Neither audit logging nor dashboard stats should ever delay the voter.
     // -----------------------------------------------------------------------
 
+    // Fire-and-forget receipt creation
+    const receiptVotes = [{
+      position: position,
+      candidate: abstain ? null : candidateId,
+      abstain: abstain || false
+    }];
+
+    createReceipt(req.user._id, electionId, receiptVotes, getIpAddress(req), getUserAgent(req))
+      .then(receipt => {
+        console.log(`[RECEIPT] Created receipt ${receipt.receiptId} for user ${req.user._id}`);
+        
+        // Attempt to send receipt email
+        return sendReceiptEmail(receipt.receiptId, req.user.email);
+      })
+      .catch(err => {
+        console.error('[RECEIPT] Error creating or sending receipt:', err.message);
+      });
+
     // Fire-and-forget audit log — do NOT await
     logActivity({
       userId: req.user._id,
@@ -319,6 +338,25 @@ const castBatchVotes = asyncHandler(async (req, res) => {
       votesSubmitted: votes.length,
       electionId: election._id
     });
+
+    // Fire-and-forget receipt creation
+    // Format votes for receipt storage
+    const receiptVotes = votes.map(v => ({
+      position: v.position,
+      candidate: v.abstain ? null : v.candidateId,
+      abstain: v.abstain || false
+    }));
+
+    createReceipt(req.user._id, electionId, receiptVotes, getIpAddress(req), getUserAgent(req))
+      .then(receipt => {
+        console.log(`[RECEIPT] Created receipt ${receipt.receiptId} for user ${req.user._id}`);
+        
+        // Attempt to send receipt email
+        return sendReceiptEmail(receipt.receiptId, req.user.email);
+      })
+      .catch(err => {
+        console.error('[RECEIPT] Error creating or sending receipt:', err.message);
+      });
 
     // Fire-and-forget audit log
     logActivity({

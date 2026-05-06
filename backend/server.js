@@ -59,6 +59,7 @@ const engagementRoutes = require('./routes/engagementRoutes');
 const observerRoutes = require('./routes/observerRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const organizationRoutes = require('./routes/organizationRoutes');
+const receiptRoutes = require('./routes/receiptRoutes');
 const backupController = require('./controllers/backupController');
 const cron = require('node-cron');
 
@@ -264,6 +265,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/observer', observerRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/receipts', receiptRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 
