@@ -67,7 +67,7 @@ function ElectionDetailedCharts({ electionId }) {
         }
 
         const response = await axios.get(
-          `https://api.campusballot.tech/api/admin/election/${electionId}/detailed-stats`,
+          `/api/admin/election/${electionId}/detailed-stats`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
@@ -83,7 +83,8 @@ function ElectionDetailedCharts({ electionId }) {
       } catch (err) {
         console.error('Error fetching election stats:', err);
         console.error('Error details:', err.response?.data || err.message);
-        setError(`Failed to load election data: ${err.message}`);
+        const errorMsg = err.response?.data?.message || err.message;
+        setError(`Failed to load election data: ${errorMsg}`);
       } finally {
         setLoading(false);
       }
@@ -178,7 +179,7 @@ function ElectionDetailedCharts({ electionId }) {
   const currentPositionData = selectedPosition 
     ? electionData.positionStats.find(p => p.position === selectedPosition)
     : null;
-
+    
   // Prepare data for positions overview bar chart (all positions, total votes)
   const positionsOverviewData = {
     labels: electionData.positionStats.map(p => p.position),
@@ -345,7 +346,7 @@ function ElectionDetailedCharts({ electionId }) {
 
       {/* Position Selector */}
       <div className="col-12">
-        <div className="d-flex gap-2 flex-wrap">
+        <div className="d-flex gap-2 flex-wrap mb-2">
           {electionData.positions.map(position => (
             <button
               key={position}
@@ -443,7 +444,7 @@ function ElectionDetailedCharts({ electionId }) {
             >
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
                 {selectedPosition} - Vote Distribution
-              </h5>
+              </h5> 
             </div>
             <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
               <Doughnut
