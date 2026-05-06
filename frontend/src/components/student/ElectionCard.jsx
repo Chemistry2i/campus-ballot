@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FaCheckCircle, FaCalendarAlt, FaClock, FaUsers, FaUnlock, 
   FaVoteYea, FaLock, FaEye, FaStar, FaFlag, FaUserTie,
   FaBalanceScale, FaHandshake, FaLeaf, FaIndustry,
-  FaTrophy, FaHeart, FaGraduationCap
+  FaTrophy, FaHeart, FaGraduationCap, FaSpinner
 } from 'react-icons/fa';
 import getImageUrl from '../../utils/getImageUrl';
+import axiosInstance from '../../api/axiosInstance';
 
 // Helper function to get party symbol and color
 const getPartyInfo = (partyName) => {
@@ -41,9 +42,11 @@ export default function ElectionCard({
   setSelectedCandidateForVoting,
   setShowVotingModal,
   setVotingStep,
-  setShowMultiVotingModal,
-  setSelectedElectionForMultiVoting,
 }) {
+  // ✅ State for multi-position checkbox voting
+  const [selectedVotes, setSelectedVotes] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
 
   const getCandidatePosition = (candidate) => {
@@ -108,6 +111,52 @@ export default function ElectionCard({
   });
   
   const { status, color, icon: StatusIcon } = getElectionStatus(election);
+
+  // ✅ Check if this is a multi-position election (multiple positions available)
+  const isMultiPositionElection = groupedCandidates.length > 1;
+
+  // ✅ Toggle checkbox selection for a candidate
+  const handleToggleCandidate = (position, candidateId) => {
+    setSelectedVotes(prev => {
+      const updated = { ...prev };
+      if (updated[position] === candidateId) {
+        // Deselect if already selected
+        delete updated[position];
+      } else {
+        // Select this candidate for this position
+        updated[position] = candidateId;
+      }
+      return updated;
+    });
+  };
+
+  // ✅ Submit all selected votes at once
+  const handleSubmitBatchVotes = async () => {
+    if (Object.keys(selectedVotes).length === 0) return;
+    
+    setIsSubmitting(true);
+    try {
+      const votes = Object.entries(selectedVotes).map(([position, candidateId]) => ({
+        position,
+        candidateId,
+        abstain: false
+      }));
+
+      await axiosInstance.post('/api/votes/batch', {
+        electionId: election._id || election.id,
+        votes
+      });
+
+      // Success - reset and refresh
+      setSelectedVotes({});
+      window.location.reload(); // Refresh to show updated votes
+    } catch (err) {
+      console.error('Batch vote submission failed:', err);
+      alert(`Error submitting votes: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div key={election._id || election.id} className="col-12">
@@ -326,7 +375,21 @@ export default function ElectionCard({
                                 </div>
 
                                 <div className="mt-2">
-                                  {voted ? (
+                                  {/* ✅ Multi-Position: Show Checkbox */}
+                                  {isMultiPositionElection && !voted && status === 'active' ? (
+                                    <label className="d-flex align-items-center gap-2 mb-0 cursor-pointer" style={{ cursor: 'pointer' }}>
+                                      <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                        checked={selectedVotes[candidatePosition] === (candidate._id || candidate.id)}
+                                        onChange={() => handleToggleCandidate(candidatePosition, candidate._id || candidate.id)}
+                                      />
+                                      <span className="fw-semibold" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
+                                        {selectedVotes[candidatePosition] === (candidate._id || candidate.id) ? 'Selected' : 'Select'}
+                                      </span>
+                                    </label>
+                                  ) : voted ? (
                                     <button className="btn btn-success btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
                                       <FaCheckCircle className="me-1" size={12} /> 
                                       <span className="fw-semibold">Voted</span>
@@ -383,27 +446,35 @@ export default function ElectionCard({
               </div>
             )}
 
-            {/* ✅ Multi-Position Voting Button */}
-            {status === 'active' && !voted && groupedCandidates.length > 1 && (
+            {/* ✅ Submit Button for Multi-Position Checkbox Voting */}
+            {isMultiPositionElection && !voted && status === 'active' && Object.keys(selectedVotes).length > 0 && (
               <div className="mt-4 pt-3 border-top">
-                <div className="d-flex gap-2 justify-content-center">
+                <div className="d-flex gap-2 justify-content-center align-items-center">
                   <button
-                    className="btn btn-success btn-sm"
+                    className="btn btn-success"
                     style={{ 
                       borderRadius: '4px',
                       background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                      border: 'none'
+                      border: 'none',
+                      padding: '10px 20px'
                     }}
-                    onClick={() => {
-                      setSelectedElectionForMultiVoting(election);
-                      setShowMultiVotingModal(true);
-                    }}
+                    disabled={isSubmitting}
+                    onClick={handleSubmitBatchVotes}
                   >
-                    <FaVoteYea className="me-2" size={14} />
-                    Vote for {groupedCandidates.length} Positions
+                    {isSubmitting ? (
+                      <>
+                        <FaSpinner className="me-2 spinner-border-sm" spin /> 
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <FaVoteYea className="me-2" size={14} />
+                        Submit {Object.keys(selectedVotes).length} Vote{Object.keys(selectedVotes).length !== 1 ? 's' : ''}
+                      </>
+                    )}
                   </button>
                   <small className="text-muted d-flex align-items-center">
-                    Submit all votes at once
+                    ✓ All at once
                   </small>
                 </div>
               </div>
