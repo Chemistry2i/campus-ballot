@@ -3,10 +3,9 @@ import {
   FaCheckCircle, FaCalendarAlt, FaClock, FaUsers, FaUnlock, 
   FaVoteYea, FaLock, FaEye, FaStar, FaFlag, FaUserTie,
   FaBalanceScale, FaHandshake, FaLeaf, FaIndustry,
-  FaTrophy, FaHeart, FaGraduationCap, FaSpinner
+  FaTrophy, FaHeart, FaGraduationCap
 } from 'react-icons/fa';
 import getImageUrl from '../../utils/getImageUrl';
-import axiosInstance from '../../utils/axiosInstance';
 
 // Helper function to get party symbol and color
 const getPartyInfo = (partyName) => {
@@ -42,10 +41,10 @@ export default function ElectionCard({
   setSelectedCandidateForVoting,
   setShowVotingModal,
   setVotingStep,
+  onMultiVoteSelectionChange,
 }) {
   // ✅ State for multi-position checkbox voting
   const [selectedVotes, setSelectedVotes] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
 
@@ -93,17 +92,21 @@ export default function ElectionCard({
     return orderedGroups;
   })();
   
-  // More precise vote checking - check if user voted for this specific election and position
-  const voted = myVotes.some((vote) => {
+  // More precise vote checking - compute positions user already voted for in this election
+  const electionId = election._id || election.id;
+  const votesForThisElection = myVotes.filter((vote) => {
     const voteElectionId = vote.election?._id || vote.election?.id || vote.election;
-    const electionId = election._id || election.id;
     return voteElectionId === electionId;
   });
-  
+
+  const votedPositions = votesForThisElection.map(v => String(v.position || v.positionName || '').trim()).filter(Boolean);
+  const hasVotedForPosition = (position) => votedPositions.includes(String(position).trim());
+  const votedAll = groupedCandidates.length > 0 && votedPositions.length >= groupedCandidates.length;
+
   console.log('Vote check for election', election.title, ':', {
-    voted,
+    votedPositions,
     myVotes: myVotes.length,
-    electionId: election._id || election.id,
+    electionId,
     myVoteElections: myVotes.map(v => ({
       electionId: v.election?._id || v.election?.id || v.election,
       position: v.position
@@ -126,37 +129,20 @@ export default function ElectionCard({
         // Select this candidate for this position
         updated[position] = candidateId;
       }
+      // Notify parent of selection change
+      if (onMultiVoteSelectionChange) {
+        onMultiVoteSelectionChange({
+          electionId: election._id || election.id,
+          electionTitle: election.title,
+          selectedVotes: updated,
+          totalPositions: groupedCandidates.length
+        });
+      }
       return updated;
     });
   };
 
-  // ✅ Submit all selected votes at once
-  const handleSubmitBatchVotes = async () => {
-    if (Object.keys(selectedVotes).length === 0) return;
-    
-    setIsSubmitting(true);
-    try {
-      const votes = Object.entries(selectedVotes).map(([position, candidateId]) => ({
-        position,
-        candidateId,
-        abstain: false
-      }));
-
-      await axiosInstance.post('/api/votes/batch', {
-        electionId: election._id || election.id,
-        votes
-      });
-
-      // Success - reset and refresh
-      setSelectedVotes({});
-      window.location.reload(); // Refresh to show updated votes
-    } catch (err) {
-      console.error('Batch vote submission failed:', err);
-      alert(`Error submitting votes: ${err.response?.data?.message || err.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Note: submission is handled by the page-level footer in StudentDashboard
 
   return (
     <div key={election._id || election.id} className="col-12">
@@ -173,7 +159,7 @@ export default function ElectionCard({
             <StatusIcon size={14} />
             <span className="fw-semibold small">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
           </div>
-          {voted && (
+          {votedAll && (
             <div className="d-flex align-items-center gap-1">
               <FaCheckCircle size={12} />
               <span className="small">Voted</span>
@@ -263,7 +249,7 @@ export default function ElectionCard({
                 </div>
                 Candidates by Position ({approvedCandidates.length})
               </h6>
-              {status === 'active' && !voted && (
+              {status === 'active' && !votedAll && (
                 <span className="badge d-flex align-items-center gap-1 px-2 py-1" style={{ 
                   background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                   color: 'white'
@@ -292,19 +278,19 @@ export default function ElectionCard({
                         const partyInfo = getPartyInfo(candidate.party);
                         const PartyIcon = partyInfo.icon;
                         const candidatePosition = getCandidatePosition(candidate);
-
+                        const hasVoted = hasVotedForPosition(candidatePosition);
                         return (
                           <div className="col-12 col-lg-6" key={candidate._id || candidate.id}>
                             <div className="card border shadow-sm h-100" style={{ 
                               borderRadius: '8px', 
-                              background: voted ? '#f8f9fa' : 'white',
-                              borderColor: voted ? '#28a745' : '#0d6efd',
+                              background: hasVoted ? '#f8f9fa' : 'white',
+                              borderColor: hasVoted ? '#28a745' : '#0d6efd',
                               borderWidth: '2px',
                               transition: 'all 0.2s ease'
                             }}>
                               <div className="w-100" style={{ 
                                 height: '3px', 
-                                background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)'
+                                background: hasVoted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)'
                               }}></div>
 
                               <div className="card-body p-3">
@@ -318,7 +304,7 @@ export default function ElectionCard({
                                         height: 60,
                                         objectFit: 'cover',
                                         borderRadius: '50%',
-                                        border: `2px solid ${voted ? '#28a745' : '#0d6efd'}`,
+                                        border: `2px solid ${hasVoted ? '#28a745' : '#0d6efd'}`,
                                       }}
                                       className="flex-shrink-0"
                                     />
@@ -327,7 +313,7 @@ export default function ElectionCard({
                                       style={{
                                         width: '18px',
                                         height: '18px',
-                                        background: voted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
+                                        background: hasVoted ? '#28a745' : 'linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(29, 78, 216) 100%)',
                                         border: '2px solid white'
                                       }}
                                     >
@@ -353,12 +339,12 @@ export default function ElectionCard({
                                     <div className="d-flex align-items-center gap-1 mb-1">
                                       <div 
                                         className="px-2 py-1 rounded-pill d-flex align-items-center gap-1"
-                                        style={{ 
-                                          background: voted ? '#d4edda' : 'linear-gradient(135deg, #e7f1ff 0%, #cce7ff 100%)',
-                                          color: voted ? '#155724' : '#0d6efd',
+                                          style={{ 
+                                          background: hasVoted ? '#d4edda' : 'linear-gradient(135deg, #e7f1ff 0%, #cce7ff 100%)',
+                                          color: hasVoted ? '#155724' : '#0d6efd',
                                           fontSize: '0.7rem',
                                           fontWeight: '600',
-                                          border: `1px solid ${voted ? '#c3e6cb' : '#b3d7ff'}`
+                                          border: `1px solid ${hasVoted ? '#c3e6cb' : '#b3d7ff'}`
                                         }}
                                       >
                                         <PartyIcon size={8} />
@@ -375,21 +361,28 @@ export default function ElectionCard({
                                 </div>
 
                                 <div className="mt-2">
-                                  {/* ✅ Multi-Position: Show Checkbox */}
-                                  {isMultiPositionElection && !voted && status === 'active' ? (
-                                    <label className="d-flex align-items-center gap-2 mb-0 cursor-pointer" style={{ cursor: 'pointer' }}>
-                                      <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                                        checked={selectedVotes[candidatePosition] === (candidate._id || candidate.id)}
-                                        onChange={() => handleToggleCandidate(candidatePosition, candidate._id || candidate.id)}
-                                      />
-                                      <span className="fw-semibold" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
-                                        {selectedVotes[candidatePosition] === (candidate._id || candidate.id) ? 'Selected' : 'Select'}
-                                      </span>
-                                    </label>
-                                  ) : voted ? (
+                                  {/* ✅ Multi-Position: checkbox if position not voted, otherwise show Voted */}
+                                  {isMultiPositionElection && status === 'active' ? (
+                                    hasVoted ? (
+                                      <button className="btn btn-success btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
+                                        <FaCheckCircle className="me-1" size={12} /> 
+                                        <span className="fw-semibold">Voted</span>
+                                      </button>
+                                    ) : (
+                                      <label className="d-flex align-items-center gap-2 mb-0 cursor-pointer" style={{ cursor: 'pointer' }}>
+                                        <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                          checked={selectedVotes[candidatePosition] === (candidate._id || candidate.id)}
+                                          onChange={() => handleToggleCandidate(candidatePosition, candidate._id || candidate.id)}
+                                        />
+                                        <span className="fw-semibold" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
+                                          {selectedVotes[candidatePosition] === (candidate._id || candidate.id) ? 'Selected' : 'Select'}
+                                        </span>
+                                      </label>
+                                    )
+                                  ) : hasVoted ? (
                                     <button className="btn btn-success btn-sm w-100 disabled" style={{ borderRadius: '4px' }}>
                                       <FaCheckCircle className="me-1" size={12} /> 
                                       <span className="fw-semibold">Voted</span>
@@ -446,79 +439,7 @@ export default function ElectionCard({
               </div>
             )}
 
-            {/* ✅ Sticky Footer with Submit/Clear Buttons - Always Visible */}
-            {isMultiPositionElection && !voted && status === 'active' && (
-              <div 
-                className="mt-4 pt-3 border-top"
-                style={{
-                  background: '#f8f9fa',
-                  padding: '12px 0',
-                  marginLeft: '-12px',
-                  marginRight: '-12px',
-                  marginBottom: '-12px',
-                  paddingLeft: '12px',
-                  paddingRight: '12px',
-                  borderBottomLeftRadius: '8px',
-                  borderBottomRightRadius: '8px',
-                  borderTop: '1px solid #dee2e6'
-                }}
-              >
-                {/* Selection Counter */}
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <div className="d-flex align-items-center gap-2">
-                    <FaVoteYea size={14} style={{ color: '#28a745' }} />
-                    <span className="fw-semibold" style={{ fontSize: '0.95rem', color: '#28a745' }}>
-                      {Object.keys(selectedVotes).length} {Object.keys(selectedVotes).length === 1 ? 'position' : 'positions'} selected
-                    </span>
-                  </div>
-                  <small className="text-muted">{groupedCandidates.length - Object.keys(selectedVotes).length} to go</small>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="d-flex gap-2 justify-content-end">
-                  {/* Clear Button */}
-                  <button
-                    className="btn btn-outline-secondary btn-sm"
-                    style={{ 
-                      borderRadius: '4px',
-                      borderColor: '#6c757d',
-                      color: '#6c757d'
-                    }}
-                    onClick={() => setSelectedVotes({})}
-                    disabled={Object.keys(selectedVotes).length === 0}
-                  >
-                    Clear
-                  </button>
-
-                  {/* Submit Button */}
-                  <button
-                    className="btn btn-success btn-sm"
-                    style={{ 
-                      borderRadius: '4px',
-                      background: Object.keys(selectedVotes).length > 0 
-                        ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' 
-                        : '#ccc',
-                      border: 'none',
-                      cursor: Object.keys(selectedVotes).length > 0 ? 'pointer' : 'not-allowed'
-                    }}
-                    disabled={isSubmitting || Object.keys(selectedVotes).length === 0}
-                    onClick={handleSubmitBatchVotes}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <FaSpinner className="me-2" size={12} /> 
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <FaVoteYea className="me-2" size={12} />
-                        Submit {Object.keys(selectedVotes).length}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* (Footer moved to page-level fixed footer in StudentDashboard) */}
           </div>
         </div>
       </div>

@@ -116,6 +116,10 @@ function StudentDashboard({ user: initialUser }) {
   const [comparisonMode, setComparisonMode] = useState('side-by-side'); // 'side-by-side' or 'table'
   const [selectedCandidatesForComparison, setSelectedCandidatesForComparison] = useState([]);
   
+  // ✅ State for fixed multi-position voting footer (page-level)
+  const [currentMultiVoting, setCurrentMultiVoting] = useState(null); // { electionId, electionTitle, selectedVotes, totalPositions }
+  const [isSubmittingFooter, setIsSubmittingFooter] = useState(false);
+  
   // Auto-refresh functionality
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
@@ -918,6 +922,33 @@ function StudentDashboard({ user: initialUser }) {
     }
   };
 
+  // Submit handler for the page-level multi-vote footer
+  const handleSubmitFromFooter = async (multi) => {
+    if (!multi || !multi.electionId || !multi.selectedVotes) return;
+    const token = localStorage.getItem('token');
+    const votes = Object.entries(multi.selectedVotes).map(([position, candidateId]) => ({ position, candidateId, abstain: false }));
+
+    try {
+      setIsSubmittingFooter(true);
+      await axios.post(
+        `/api/votes/batch`,
+        { electionId: multi.electionId, votes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      success('Votes submitted successfully');
+      // Refresh local data so UI reflects new voted positions
+      fetchMyVotes();
+      fetchElections();
+      setCurrentMultiVoting(null);
+    } catch (err) {
+      console.error('Batch submit error:', err);
+      error('Failed to submit votes: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmittingFooter(false);
+    }
+  };
+
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FaChartBar, badge: null },
     { id: 'elections', label: 'Elections', icon: FaPoll, badge: electionStats.total },
@@ -1310,6 +1341,7 @@ function StudentDashboard({ user: initialUser }) {
                 setSelectedCandidateForVoting={setSelectedCandidateForVoting}
                 setShowVotingModal={setShowVotingModal}
                 setVotingStep={setVotingStep}
+                onMultiVoteSelectionChange={setCurrentMultiVoting}
               />
             ))}
           </div>
@@ -4496,6 +4528,75 @@ function StudentDashboard({ user: initialUser }) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Fixed Multi-Position Voting Footer - Always at Page Bottom */}
+      {currentMultiVoting && currentMultiVoting.selectedVotes && Object.keys(currentMultiVoting.selectedVotes).length > 0 && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderTop: '2px solid #28a745',
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
+            padding: '12px 20px',
+            zIndex: 999,
+            backdropFilter: 'blur(4px)'
+          }}
+          className="d-flex align-items-center justify-content-between"
+        >
+          {/* Left: Selection Info */}
+          <div className="d-flex align-items-center gap-3 flex-grow-1">
+            <div>
+              <div className="fw-bold" style={{ color: '#0d6efd', fontSize: '0.9rem' }}>
+                {currentMultiVoting.electionTitle}
+              </div>
+              <div className="text-muted" style={{ fontSize: '0.8rem' }}>
+                {Object.keys(currentMultiVoting.selectedVotes).length} of {currentMultiVoting.totalPositions} selected
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Action Buttons */}
+          <div className="d-flex gap-2 align-items-center">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => setCurrentMultiVoting(null)}
+              style={{ borderRadius: '4px' }}
+            >
+              Clear
+            </button>
+            <button
+              className="btn btn-success btn-sm"
+              onClick={() => {
+                // Submit all votes from currentMultiVoting
+                if (currentMultiVoting.selectedVotes) {
+                  handleSubmitFromFooter(currentMultiVoting);
+                }
+              }}
+              disabled={isSubmittingFooter}
+              style={{
+                borderRadius: '4px',
+                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                border: 'none'
+              }}
+            >
+              {isSubmittingFooter ? (
+                <>
+                  <FaSpinner className="me-2 fa-spin" size={12} />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <FaVoteYea className="me-2" size={12} />
+                  Submit {Object.keys(currentMultiVoting.selectedVotes).length}
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
