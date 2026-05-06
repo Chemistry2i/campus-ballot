@@ -17,7 +17,6 @@ import ShareButton from '../components/student/ShareButton';
 import ReminderSystem from '../components/student/ReminderSystem';
 import CandidateComparison from '../components/student/CandidateComparison';
 import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
-import MultiPositionVotingModal from '../components/student/MultiPositionVotingModal';
 import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
@@ -116,10 +115,6 @@ function StudentDashboard({ user: initialUser }) {
   const [showCandidateComparison, setShowCandidateComparison] = useState(false);
   const [comparisonMode, setComparisonMode] = useState('side-by-side'); // 'side-by-side' or 'table'
   const [selectedCandidatesForComparison, setSelectedCandidatesForComparison] = useState([]);
-  
-  // ✅ Multi-position voting modal
-  const [showMultiVotingModal, setShowMultiVotingModal] = useState(false);
-  const [selectedElectionForMultiVoting, setSelectedElectionForMultiVoting] = useState(null);
   
   // Auto-refresh functionality
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
@@ -1315,8 +1310,6 @@ function StudentDashboard({ user: initialUser }) {
                 setSelectedCandidateForVoting={setSelectedCandidateForVoting}
                 setShowVotingModal={setShowVotingModal}
                 setVotingStep={setVotingStep}
-                setShowMultiVotingModal={setShowMultiVotingModal}
-                setSelectedElectionForMultiVoting={setSelectedElectionForMultiVoting}
               />
             ))}
           </div>
@@ -4505,22 +4498,6 @@ function StudentDashboard({ user: initialUser }) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ✅ Multi-Position Voting Modal */}
-      {showMultiVotingModal && selectedElectionForMultiVoting && (
-        <MultiPositionVotingModal
-          election={selectedElectionForMultiVoting}
-          myVotes={myVotes}
-          setShowMultiVotingModal={setShowMultiVotingModal}
-          onVotesSuccess={() => {
-            fetchMyVotes();
-            fetchElections();
-            success(`Successfully submitted votes for ${selectedElectionForMultiVoting.title}!`);
-          }}
-          colors={colors}
-          isDarkMode={isDarkMode}
-        />
       )}
       </div>
     </>
