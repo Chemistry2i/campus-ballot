@@ -69,6 +69,13 @@ const castVote = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Election not found" });
     }
 
+    // ✅ SECURITY FIX: Validate voter is from the same organization as election
+    // Students can only vote in elections within their organization
+    if (election.organization && String(req.user.organization) !== String(election.organization)) {
+      console.log({ message: 'Voter not eligible', userOrg: req.user.organization, electionOrg: election.organization });
+      return res.status(403).json({ message: 'You are not eligible to participate in this election (different organization).' });
+    }
+
     // Enforce voting time window on the server (use server time)
     const now = new Date();
     const start = election.startDate ? new Date(election.startDate) : null;

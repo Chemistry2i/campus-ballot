@@ -8,6 +8,7 @@ const {
     updateElection,
     deleteElection,
     publishResults,
+    getResultsAuditTrail,
     getElectionResults,
     getElectionCandidates,
     addPositionToElection,
@@ -52,6 +53,9 @@ router.delete('/:id', protect, adminOnly, deleteElection);
 
 // Admin: Publish results for an election
 router.put('/:id/publish-results', protect, adminOnly, publishResults);
+
+// ✅ SECURITY: Get results audit trail (admin only) - immutable log of all result changes
+router.get('/:id/audit-trail', protect, adminOnly, getResultsAuditTrail);
 
 // Get results for an election
 router.get('/:id/results', protect, getElectionResults);
