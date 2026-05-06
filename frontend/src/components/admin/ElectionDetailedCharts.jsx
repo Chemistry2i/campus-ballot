@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "../../../utils/axiosInstance";
+import axios from "../../utils/axiosInstance";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
