@@ -292,14 +292,14 @@ const approveCandidate = asyncHandler(async (req, res) => {
     }
 
     console.log(`[CANDIDATE APPROVAL] Starting approval for candidate: ${candidate.name}`);
-    console.log(`[CANDIDATE APPROVAL] Candidate user ID: ${candidate.user._id}`);
+    console.log(`[CANDIDATE APPROVAL] Candidate user: ${candidate.user ? candidate.user._id : 'None'}`);
 
     candidate.status = "approved";
     await candidate.save();
 
     // Add 'candidate' to the user's additionalRoles if not already present
     // This allows the student to access both Student and Candidate dashboards
-    if (candidate.user) {
+    if (candidate.user && candidate.user._id) {
       try {
         console.log(`[CANDIDATE APPROVAL] Updating user ${candidate.user._id} with candidate role...`);
         
@@ -318,7 +318,7 @@ const approveCandidate = asyncHandler(async (req, res) => {
           try {
             const emailTemplate = emailTemplates.applicationApproved({
               candidateName: candidate.name,
-              electionTitle: candidate.election.title,
+              electionTitle: candidate.election?.title || "the election",
               position: candidate.position,
               userEmail: updatedUser.email
             });
@@ -341,12 +341,12 @@ const approveCandidate = asyncHandler(async (req, res) => {
         console.error(`[CANDIDATE APPROVAL] ❌ ERROR updating user:`, userUpdateError);
       }
     } else {
-      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} has no user field linked!`);
+      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} (${candidate._id}) has no valid user linked!`);
     }
     
     // Log activity
     await logActivity({
-      userId: req.user._id,
+      userId: req.user?._id,
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),
@@ -395,7 +395,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
       try {
         const emailTemplate = emailTemplates.applicationDisqualified({
           candidateName: candidate.name,
-          electionTitle: candidate.election.title,
+          electionTitle: candidate.election?.title || "the election",
           position: candidate.position,
           userEmail: candidate.user.email,
           reason: reason || undefined
@@ -416,7 +416,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
     
     // Log activity
     await logActivity({
-      userId: req.user._id,
+      userId: req.user?._id,
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),
