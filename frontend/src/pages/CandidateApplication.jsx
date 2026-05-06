@@ -103,10 +103,15 @@ export default function CandidateApplication({ user, users = [] }) {
         const allElections = data.elections || [];
         const now = new Date();
         
-        // Filter elections: must not be ended AND user must be eligible
+        // Filter elections: must not be ended, must not be active, AND user must be eligible
         const eligibleElections = allElections.filter(election => {
           // First: filter out ended elections
           if (election.endDate && new Date(election.endDate) < now) {
+            return false;
+          }
+          
+          // Second: filter out active elections (no applications during voting)
+          if (election.status === 'active') {
             return false;
           }
 
@@ -760,9 +765,9 @@ export default function CandidateApplication({ user, users = [] }) {
                 ))}
               </select>
               {elections.length === 0 && (
-                <div className="text-info small mt-1">
-                  <i className="fa fa-info-circle me-1" />
-                  You don't meet the eligibility criteria for any active elections
+                <div className="text-warning small mt-1">
+                  <i className="fa fa-exclamation-triangle me-1" />
+                  No elections available for applications. All ongoing elections have voting in progress. Check back when new elections open.
                 </div>
               )}
               {validation.election && <div className="invalid-feedback d-block small">{validation.election}</div>}

@@ -4584,9 +4584,30 @@ function StudentDashboard({ user: initialUser }) {
             {/* Vote Button - Takes most width */}
             <button
               className="btn btn-success flex-grow-1"
-              onClick={() => {
-                // Submit all votes from currentMultiVoting
-                if (currentMultiVoting.selectedVotes) {
+              onClick={async () => {
+                if (!currentMultiVoting.selectedVotes) return;
+                
+                // Show SweetAlert confirmation
+                const result = await Swal.fire({
+                  title: 'Confirm Your Votes',
+                  html: `<p>You are about to submit your votes for <strong>${currentMultiVoting.electionTitle}</strong></p>
+                         <p className="text-muted" style="font-size: 0.9rem; margin-top: 8px;">
+                           <strong>${Object.keys(currentMultiVoting.selectedVotes).length} position(s)</strong> selected
+                         </p>
+                         <p style="color: #dc3545; margin-top: 12px; font-weight: 500;">
+                           ⚠️ This action cannot be undone
+                         </p>`,
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonColor: '#28a745',
+                  cancelButtonColor: '#6c757d',
+                  confirmButtonText: 'Yes, Submit Votes',
+                  cancelButtonText: 'Cancel',
+                  allowOutsideClick: false,
+                  allowEscapeKey: false
+                });
+                
+                if (result.isConfirmed) {
                   handleSubmitFromFooter(currentMultiVoting);
                 }
               }}

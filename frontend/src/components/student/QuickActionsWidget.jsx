@@ -112,9 +112,13 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
                   onNavigate('apply');
                   setIsOpen(false);
                 }}
+                disabled={!activeElections.some(e => e.status !== 'active')}
+                title={!activeElections.some(e => e.status !== 'active') ? 'Applications closed - all elections are currently active' : 'Apply as a candidate'}
                 style={{
                   borderColor: isDarkMode ? colors.border : '#dee2e6',
-                  color: isDarkMode ? colors.text : '#16a34a'
+                  color: isDarkMode ? colors.text : '#16a34a',
+                  opacity: !activeElections.some(e => e.status !== 'active') ? 0.5 : 1,
+                  cursor: !activeElections.some(e => e.status !== 'active') ? 'not-allowed' : 'pointer'
                 }}
               >
                 <FaBolt className="me-2" /> Apply as Candidate

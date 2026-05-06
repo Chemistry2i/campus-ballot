@@ -42,6 +42,13 @@ const createApplication = asyncHandler(async (req, res) => {
     if (!validElection) {
       return res.status(404).json({ message: 'Election not found' });
     }
+    
+    // Check if election is active - prevent applications during voting
+    if (validElection.status === 'active') {
+      return res.status(403).json({ 
+        message: 'Applications are closed - this election is currently in voting progress. Please try again after voting ends.' 
+      });
+    }
     const candidate = await Candidate.create({
       user,
       election,
