@@ -41,6 +41,8 @@ export default function ElectionCard({
   setSelectedCandidateForVoting,
   setShowVotingModal,
   setVotingStep,
+  setShowMultiVotingModal,
+  setSelectedElectionForMultiVoting,
 }) {
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
 
@@ -378,6 +380,32 @@ export default function ElectionCard({
                 </div>
                 <h6 className="text-muted mb-1">No Candidates Yet</h6>
                 <small className="text-muted">Candidates will appear here once approved</small>
+              </div>
+            )}
+
+            {/* ✅ Multi-Position Voting Button */}
+            {status === 'active' && !voted && groupedCandidates.length > 1 && (
+              <div className="mt-4 pt-3 border-top">
+                <div className="d-flex gap-2 justify-content-center">
+                  <button
+                    className="btn btn-success btn-sm"
+                    style={{ 
+                      borderRadius: '4px',
+                      background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                      border: 'none'
+                    }}
+                    onClick={() => {
+                      setSelectedElectionForMultiVoting(election);
+                      setShowMultiVotingModal(true);
+                    }}
+                  >
+                    <FaVoteYea className="me-2" size={14} />
+                    Vote for {groupedCandidates.length} Positions
+                  </button>
+                  <small className="text-muted d-flex align-items-center">
+                    Submit all votes at once
+                  </small>
+                </div>
               </div>
             )}
           </div>
