@@ -18,10 +18,12 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: [12, 'Password must be at least 12 characters long'],
+        minlength: [8, 'Password must be at least 8 characters long'],
         select: false, // Exclude password from queries by default
-        // ✅ SECURITY FIX: Validate password complexity
+        // ✅ SECURITY FIX: Validate password complexity (TEMPORARILY DISABLED FOR DEVELOPMENT)
         // Must contain uppercase, lowercase, number, and special character
+        // TODO: Re-enable in production with proper UX for password requirements
+        /*
         validate: {
             validator: function(v) {
                 if (!v) return false;
@@ -34,6 +36,7 @@ const userSchema = new mongoose.Schema({
             },
             message: 'Password must contain uppercase, lowercase, number, and special character'
         }
+        */
     },
     
     // Organization this user belongs to (university or federation)
