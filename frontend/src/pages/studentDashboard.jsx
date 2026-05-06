@@ -4543,19 +4543,20 @@ function StudentDashboard({ user: initialUser }) {
             background: isDarkMode ? colors.surface : '#ffffff',
             borderTop: `2px solid ${isDarkMode ? '#28a745' : '#28a745'}`,
             boxShadow: isDarkMode ? '0 -2px 10px rgba(0,0,0,0.4)' : '0 -2px 10px rgba(0,0,0,0.15)',
-            padding: '16px 20px',
+            padding: '10px 16px',
             zIndex: 999,
             backdropFilter: 'blur(4px)'
           }}
-          className="d-flex flex-column gap-3"
+          className="d-flex flex-column gap-2"
         >
           {/* Top: Selection Counter */}
-          <div className="text-center">
+          <div className="text-center" style={{ marginBottom: '2px' }}>
             <div 
               className="fw-bold" 
               style={{ 
                 color: '#28a745', 
-                fontSize: '0.95rem'
+                fontSize: '0.85rem',
+                lineHeight: '1'
               }}
             >
               {Object.keys(currentMultiVoting.selectedVotes).length} of {currentMultiVoting.totalPositions} selected
