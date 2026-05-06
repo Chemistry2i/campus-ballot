@@ -138,13 +138,67 @@ function App() {
     }
   }, [currentUser]);
 
-  // Function to handle logout
+  // Function to handle logout - Clear ALL sensitive data from localStorage
   const { reconnectWithToken } = useSocket();
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("token");
+    
+    // List of all localStorage keys that contain user/session data
+    const keysToRemove = [
+      // Auth & User Data
+      "currentUser",
+      "token",
+      "user",
+      
+      // Voting Data
+      "voteReceipts",
+      "votingStatus",
+      
+      // Notification Data
+      "archivedNotifications",
+      "notifications",
+      
+      // Candidate Data
+      "candidateProfile",
+      "candidateApplicationDraft",
+      "candidateInfo",
+      
+      // Observer Data
+      "observerSettings",
+      "observerDashboard",
+      
+      // Application Data
+      "selectedElection",
+      "selectedCandidate",
+      "comparisonCandidates",
+      
+      // Theme & Settings
+      "adminDarkMode",
+      "adminWelcomeShown",
+      "theme",
+      "userPreferences",
+      
+      // Session Data
+      "lastRefresh",
+      "autoRefresh",
+      "currentPage",
+      "scrollPosition",
+      
+      // Cache Data
+      "cachedElections",
+      "cachedCandidates",
+      "cachedResults"
+    ];
+    
+    // Remove all sensitive data from localStorage
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Also clear sessionStorage if used anywhere
+    sessionStorage.clear();
+    
     try {
       reconnectWithToken(null);
     } catch {
