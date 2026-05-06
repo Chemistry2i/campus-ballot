@@ -23,6 +23,7 @@ const createCandidate = asyncHandler(async (req, res) => {
 
     // Multer puts files in req.files and text fields in req.body
     const {
+      userId, // The ID of the student being nominated
       election,
       name,
       position,
@@ -44,17 +45,28 @@ const createCandidate = asyncHandler(async (req, res) => {
       }
     }
 
-    if (!election || !name || !position || !description) {
-      return res.status(400).json({ message: "Missing required candidate fields" });
+    if (!userId || !election || !name || !position || !description) {
+      return res.status(400).json({ message: "Missing required candidate fields (userId, election, name, position, description)" });
     }
 
     const validElection = await Election.findById(election);
     if (!validElection) {
       return res.status(404).json({ message: "Election not found" });
     }
+    
+    const studentUser = await User.findById(userId);
+    if (!studentUser) {
+      return res.status(404).json({ message: "Nominated user (student) not found" });
+    }
+
+    // Check if the user is already a candidate for this position in this election
+    const existingCandidate = await Candidate.findOne({ user: userId, election: election, position: position });
+    if (existingCandidate) {
+        return res.status(400).json({ message: "This user is already a candidate for this position in this election." });
+    }
 
     const candidate = await Candidate.create({
-      user: req.user._id, // Admin who added the candidate
+      user: userId, // This must be the student's ID
       election,
       name,
       photo,
@@ -318,7 +330,7 @@ const approveCandidate = asyncHandler(async (req, res) => {
           try {
             const emailTemplate = emailTemplates.applicationApproved({
               candidateName: candidate.name,
-              electionTitle: candidate.election?.title || "the election",
+              electionTitle: candidate.election?.title || "the election", // Use optional chaining
               position: candidate.position,
               userEmail: updatedUser.email
             });
@@ -335,18 +347,18 @@ const approveCandidate = asyncHandler(async (req, res) => {
             // Don't fail the entire request if email fails
           }
         } else {
-          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidate.user._id}`);
+          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidateUserId}`);
         }
       } catch (userUpdateError) {
         console.error(`[CANDIDATE APPROVAL] ❌ ERROR updating user:`, userUpdateError);
       }
     } else {
-      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} (${candidate._id}) has no valid user linked!`);
+      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} (${candidate._id}) has no valid user linked!`); // Improved warning
     }
     
     // Log activity
-    await logActivity({
-      userId: req.user?._id,
+    await logActivity({ // Use optional chaining for req.user
+      userId: req.user?._id, 
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),
@@ -416,7 +428,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
     
     // Log activity
     await logActivity({
-      userId: req.user?._id,
+      userId: req.user?._id, // Use optional chaining for req.user
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),

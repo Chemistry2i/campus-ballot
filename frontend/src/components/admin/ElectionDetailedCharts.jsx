@@ -38,6 +38,10 @@ ChartJS.register(
   Filler
 );
 
+// Ensure API_URL is correctly defined and used for absolute paths
+// It should be set in your .env.production or .env file (e.g., VITE_API_URL=https://api.campusballot.tech)
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function ElectionDetailedCharts({ electionId }) {
   const { isDarkMode, colors } = useTheme();
   const [electionData, setElectionData] = useState(null);
@@ -67,7 +71,7 @@ function ElectionDetailedCharts({ electionId }) {
         }
 
         const response = await axios.get(
-          `/api/admin/election/${electionId}/detailed-stats`,
+          `${API_URL}/api/admin/election/${electionId}/detailed-stats`, // Corrected: only one URL argument
           {
             headers: { Authorization: `Bearer ${token}` }
           }
