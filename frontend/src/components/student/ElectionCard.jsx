@@ -6,7 +6,7 @@ import {
   FaTrophy, FaHeart, FaGraduationCap, FaSpinner
 } from 'react-icons/fa';
 import getImageUrl from '../../utils/getImageUrl';
-import axiosInstance from '../../api/axiosInstance';
+import axiosInstance from '../../utils/axiosInstance';
 
 // Helper function to get party symbol and color
 const getPartyInfo = (partyName) => {
