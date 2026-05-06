@@ -20,6 +20,30 @@ function Login({ setCurrentUser }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is already logged in - redirect to appropriate dashboard
+    const currentUser = localStorage.getItem("currentUser");
+    const token = localStorage.getItem("token");
+    
+    if (currentUser && token) {
+      try {
+        const user = JSON.parse(currentUser);
+        // User is already authenticated, redirect to their dashboard
+        if (user.role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (user.role === "super_admin") {
+          navigate("/super-admin/system-health", { replace: true });
+        } else if (user.role === "candidate") {
+          navigate("/candidate", { replace: true });
+        } else if (user.role === "observer") {
+          navigate("/observer/dashboard", { replace: true });
+        } else {
+          navigate("/student-dashboard", { replace: true });
+        }
+      } catch (e) {
+        console.error("Failed to parse stored user:", e);
+      }
+    }
+    
     // Remove dark mode classes on mount
     const loginContainer = document.querySelector(`.${styles["login-inner-container"]}`);
     if (loginContainer) {
@@ -36,7 +60,7 @@ function Login({ setCurrentUser }) {
       document.body.style.backgroundColor = '';
       document.body.style.color = '';
     };
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

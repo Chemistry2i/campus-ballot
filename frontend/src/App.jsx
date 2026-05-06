@@ -204,6 +204,9 @@ function App() {
     } catch {
       // ignore if socket not initialized
     }
+    
+    // Navigate to login page after logout
+    window.location.href = '/login';
   };
 
 
