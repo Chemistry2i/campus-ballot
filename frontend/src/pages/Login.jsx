@@ -24,9 +24,21 @@ function Login({ setCurrentUser }) {
     const currentUser = localStorage.getItem("currentUser");
     const token = localStorage.getItem("token");
     
+    // BOTH must exist and be valid for user to be considered logged in
     if (currentUser && token) {
       try {
         const user = JSON.parse(currentUser);
+        
+        // IMPORTANT: Validate token format (JWT should have 3 parts separated by dots)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          // Invalid token format - clear it and stay on login
+          console.warn('Invalid token format detected, clearing storage');
+          localStorage.removeItem("currentUser");
+          localStorage.removeItem("token");
+          return;
+        }
+        
         // User is already authenticated, redirect to their dashboard
         if (user.role === "admin") {
           navigate("/admin", { replace: true });
@@ -40,7 +52,10 @@ function Login({ setCurrentUser }) {
           navigate("/student-dashboard", { replace: true });
         }
       } catch (e) {
-        console.error("Failed to parse stored user:", e);
+        console.error("Failed to parse stored user or validate token:", e);
+        // Clear invalid data
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("token");
       }
     }
     

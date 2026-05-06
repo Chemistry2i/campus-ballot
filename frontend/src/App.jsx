@@ -121,11 +121,32 @@ function ProtectedRoute({ user, requiredRole, children }) {
 
 function App() {
   // Get user from localStorage or set to null
+  // IMPORTANT: Validate both currentUser AND token exist and are valid
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const user = localStorage.getItem("currentUser");
-      return user ? JSON.parse(user) : null;
-    } catch {
+      const token = localStorage.getItem("token");
+      
+      // BOTH must exist for user to be logged in
+      if (!user || !token) {
+        return null;
+      }
+      
+      // Token must be valid JWT format (3 parts separated by dots)
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.warn('Invalid token format detected at init, clearing storage');
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("token");
+        return null;
+      }
+      
+      return JSON.parse(user);
+    } catch (err) {
+      console.warn('Failed to initialize user from storage:', err.message);
+      // Clear potentially corrupt data
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("token");
       return null;
     }
   });
@@ -143,71 +164,66 @@ function App() {
   const { reconnectWithToken } = useSocket();
 
   const handleLogout = () => {
+    // ===== Step 1: Set state to null immediately =====
     setCurrentUser(null);
     
-    // List of all localStorage keys that contain user/session data
+    // ===== Step 2: Clear EVERYTHING from localStorage (not just specific keys) =====
+    // This is more thorough - clears any key we might have missed
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(key => {
+      // Only remove app-specific keys (don't remove browser extensions data)
+      if (!key.startsWith('chrome-extension') && !key.startsWith('moz-extension')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // As backup, also remove the specific keys we know about
     const keysToRemove = [
-      // Auth & User Data
       "currentUser",
       "token",
       "user",
-      
-      // Voting Data
       "voteReceipts",
       "votingStatus",
-      
-      // Notification Data
       "archivedNotifications",
       "notifications",
-      
-      // Candidate Data
       "candidateProfile",
       "candidateApplicationDraft",
       "candidateInfo",
-      
-      // Observer Data
       "observerSettings",
       "observerDashboard",
-      
-      // Application Data
       "selectedElection",
       "selectedCandidate",
       "comparisonCandidates",
-      
-      // Theme & Settings
       "adminDarkMode",
       "adminWelcomeShown",
       "theme",
       "userPreferences",
-      
-      // Session Data
       "lastRefresh",
       "autoRefresh",
       "currentPage",
       "scrollPosition",
-      
-      // Cache Data
       "cachedElections",
       "cachedCandidates",
       "cachedResults"
     ];
     
-    // Remove all sensitive data from localStorage
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
     });
     
-    // Also clear sessionStorage if used anywhere
+    // ===== Step 3: Clear sessionStorage completely =====
     sessionStorage.clear();
     
+    // ===== Step 4: Disconnect socket =====
     try {
       reconnectWithToken(null);
-    } catch {
-      // ignore if socket not initialized
+    } catch (err) {
+      console.error('Socket disconnect error:', err);
     }
     
-    // Navigate to login page after logout
-    window.location.href = '/login';
+    // ===== Step 5: Force full page reload to /login =====
+    // Using replace to clear history + timestamp to prevent browser cache
+    window.location.href = '/login?logout=' + Date.now();
   };
 
 
