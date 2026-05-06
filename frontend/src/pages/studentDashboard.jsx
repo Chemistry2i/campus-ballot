@@ -4540,38 +4540,49 @@ function StudentDashboard({ user: initialUser }) {
             bottom: 0,
             left: 0,
             right: 0,
-            background: 'white',
-            borderTop: '2px solid #28a745',
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
-            padding: '12px 20px',
+            background: isDarkMode ? colors.surface : '#ffffff',
+            borderTop: `2px solid ${isDarkMode ? '#28a745' : '#28a745'}`,
+            boxShadow: isDarkMode ? '0 -2px 10px rgba(0,0,0,0.4)' : '0 -2px 10px rgba(0,0,0,0.15)',
+            padding: '16px 20px',
             zIndex: 999,
             backdropFilter: 'blur(4px)'
           }}
-          className="d-flex align-items-center justify-content-between"
+          className="d-flex flex-column gap-3"
         >
-          {/* Left: Selection Info */}
-          <div className="d-flex align-items-center gap-3 flex-grow-1">
-            <div>
-              <div className="fw-bold" style={{ color: '#0d6efd', fontSize: '0.9rem' }}>
-                {currentMultiVoting.electionTitle}
-              </div>
-              <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                {Object.keys(currentMultiVoting.selectedVotes).length} of {currentMultiVoting.totalPositions} selected
-              </div>
+          {/* Top: Selection Counter */}
+          <div className="text-center">
+            <div 
+              className="fw-bold" 
+              style={{ 
+                color: '#28a745', 
+                fontSize: '0.95rem'
+              }}
+            >
+              {Object.keys(currentMultiVoting.selectedVotes).length} of {currentMultiVoting.totalPositions} selected
             </div>
           </div>
 
-          {/* Right: Action Buttons */}
-          <div className="d-flex gap-2 align-items-center">
+          {/* Bottom: Action Buttons - Clear small, Vote takes most width */}
+          <div className="d-flex gap-2 align-items-stretch" style={{ width: '100%' }}>
+            {/* Clear Button - Small */}
             <button
-              className="btn btn-outline-secondary btn-sm"
+              className="btn btn-sm"
               onClick={() => setCurrentMultiVoting(null)}
-              style={{ borderRadius: '4px' }}
+              style={{ 
+                borderRadius: '6px',
+                flex: '0 0 auto',
+                minWidth: '70px',
+                background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
+                border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
+                color: isDarkMode ? colors.text : '#333'
+              }}
             >
               Clear
             </button>
+
+            {/* Vote Button - Takes most width */}
             <button
-              className="btn btn-success btn-sm"
+              className="btn btn-success flex-grow-1"
               onClick={() => {
                 // Submit all votes from currentMultiVoting
                 if (currentMultiVoting.selectedVotes) {
@@ -4580,20 +4591,26 @@ function StudentDashboard({ user: initialUser }) {
               }}
               disabled={isSubmittingFooter}
               style={{
-                borderRadius: '4px',
-                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                border: 'none'
+                borderRadius: '6px',
+                background: isSubmittingFooter
+                  ? '#6c757d'
+                  : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                border: 'none',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '1rem',
+                padding: '10px 16px'
               }}
             >
               {isSubmittingFooter ? (
                 <>
-                  <FaSpinner className="me-2 fa-spin" size={12} />
-                  Submitting...
+                  <FaSpinner className="me-2 fa-spin" size={14} />
+                  Voting...
                 </>
               ) : (
                 <>
-                  <FaVoteYea className="me-2" size={12} />
-                  Submit {Object.keys(currentMultiVoting.selectedVotes).length}
+                  <FaVoteYea className="me-2" size={14} />
+                  Vote
                 </>
               )}
             </button>
