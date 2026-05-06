@@ -1,12 +1,15 @@
 import React from 'react';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import ReceiptVerification from '../components/receipt/ReceiptVerification';
 import styles from './ReceiptVerificationPage.module.css';
 
 function ReceiptVerificationPage() {
   return (
-    <div className={styles['page-container']}>
-      <ReceiptVerification />
-    </div>
+    <ThemeProvider>
+      <div className={styles['page-container']}>
+        <ReceiptVerification />
+      </div>
+    </ThemeProvider>
   );
 }
 
