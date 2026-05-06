@@ -21,9 +21,8 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
-
-// Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+import kyuLogo from "../assets/kyucsa.png";
+// baseURL is set centrally in axiosInstance.js — do not override here
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -116,6 +115,10 @@ function StudentDashboard({ user: initialUser }) {
   const [showCandidateComparison, setShowCandidateComparison] = useState(false);
   const [comparisonMode, setComparisonMode] = useState('side-by-side'); // 'side-by-side' or 'table'
   const [selectedCandidatesForComparison, setSelectedCandidatesForComparison] = useState([]);
+  
+  // ✅ State for fixed multi-position voting footer (page-level)
+  const [currentMultiVoting, setCurrentMultiVoting] = useState(null); // { electionId, electionTitle, selectedVotes, totalPositions }
+  const [isSubmittingFooter, setIsSubmittingFooter] = useState(false);
   
   // Auto-refresh functionality
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
@@ -640,6 +643,18 @@ function StudentDashboard({ user: initialUser }) {
       'isEligible:', isEligible);
     
     return matchesSearch && matchesStatus && isEligible;
+  }).sort((a, b) => {
+    const statusA = getElectionStatus(a).status;
+    const statusB = getElectionStatus(b).status;
+    
+    const priority = { 'active': 0, 'upcoming': 1, 'completed': 2 };
+    
+    if (priority[statusA] !== priority[statusB]) {
+      return priority[statusA] - priority[statusB];
+    }
+    
+    // Within same status, show newest first
+    return new Date(b.startDate) - new Date(a.startDate);
   });
 
 
@@ -904,6 +919,33 @@ function StudentDashboard({ user: initialUser }) {
         });
       }
       return false;
+    }
+  };
+
+  // Submit handler for the page-level multi-vote footer
+  const handleSubmitFromFooter = async (multi) => {
+    if (!multi || !multi.electionId || !multi.selectedVotes) return;
+    const token = localStorage.getItem('token');
+    const votes = Object.entries(multi.selectedVotes).map(([position, candidateId]) => ({ position, candidateId, abstain: false }));
+
+    try {
+      setIsSubmittingFooter(true);
+      await axios.post(
+        `/api/votes/batch`,
+        { electionId: multi.electionId, votes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      success('Votes submitted successfully');
+      // Refresh local data so UI reflects new voted positions
+      fetchMyVotes();
+      fetchElections();
+      setCurrentMultiVoting(null);
+    } catch (err) {
+      console.error('Batch submit error:', err);
+      error('Failed to submit votes: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmittingFooter(false);
     }
   };
 
@@ -1299,6 +1341,7 @@ function StudentDashboard({ user: initialUser }) {
                 setSelectedCandidateForVoting={setSelectedCandidateForVoting}
                 setShowVotingModal={setShowVotingModal}
                 setVotingStep={setVotingStep}
+                onMultiVoteSelectionChange={setCurrentMultiVoting}
               />
             ))}
           </div>
@@ -2317,10 +2360,10 @@ function StudentDashboard({ user: initialUser }) {
         }}
       >
         <div className="container-fluid" style={{ maxWidth: "100%", padding: "0 0.5rem", margin: 0 }}>
-          <span className="navbar-brand d-flex align-items-center gap-2">
+          <span className="navbar-brand d-flex align-items-center gap-1">
             {/* Hamburger menu for mobile */}
             <button
-              className="btn btn-sm me-2 d-lg-none"
+              className="btn btn-sm ms-n3 d-lg-none"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open sidebar menu"
               style={{
@@ -2331,9 +2374,9 @@ function StudentDashboard({ user: initialUser }) {
             >
               <FaBars />
             </button>
-            <FaUserGraduate size={22} className="text-white" />
-            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Student Portal</span>
-            <span className="fw-bold d-md-none text-white" style={{ fontSize: '1rem' }}>Portal</span>
+            <img src={kyuLogo} alt="Kyambogo University Logo" className="img-fluid" style={{ height: '40px', width: '85px' }} />
+            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.3rem' }}>Campus Ballot</span>
+            {/* <span className="fw-bold d-md-none text-white" style={{ fontSize: '0.8em', marginLeft: '0.5rem' }}>Campus Ballot</span> */}
           </span>
           
           {/* User Actions */}
@@ -2342,7 +2385,7 @@ function StudentDashboard({ user: initialUser }) {
             style={{
               flexWrap: 'wrap',
               justifyContent: 'flex-start',
-              rowGap: '0.35rem',
+              rowGap: '0.30rem',
               maxWidth: '75vw'
             }}
           >
@@ -2569,6 +2612,7 @@ function StudentDashboard({ user: initialUser }) {
           zIndex: 2000,
           left: 0,
           top: 0,
+          // display: sidebarOpen ? 'block' : 'none'
           display: 'none'
         }}
         className="d-lg-none"
@@ -3744,7 +3788,7 @@ function StudentDashboard({ user: initialUser }) {
                 <>
                   <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
                     <div className="d-flex align-items-center gap-3">
-                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 40, height: 40, background: 'rgba(59, 130, 246, 0.1)' }}>
+                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 60, height: 60, background: 'rgba(59, 130, 246, 0.1)' }}>
                         <FaVoteYea className="text-primary" size={16} />
                       </div>
                       <div>
@@ -3777,10 +3821,18 @@ function StudentDashboard({ user: initialUser }) {
                         }}
                       />
                       <h3 className="fw-bold mt-3 mb-1" style={{ fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem' }}>{selectedCandidateForVoting.name}</h3>
-                      <p className="text-primary mb-0" style={{ fontSize: window.innerWidth <= 768 ? '0.85rem' : '1rem' }}>{selectedCandidateForVoting.party || 'Independent'}</p>
-                      {selectedCandidateForVoting.position && (
-                        <span className="badge bg-success mt-2" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>{selectedCandidateForVoting.position}</span>
-                      )}
+                      <p className="text-primary mb-0" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '1rem' }}>{selectedCandidateForVoting.party || 'Independent'}</p>
+                      <div className="d-flex flex-row align-items-center justify-content-center gap-2 mt-2 mb-2" style={{ minHeight: window.innerWidth <= 768 ? 28 : 36 }}>
+                        {selectedCandidateForVoting.position && (
+                          <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '0.85rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>{selectedCandidateForVoting.position}</span>
+                        )}
+                        {selectedCandidateForVoting.symbol && (
+                          <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.8rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
+                            <FaStar className="me-1" size={window.innerWidth <= 768 ? 12 : 14} style={{ color: '#f59e42' }} />
+                            <span style={{ fontWeight: 700 }}>{selectedCandidateForVoting.symbol}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Election Info */}
@@ -4321,8 +4373,8 @@ function StudentDashboard({ user: initialUser }) {
       {/* Quick Actions Widget */}
       <QuickActionsWidget 
         activeElections={elections.filter(e => {
-          const status = getElectionStatus(e);
-          return status.status === 'active' && isUserEligibleForElection(e);
+          const status = getElectionStatus(e).status;
+          return (status === 'active' || status === 'upcoming') && isUserEligibleForElection(e);
         })}
         onNavigate={(action) => {
           if (action === 'apply') {
@@ -4476,6 +4528,114 @@ function StudentDashboard({ user: initialUser }) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Fixed Multi-Position Voting Footer - Always at Page Bottom */}
+      {currentMultiVoting && currentMultiVoting.selectedVotes && Object.keys(currentMultiVoting.selectedVotes).length > 0 && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: isDarkMode ? colors.surface : '#ffffff',
+            borderTop: `2px solid ${isDarkMode ? '#28a745' : '#28a745'}`,
+            boxShadow: isDarkMode ? '0 -2px 10px rgba(0,0,0,0.4)' : '0 -2px 10px rgba(0,0,0,0.15)',
+            padding: '10px 16px',
+            zIndex: 999,
+            backdropFilter: 'blur(4px)'
+          }}
+          className="d-flex flex-column gap-2"
+        >
+          {/* Top: Selection Counter */}
+          <div className="text-center" style={{ marginBottom: '2px' }}>
+            <div 
+              className="fw-bold" 
+              style={{ 
+                color: '#28a745', 
+                fontSize: '0.85rem',
+                lineHeight: '1'
+              }}
+            >
+              {Object.keys(currentMultiVoting.selectedVotes).length} of {currentMultiVoting.totalPositions} selected
+            </div>
+          </div>
+
+          {/* Bottom: Action Buttons - Clear small, Vote takes most width */}
+          <div className="d-flex gap-2 align-items-stretch" style={{ width: '100%' }}>
+            {/* Clear Button - Small */}
+            <button
+              className="btn btn-sm"
+              onClick={() => setCurrentMultiVoting(null)}
+              style={{ 
+                borderRadius: '6px',
+                flex: '0 0 auto',
+                minWidth: '70px',
+                background: isDarkMode ? colors.surfaceHover : '#f0f0f0',
+                border: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}`,
+                color: isDarkMode ? colors.text : '#333'
+              }}
+            >
+              Clear
+            </button>
+
+            {/* Vote Button - Takes most width */}
+            <button
+              className="btn btn-success flex-grow-1"
+              onClick={async () => {
+                if (!currentMultiVoting.selectedVotes) return;
+                
+                // Show SweetAlert confirmation
+                const result = await Swal.fire({
+                  title: 'Confirm Your Votes',
+                  html: `<p>You are about to submit your votes for <strong>${currentMultiVoting.electionTitle}</strong></p>
+                         <p className="text-muted" style="font-size: 0.9rem; margin-top: 8px;">
+                           <strong>${Object.keys(currentMultiVoting.selectedVotes).length} position(s)</strong> selected
+                         </p>
+                         <p style="color: #dc3545; margin-top: 12px; font-weight: 500;">
+                           ⚠️ This action cannot be undone
+                         </p>`,
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonColor: '#28a745',
+                  cancelButtonColor: '#6c757d',
+                  confirmButtonText: 'Yes, Submit Votes',
+                  cancelButtonText: 'Cancel',
+                  allowOutsideClick: false,
+                  allowEscapeKey: false
+                });
+                
+                if (result.isConfirmed) {
+                  handleSubmitFromFooter(currentMultiVoting);
+                }
+              }}
+              disabled={isSubmittingFooter}
+              style={{
+                borderRadius: '6px',
+                background: isSubmittingFooter
+                  ? '#6c757d'
+                  : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                border: 'none',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '1rem',
+                padding: '10px 16px'
+              }}
+            >
+              {isSubmittingFooter ? (
+                <>
+                  <FaSpinner className="me-2 fa-spin" size={14} />
+                  Voting...
+                </>
+              ) : (
+                <>
+                  <FaVoteYea className="me-2" size={14} />
+                  Vote
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

@@ -12,7 +12,8 @@ import {
     faTimes,
     faCheckCircle,
     faTrash,
-    faUserCog
+    faUserCog,
+    faDownload
 } from "@fortawesome/free-solid-svg-icons";
 import './users-actions.css';
 
@@ -52,6 +53,167 @@ const Users = ({ user }) => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [totalUsers, setTotalUsers] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+
+    // Bulk selection state
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+
+    // Bulk selection helpers
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            setSelectedUserIds(users.map(u => u._id || u.id));
+        } else {
+            setSelectedUserIds([]);
+        }
+    };
+
+    const handleSelectOne = (id, checked) => {
+        if (checked) {
+            setSelectedUserIds(prev => [...prev, id]);
+        } else {
+            setSelectedUserIds(prev => prev.filter(uid => uid !== id));
+        }
+    };
+
+    // Bulk actions
+    const handleBulkDelete = async () => {
+        if (selectedUserIds.length === 0) {
+            Swal.fire('Warning', 'Please select users to delete', 'warning');
+            return;
+        }
+        const result = await Swal.fire({
+            title: 'Bulk Delete Users',
+            html: `Are you sure you want to delete <strong>${selectedUserIds.length}</strong> selected users?<br><small class="text-muted">This action cannot be undone</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete All',
+            cancelButtonText: 'Cancel'
+        });
+        if (!result.isConfirmed) return;
+        const loadingSwal = Swal.fire({
+            title: 'Processing...',
+            html: `Deleting ${selectedUserIds.length} users...`,
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+        try {
+            const promises = selectedUserIds.map(userId =>
+                axios.delete(`https://api.campusballot.tech/api/users/${userId}`, { headers: getAuthHeaders() })
+            );
+            const results = await Promise.allSettled(promises);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            loadingSwal.close();
+            if (successful > 0) {
+                Swal.fire('Success', `${successful} user(s) deleted successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+                setSelectedUserIds([]);
+                fetchUsers();
+            } else {
+                Swal.fire('Error', 'Failed to delete users', 'error');
+            }
+        } catch (error) {
+            loadingSwal.close();
+            Swal.fire('Error', 'Failed to delete users', 'error');
+        }
+    };
+
+    const handleBulkActivate = async () => {
+        if (selectedUserIds.length === 0) {
+            Swal.fire('Warning', 'Please select users to activate', 'warning');
+            return;
+        }
+        const result = await Swal.fire({
+            title: 'Bulk Activate Users',
+            html: `Are you sure you want to activate <strong>${selectedUserIds.length}</strong> selected users?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Activate All',
+            cancelButtonText: 'Cancel'
+        });
+        if (!result.isConfirmed) return;
+        const loadingSwal = Swal.fire({
+            title: 'Processing...',
+            html: `Activating ${selectedUserIds.length} users...`,
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+        try {
+            const promises = selectedUserIds.map(userId =>
+                axios.put(`https://api.campusballot.tech/api/users/${userId}/activate`, {}, { headers: getAuthHeaders() })
+            );
+            const results = await Promise.allSettled(promises);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            loadingSwal.close();
+            if (successful > 0) {
+                Swal.fire('Success', `${successful} user(s) activated successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+                setSelectedUserIds([]);
+                fetchUsers();
+            } else {
+                Swal.fire('Error', 'Failed to activate users', 'error');
+            }
+        } catch (error) {
+            loadingSwal.close();
+            Swal.fire('Error', 'Failed to activate users', 'error');
+        }
+    };
+
+    const handleBulkSuspend = async () => {
+        if (selectedUserIds.length === 0) {
+            Swal.fire('Warning', 'Please select users to suspend', 'warning');
+            return;
+        }
+        const result = await Swal.fire({
+            title: 'Bulk Suspend Users',
+            html: `Are you sure you want to suspend <strong>${selectedUserIds.length}</strong> selected users?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Suspend All',
+            cancelButtonText: 'Cancel'
+        });
+        if (!result.isConfirmed) return;
+        const loadingSwal = Swal.fire({
+            title: 'Processing...',
+            html: `Suspending ${selectedUserIds.length} users...`,
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+        try {
+            const promises = selectedUserIds.map(userId =>
+                axios.put(`https://api.campusballot.tech/api/users/${userId}/suspend`, {}, { headers: getAuthHeaders() })
+            );
+            const results = await Promise.allSettled(promises);
+            const successful = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+            loadingSwal.close();
+            if (successful > 0) {
+                Swal.fire('Success', `${successful} user(s) suspended successfully${failed > 0 ? `, ${failed} failed` : ''}`, 'success');
+                setSelectedUserIds([]);
+                fetchUsers();
+            } else {
+                Swal.fire('Error', 'Failed to suspend users', 'error');
+            }
+        } catch (error) {
+            loadingSwal.close();
+            Swal.fire('Error', 'Failed to suspend users', 'error');
+        }
+    };
+
+    const handleBulkExport = () => {
+        if (selectedUserIds.length === 0) {
+            Swal.fire('Warning', 'Please select users to export', 'warning');
+            return;
+        }
+        const selectedUsers = users.filter(u => selectedUserIds.includes(u._id || u.id));
+        const csvContent = generateCSV(selectedUsers);
+        downloadCSV(csvContent, `selected_users_${new Date().toISOString().split('T')[0]}.csv`);
+        Swal.fire('Success', `${selectedUserIds.length} users exported successfully`, 'success');
+    };
 
     // Debug the user object
     console.log('User object in Users component:', user);
@@ -532,24 +694,50 @@ const Users = ({ user }) => {
                                 </div>
                             </div>
 
+                            {/* Bulk Action Buttons */}
+                            <div className="mb-2 d-flex flex-wrap gap-2">
+                                <button className="btn btn-danger btn-sm" onClick={handleBulkDelete} disabled={selectedUserIds.length === 0}>
+                                    <FontAwesomeIcon icon={faTrash} className="me-1" /> Bulk Delete
+                                </button>
+                                <button className="btn btn-success btn-sm" onClick={handleBulkActivate} disabled={selectedUserIds.length === 0}>
+                                    <FontAwesomeIcon icon={faCheckCircle} className="me-1" /> Bulk Activate
+                                </button>
+                                <button className="btn btn-warning btn-sm" onClick={handleBulkSuspend} disabled={selectedUserIds.length === 0}>
+                                    <FontAwesomeIcon icon={faBan} className="me-1" /> Bulk Suspend
+                                </button>
+                                <button className="btn btn-info btn-sm" onClick={handleBulkExport} disabled={selectedUserIds.length === 0}>
+                                    <FontAwesomeIcon icon={faDownload} className="me-1" /> Bulk Export
+                                </button>
+                                <span className="ms-2 text-muted" style={{ fontSize: '0.9em' }}>
+                                    {selectedUserIds.length > 0 ? `${selectedUserIds.length} selected` : 'No users selected'}
+                                </span>
+                            </div>
+
                             {/* Users Table */}
                             <div className="table-responsive">
-                                                                <style>{`
-                                                                    .users-table-font84, .users-table-font84 th, .users-table-font84 td {
-                                                                        font-size: 0.84rem !important;
-                                                                    }
-                                                                    .action-btn {
-                                                                        font-size: 0.75rem !important;
-                                                                        padding: 0.18rem 0.38rem !important;
-                                                                        max-width: 2rem;
-                                                                        max-height: 2rem;
-                                                                        line-height: 1.1;
-                                                                    }
-                                                                `}</style>
-                                                                <table className="table table-striped table-hover users-table-font84">
+                                <style>{`
+                                    .users-table-font84, .users-table-font84 th, .users-table-font84 td {
+                                        font-size: 0.84rem !important;
+                                    }
+                                    .action-btn {
+                                        font-size: 0.75rem !important;
+                                        padding: 0.18rem 0.38rem !important;
+                                        max-width: 2rem;
+                                        max-height: 2rem;
+                                        line-height: 1.1;
+                                    }
+                                `}</style>
+                                <table className="table table-striped table-hover users-table-font84">
                                     <thead className="table-light">
                                         <tr>
-                                            {/* ID intentionally hidden; admin can copy via action */}
+                                            <th>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedUserIds.length > 0 && selectedUserIds.length === users.length}
+                                                    onChange={e => handleSelectAll(e.target.checked)}
+                                                    aria-label="Select all users"
+                                                />
+                                            </th>
                                             <th>ID</th>
                                             <th>Name</th>
                                             <th>Email</th>
@@ -566,6 +754,14 @@ const Users = ({ user }) => {
                                                 const uid = u._id || u.id;
                                                 return (
                                                     <tr key={uid}>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedUserIds.includes(uid)}
+                                                                onChange={e => handleSelectOne(uid, e.target.checked)}
+                                                                aria-label={`Select user ${uid}`}
+                                                            />
+                                                        </td>
                                                         <td>{uid}</td>
                                                         <td>{u.name}</td>
                                                         <td>{u.email}</td>

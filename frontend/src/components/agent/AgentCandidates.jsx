@@ -16,6 +16,8 @@ import {
   FaTrophy,
   FaUsers
 } from 'react-icons/fa';
+import AgentPermissions from './AgentPermissions';
+import CampaignAnalytics from './CampaignAnalytics';
 
 const AgentCandidates = () => {
   const { isDarkMode, colors } = useTheme();
@@ -826,6 +828,14 @@ const AgentCandidates = () => {
                         {candidate.status}
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="row mt-4">
+                  <div className="col-12 mb-4">
+                    <CampaignAnalytics
+                      agentPermissions={Array.isArray(candidate.permissions) ? candidate.permissions : Object.entries(candidate.permissions || {}).filter(([k, v]) => v).map(([k]) => k)}
+                    />
                   </div>
                 </div>
               </div>

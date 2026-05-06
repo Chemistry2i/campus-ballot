@@ -462,6 +462,7 @@ const login = asyncHandler(async (req, res) => {
       .select("+password")
       .populate("organization", "_id name code type parent");
 
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -472,19 +473,26 @@ const login = asyncHandler(async (req, res) => {
         .json({ message: "Please verify your email before logging in." });
     }
 
-    user.lastLogin = new Date();
+    // Block login for suspended users
+    if (user.accountStatus === 'suspended') {
+      return res.status(403).json({ message: "Your account is suspended. Please contact support." });
+    }
 
     // Generate JWT
     const token = generateToken(user._id);
 
-    // Enforce single-device login / session tracking for ALL users (Students & Admins)
-    user.currentSessionToken = token;
-    await user.save();
+    // Persist lastLogin + currentSessionToken in a single atomic write.
+    // Avoids two full Mongoose document saves (with validators + bcrypt hook)
+    // that would otherwise add 60-100ms to every login.
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date(), currentSessionToken: token } }
+    );
 
     console.log("[LOGIN]:", user.email, "Role:", user.role);
 
-    // Log activity for all users (admin, super_admin, and students)
-    await logActivity({
+    // Fire-and-forget audit log — do not block the login response
+    logActivity({
       userId: user._id,
       action: 'login',
       entityType: 'System',
@@ -492,7 +500,7 @@ const login = asyncHandler(async (req, res) => {
       status: 'success',
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
-    });
+    }).catch(err => console.error('[LOGIN] logActivity failed:', err.message));
 
     // Prepare user response
     const userResponse = {
@@ -549,10 +557,16 @@ const login = asyncHandler(async (req, res) => {
 --------------------------------------------------------- */
 const logout = asyncHandler(async (req, res) => {
   console.log("[LOGOUT]");
-  
-  // Log activity for all users
+
   if (req.user) {
-    await logActivity({
+    // Fire-and-forget: clear session token + write audit log atomically
+    // Do NOT await either — the user is done the moment we respond
+    User.updateOne(
+      { _id: req.user._id },
+      { $set: { currentSessionToken: null } }
+    ).exec().catch(err => console.error('[LOGOUT] session clear failed:', err.message));
+
+    logActivity({
       userId: req.user._id,
       action: 'logout',
       entityType: 'System',
@@ -560,10 +574,9 @@ const logout = asyncHandler(async (req, res) => {
       status: 'success',
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
-    });
-      // Clear currentSessionToken to invalidate the JWT immediately
-      await User.findByIdAndUpdate(req.user._id, { $set: { currentSessionToken: null } });
+    }).catch(err => console.error('[LOGOUT] logActivity failed:', err.message));
   }
+
   res.json({ message: "Logout successful" });
 });
 

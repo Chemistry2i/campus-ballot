@@ -19,7 +19,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import styles from "./Register.module.css";
 import { useNavigate, Link } from "react-router-dom";
-import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+import kyuLogo from "../assets/kyucsa.png";
 
 // Sample data for faculties and courses
 const facultyCourses = {
@@ -484,7 +484,7 @@ function Register() {
           <Link
             to="/"
             className="btn btn-light fw-bold px-4 mb-3"
-            style={{ color: "#2563eb", marginBottom: 24 }}
+            style={{ color: "#2563eb", marginBottom: 24, display: "grid", placeItems: "center" }}
           >
             Go Back
           </Link>
@@ -524,7 +524,7 @@ function Register() {
       className="form-control"
       name="password"
       type={showPassword ? "text" : "password"} // Toggle password visibility
-      placeholder="Password (min. 6 characters)"
+      placeholder="Password (min. 8 characters)"
       value={form.password}
       onChange={handleChange}
       required

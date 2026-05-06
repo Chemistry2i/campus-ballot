@@ -173,10 +173,24 @@ const organizationSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Indexes for efficient queries
-organizationSchema.index({ type: 1 });
-organizationSchema.index({ parent: 1 });
+// -------------------------------------------------------------------------
+// Indexes — covering federation hierarchy and eligibility lookups
+// -------------------------------------------------------------------------
+
+// Single-field
+organizationSchema.index({ type:   1 });
 organizationSchema.index({ status: 1 });
+
+// Compound: "find all active universities" — used in admin org management
+organizationSchema.index({ type: 1, status: 1 });
+
+// Compound: "find universities in this federation" — used in election eligibility
+// Election.isUserEligible() calls Organization.findById(user.organization) then
+// checks parent — this compound index covers both parent lookup and status filter
+organizationSchema.index({ parent: 1, status: 1 });
+
+// Compound: getUniversitiesByFederation() filters on parent + type + status
+organizationSchema.index({ parent: 1, type: 1, status: 1 });
 
 // Virtual to get all child organizations (universities under a federation)
 organizationSchema.virtual('children', {

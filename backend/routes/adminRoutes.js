@@ -14,6 +14,9 @@ const settingsController = require('../controllers/settingsController');
 const bulkUploadController = require('../controllers/bulkUploadController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
+// Apply protection to all admin routes
+router.use(protect);
+
 // Configure multer for file uploads (memory storage for processing)
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -101,6 +104,83 @@ router.get('/dashboard-stats', async (req, res) => {
     console.error('Error fetching dashboard stats:', error);
     res.status(500).json({ 
       message: "Failed to fetch dashboard stats",
+      error: error.message 
+    });
+  }
+});
+
+// Get detailed election stats with candidates and votes grouped by position
+router.get('/election/:electionId/detailed-stats', protect, async (req, res) => {
+  try {
+    const { electionId } = req.params;
+    
+    // Fetch election with positions
+    const election = await Election.findById(electionId)
+      .populate('candidates')
+      .select('title description positions status startDate endDate');
+    
+    if (!election) {
+      return res.status(404).json({ message: 'Election not found' });
+    }
+
+    // Get all candidates for this election with vote counts
+    const candidates = await Candidate.find({ election: electionId })
+      .populate('user', 'name email');
+
+    // Get vote counts for each candidate
+    const candidatesWithVotes = await Promise.all(
+      candidates.map(async (candidate) => {
+        const voteCount = await Vote.countDocuments({ 
+          candidate: candidate._id,
+          election: electionId,
+          status: 'valid'
+        });
+        return {
+          _id: candidate._id,
+          name: candidate.name,
+          position: candidate.position,
+          photo: candidate.photo,
+          party: candidate.party,
+          symbol: candidate.symbol,
+          description: candidate.description,
+          status: candidate.status,
+          voteCount
+        };
+      })
+    );
+
+    // Group candidates by position
+    const positionGroups = {};
+    election.positions.forEach(pos => {
+      positionGroups[pos] = candidatesWithVotes.filter(c => c.position === pos);
+    });
+
+    // Calculate position statistics
+    const positionStats = election.positions.map(position => ({
+      position,
+      totalCandidates: positionGroups[position].length,
+      totalVotes: positionGroups[position].reduce((sum, c) => sum + c.voteCount, 0),
+      candidates: positionGroups[position]
+    }));
+
+    res.json({
+      election: {
+        _id: election._id,
+        title: election.title,
+        description: election.description,
+        status: election.status,
+        startDate: election.startDate,
+        endDate: election.endDate
+      },
+      positions: election.positions,
+      positionStats,
+      totalVotes: candidatesWithVotes.reduce((sum, c) => sum + c.voteCount, 0),
+      totalCandidates: candidatesWithVotes.length
+    });
+  } catch (error) {
+    console.error('Error fetching detailed election stats:', error);
+    res.status(500).json({ 
+      message: "Failed to fetch detailed election stats",
       error: error.message 
     });
   }

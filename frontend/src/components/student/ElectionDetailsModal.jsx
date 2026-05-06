@@ -108,13 +108,20 @@ const ElectionDetailsModal = ({ show, onClose, election, myVotes, refreshData })
                         {candidate.votes !== undefined && <div className="mb-1"><strong>Votes:</strong> {candidate.votes}</div>}
                         {candidate.description && <div className="mb-1"><strong>About:</strong> {candidate.description}</div>}
                         {candidate.manifesto && <div className="mb-2"><strong>Manifesto:</strong> <span className="text-muted">{candidate.manifesto}</span></div>}
-                        <button
-                          className="btn btn-primary btn-sm w-100 mt-2"
-                          disabled={hasVoted || voting}
-                          onClick={() => handleVote(candidate._id)}
-                        >
-                          {hasVoted ? "Voted" : voting ? "Voting..." : "Vote"}
-                        </button>
+                        {hasVoted ? (
+                          <button className="btn btn-success btn-sm w-100 mt-2 disabled d-flex align-items-center justify-content-center gap-2" style={{ borderRadius: '4px' }} disabled>
+                            <FaCheckCircle className="me-1" size={14} />
+                            <span className="fw-semibold">Voted</span>
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-primary btn-sm w-100 mt-2"
+                            disabled={voting}
+                            onClick={() => handleVote(candidate._id)}
+                          >
+                            {voting ? "Voting..." : "Vote"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

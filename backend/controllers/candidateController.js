@@ -23,6 +23,7 @@ const createCandidate = asyncHandler(async (req, res) => {
 
     // Multer puts files in req.files and text fields in req.body
     const {
+      userId, // The ID of the student being nominated
       election,
       name,
       position,
@@ -44,17 +45,28 @@ const createCandidate = asyncHandler(async (req, res) => {
       }
     }
 
-    if (!election || !name || !position || !description) {
-      return res.status(400).json({ message: "Missing required candidate fields" });
+    if (!userId || !election || !name || !position || !description) {
+      return res.status(400).json({ message: "Missing required candidate fields (userId, election, name, position, description)" });
     }
 
     const validElection = await Election.findById(election);
     if (!validElection) {
       return res.status(404).json({ message: "Election not found" });
     }
+    
+    const studentUser = await User.findById(userId);
+    if (!studentUser) {
+      return res.status(404).json({ message: "Nominated user (student) not found" });
+    }
+
+    // Check if the user is already a candidate for this position in this election
+    const existingCandidate = await Candidate.findOne({ user: userId, election: election, position: position });
+    if (existingCandidate) {
+        return res.status(400).json({ message: "This user is already a candidate for this position in this election." });
+    }
 
     const candidate = await Candidate.create({
-      user: req.user._id, // Admin who added the candidate
+      user: userId, // This must be the student's ID
       election,
       name,
       photo,
@@ -226,6 +238,27 @@ const deleteCandidate = asyncHandler(async (req, res) => {
       { $pull: { candidates: candidate._id } }
     );
 
+    // Remove 'candidate' from user's additionalRoles and clear candidateInfo
+    await User.findByIdAndUpdate(candidate.user, {
+      $pull: { additionalRoles: "candidate" },
+      $unset: { candidateInfo: "" }
+    });
+
+    // Remove 'agent' from all users who are agents for this candidate and clear agentInfo
+    const agents = await Agent.find({ candidate: candidate.user });
+    const agentUserIds = agents.map(agent => agent.user);
+    if (agentUserIds.length > 0) {
+      await User.updateMany(
+        { _id: { $in: agentUserIds } },
+        {
+          $pull: { additionalRoles: "agent" },
+          $unset: { agentInfo: "" }
+        }
+      );
+    }
+    // Delete all Agent records for this candidate
+    await Agent.deleteMany({ candidate: candidate.user });
+
     await candidate.deleteOne();
     try {
       const io = req.app.get('io');
@@ -271,14 +304,14 @@ const approveCandidate = asyncHandler(async (req, res) => {
     }
 
     console.log(`[CANDIDATE APPROVAL] Starting approval for candidate: ${candidate.name}`);
-    console.log(`[CANDIDATE APPROVAL] Candidate user ID: ${candidate.user._id}`);
+    console.log(`[CANDIDATE APPROVAL] Candidate user: ${candidate.user ? candidate.user._id : 'None'}`);
 
     candidate.status = "approved";
     await candidate.save();
 
     // Add 'candidate' to the user's additionalRoles if not already present
     // This allows the student to access both Student and Candidate dashboards
-    if (candidate.user) {
+    if (candidate.user && candidate.user._id) {
       try {
         console.log(`[CANDIDATE APPROVAL] Updating user ${candidate.user._id} with candidate role...`);
         
@@ -297,7 +330,7 @@ const approveCandidate = asyncHandler(async (req, res) => {
           try {
             const emailTemplate = emailTemplates.applicationApproved({
               candidateName: candidate.name,
-              electionTitle: candidate.election.title,
+              electionTitle: candidate.election?.title || "the election", // Use optional chaining
               position: candidate.position,
               userEmail: updatedUser.email
             });
@@ -314,18 +347,18 @@ const approveCandidate = asyncHandler(async (req, res) => {
             // Don't fail the entire request if email fails
           }
         } else {
-          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidate.user._id}`);
+          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidateUserId}`);
         }
       } catch (userUpdateError) {
         console.error(`[CANDIDATE APPROVAL] ❌ ERROR updating user:`, userUpdateError);
       }
     } else {
-      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} has no user field linked!`);
+      console.warn(`[CANDIDATE APPROVAL] ⚠️ WARNING: Candidate ${candidate.name} (${candidate._id}) has no valid user linked!`); // Improved warning
     }
     
     // Log activity
-    await logActivity({
-      userId: req.user._id,
+    await logActivity({ // Use optional chaining for req.user
+      userId: req.user?._id, 
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),
@@ -374,7 +407,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
       try {
         const emailTemplate = emailTemplates.applicationDisqualified({
           candidateName: candidate.name,
-          electionTitle: candidate.election.title,
+          electionTitle: candidate.election?.title || "the election",
           position: candidate.position,
           userEmail: candidate.user.email,
           reason: reason || undefined
@@ -395,7 +428,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
     
     // Log activity
     await logActivity({
-      userId: req.user._id,
+      userId: req.user?._id, // Use optional chaining for req.user
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),

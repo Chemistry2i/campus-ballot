@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { FaFileCsv, FaFilePdf, FaFileExcel } from 'react-icons/fa';
+// IMPORTATION OF THE icons from the fontaswsome icons
+import { FaFileCsv, FaFilePdf, FaFileExcel, FaTrophy, FaUsers, FaVoteYea, FaCrown, FaMicrophone, FaMoneyBillWave, FaClipboardList, FaBullseye, FaChartBar, FaLink, FaCity, FaBell, FaSearch } from 'react-icons/fa';
 import useSocket from '../../hooks/useSocket';
+import ErrorBoundary from '../common/ErrorBoundary';
+import { PositionCardSkeleton } from './SkeletonLoaders';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -16,21 +19,32 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemedTable from '../common/ThemedTable';
 
-// Distinct color palette for chart bars
-const CHART_COLORS = [
-  'rgba(59, 130, 246, 0.8)',   // Blue
-  'rgba(249, 115, 22, 0.8)',   // Orange
-  'rgba(168, 85, 247, 0.8)',   // Purple
-  'rgba(236, 72, 153, 0.8)',   // Pink
-  'rgba(14, 165, 233, 0.8)',   // Sky
-  'rgba(245, 158, 11, 0.8)',   // Amber
-  'rgba(99, 102, 241, 0.8)',   // Indigo
-  'rgba(239, 68, 68, 0.8)',    // Red
-  'rgba(20, 184, 166, 0.8)',   // Teal
-  'rgba(132, 204, 22, 0.8)',   // Lime
-];
+// Position icons mapping using Font Awesome
+const POSITION_ICONS_MAP = {
+  'President': FaCrown,
+  'Vice President': FaMicrophone,
+  'Treasurer': FaMoneyBillWave,
+  'Secretary': FaClipboardList,
+  'Chairperson': FaBullseye,
+  'Director': FaChartBar,
+  'Coordinator': FaLink,
+  'Representative': FaCity
+};
 
-const WINNER_COLOR = 'rgba(34, 197, 94, 0.9)'; // Green for winner
+// Distinct color palettes per position
+const POSITION_COLORS = {
+  0: 'rgba(59, 130, 246, 0.8)',   // Blue
+  1: 'rgba(249, 115, 22, 0.8)',   // Orange
+  2: 'rgba(168, 85, 247, 0.8)',   // Purple
+  3: 'rgba(236, 72, 153, 0.8)',   // Pink
+  4: 'rgba(14, 165, 233, 0.8)',   // Sky
+  5: 'rgba(245, 158, 11, 0.8)',   // Amber
+  6: 'rgba(99, 102, 241, 0.8)',   // Indigo
+  7: 'rgba(239, 68, 68, 0.8)',    // Red
+};
+
+const WINNER_COLOR = 'rgba(34, 197, 94, 0.95)'; // Green for winner
+const CHART_COLORS = Object.values(POSITION_COLORS);
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -41,9 +55,85 @@ function Results({ user }) {
   const [selectedElectionId, setSelectedElectionId] = useState(null);
   const [selectedElection, setSelectedElection] = useState(null);
   const [results, setResults] = useState([]);
+  const [groupedResults, setGroupedResults] = useState({}); // { position: [candidates] }
   const [loading, setLoading] = useState(false);
-  const [unpublished, setUnpublished] = useState(false); // true when 403 returned
+  const [unpublished, setUnpublished] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+
+  // Authorization check - must happen but not early return (hooks rule violation)
+  const isAuthorized = user?.role === 'admin';
+
+  // Sanitize candidate names to prevent XSS
+  const sanitizeName = (name) => {
+    if (!name) return '(Unknown)';
+    return String(name)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .trim();
+  };
+
+  // Get color for position index
+  const getPositionColor = (index) => {
+    return POSITION_COLORS[index % Object.keys(POSITION_COLORS).length];
+  };
+
+  // Get Font Awesome icon component for position
+  const getPositionIcon = (position) => {
+    const IconComponent = POSITION_ICONS_MAP[position];
+    return IconComponent ? <IconComponent style={{ marginRight: '0.5rem' }} /> : <FaCity style={{ marginRight: '0.5rem' }} />;
+  };
+
+  // Group results by position and find winner per position
+  const groupResultsByPosition = (candidatesList) => {
+    const grouped = {};
+    const positions = [];
+
+    // Group candidates by position
+    candidatesList.forEach(candidate => {
+      const pos = candidate.position || 'Unassigned';
+      if (!grouped[pos]) {
+        grouped[pos] = [];
+        positions.push(pos);
+      }
+      grouped[pos].push(candidate);
+    });
+
+    // Sort candidates within each position by votes (descending)
+    Object.keys(grouped).forEach(position => {
+      grouped[position].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+    });
+
+    setGroupedResults(grouped);
+    return { grouped, positions };
+  };
+
+  // Get ALL winners for a position (handles ties - multiple candidates with same highest votes)
+  const getPositionWinners = (positionCandidates) => {
+    if (!positionCandidates || positionCandidates.length === 0) return [];
+    const maxVotes = Math.max(...positionCandidates.map(c => c.votes || 0), 0);
+    if (maxVotes === 0) return [];
+    return positionCandidates.filter(c => c.votes === maxVotes);
+  };
+
+  // Get winner for a specific position (returns first winner, kept for backward compat)
+  const getPositionWinner = (positionCandidates) => {
+    const winners = getPositionWinners(positionCandidates);
+    return winners.length > 0 ? winners[0] : null;
+  };
+
+  // Check if candidate is winner in their position (handles ties)
+  const isPositionWinner = (candidate, position) => {
+    const winners = getPositionWinners(groupedResults[position]);
+    return winners.some(w => candidate._id === w._id || candidate.id === w.id || candidate.name === w.name);
+  };
+
+  // Calculate total votes for a position
+  const getPositionTotalVotes = (positionCandidates) => {
+    return positionCandidates.reduce((sum, c) => sum + (c.votes || 0), 0);
+  };
 
   useEffect(() => {
     fetchElections();
@@ -52,18 +142,15 @@ function Results({ user }) {
   const fetchElections = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/elections', { headers: { Authorization: `Bearer ${token}` } });
-      // API may return either an array or an object { elections, total, page }
+      const res = await axios.get('https://api.campusballot.tech/api/elections', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const payload = res.data;
       if (Array.isArray(payload)) {
         setElections(payload);
-      } else if (payload && Array.isArray(payload.elections)) {
+      } else if (payload?.elections && Array.isArray(payload.elections)) {
         setElections(payload.elections);
-      } else if (payload && Array.isArray(payload.elections?.docs)) {
-        // some paginated responses may nest docs
-        setElections(payload.elections.docs);
       } else {
-        console.warn('Unexpected elections payload shape, coercing to empty array', payload);
         setElections([]);
       }
     } catch (err) {
@@ -72,8 +159,7 @@ function Results({ user }) {
     }
   };
 
-  const loadResults = async (electionId) => {
-    // Defensive: if electionId is falsy (empty string, null, undefined), do not proceed
+  const loadResults = useCallback(async (electionId) => {
     if (!electionId) {
       console.warn('loadResults called without electionId');
       return;
@@ -82,11 +168,13 @@ function Results({ user }) {
       setLoading(true);
       const token = localStorage.getItem('token');
       setSelectedElectionId(electionId);
-      const url = `/api/elections/${electionId}/results`;
+      const url = `https://api.campusballot.tech/api/elections/${electionId}/results`;
       console.debug('Loading results from', url);
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setSelectedElection(res.data.election || null);
-      setResults(res.data.results || []);
+      const candidatesList = res.data.results || [];
+      setResults(candidatesList);
+      groupResultsByPosition(candidatesList);
       setUnpublished(false);
     } catch (err) {
       console.error('Failed to load results', err);
@@ -95,7 +183,7 @@ function Results({ user }) {
         setResults([]);
         Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Results not published yet' });
       } else if (err.response?.status === 404) {
-        const serverMsg = err.response?.data?.message || err.response?.statusText || 'Not Found';
+        const serverMsg = err.response?.data?.message || 'Not Found';
         Swal.fire('Not Found', `Results endpoint returned 404: ${serverMsg}`, 'error');
       } else {
         const status = err.response?.status ? ` (${err.response.status})` : '';
@@ -106,17 +194,17 @@ function Results({ user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const publishResults = async () => {
     if (!selectedElectionId) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put(`/api/elections/${selectedElectionId}/publish-results`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.put(`https://api.campusballot.tech/api/elections/${selectedElectionId}/publish-results`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Results published' });
-      // refresh results
       await loadResults(selectedElectionId);
-      // also mark unpublished false
       setUnpublished(false);
     } catch (err) {
       console.error('Failed to publish results', err);
@@ -124,39 +212,189 @@ function Results({ user }) {
     }
   };
 
-  const exportResultsCSV = async () => {
+  // Audit logging for exports
+  const auditLog = async (action, metadata = {}) => {
+    try {
+      const logData = {
+        action,
+        userId: user?._id || user?.id || 'unknown',
+        userName: user?.name || user?.email || 'unknown',
+        electionId: selectedElectionId,
+        electionTitle: selectedElection,
+        timestamp: new Date().toISOString(),
+        ...metadata
+      };
+      
+      console.log(`[AUDIT] ${action}:`, logData);
+      
+      // Optional: Send to backend audit log endpoint
+      // const token = localStorage.getItem('token');
+      // await axios.post('/api/audit-logs', logData, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {
+      console.error('Audit logging failed:', err);
+    }
+  };
+
+  // Notify winners via multiple channels
+  const notifyWinners = async (winners, position) => {
+    try {
+      const token = localStorage.getItem('token');
+      const winnerEmails = winners.map(w => w.email).filter(Boolean);
+      
+      if (winnerEmails.length === 0) {
+        console.warn('No email addresses found for winners');
+        return;
+      }
+
+
+      // Send notification to backend for processing and return success/failure
+      await axios.post(
+        'https://api.campusballot.tech/api/elections/notify-winners',
+        {
+          winners,
+          position,
+          electionId: selectedElectionId,
+          electionTitle: selectedElection,
+          recipientEmails: winnerEmails
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Audit log winner notification
+      await auditLog('NOTIFY_WINNERS', {
+        position,
+        winnerCount: winners.length,
+        emailsSent: winnerEmails.length
+      });
+
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `✉️ ${position} winner(s) notified`,
+        timer: 3000
+      });
+    } catch (err) {
+      console.error('Failed to notify winners:', err);
+      Swal.fire('Notification Error', `Could not notify ${position} winner(s)`, 'warning');
+    }
+  };
+
+  // Export only winners as CSV
+  const exportWinnersOnlyCSV = async () => {
     try {
       setExportLoading(true);
-      const electionTitle = selectedElection?.title || 'results';
-      const rows = [['Candidate', 'Votes', 'Percentage', 'Status']];
-      const totalVotes = results.reduce((sum, r) => sum + (r.votes || 0), 0);
-      const maxVotes = Math.max(...results.map(r => r.votes || 0), 0);
-      
-      results.forEach(r => {
-        const percent = totalVotes > 0 ? ((r.votes || 0) / totalVotes * 100).toFixed(1) : '0.0';
-        const isWinner = r.votes === maxVotes && maxVotes > 0;
-        rows.push([
-          `"${r.name || ''}"`,
-          r.votes || 0,
-          `${percent}%`,
-          isWinner ? 'Winner' : ''
-        ]);
+
+      // Audit log the export action
+      await auditLog('EXPORT_WINNERS_ONLY', {
+        format: 'CSV',
+        electionTitle: selectedElection
       });
-      
-      rows.push(['']);
-      rows.push(['Total Votes', totalVotes]);
-      
-      const csv = rows.map(r => r.join(',')).join('\n');
+
+      const electionTitle = selectedElection || 'Election Winners';
+      let csv = `${electionTitle} - WINNERS ONLY\n`;
+      csv += `Exported: ${new Date().toLocaleString()}\n`;
+      csv += `Exported by: ${user?.name || user?.email || 'Admin'}\n\n`;
+
+      csv += `Position,Winner Name,Votes,Photo URL,Contact Email,Party\n`;
+
+      // Collect all winners across all positions
+      const allWinners = [];
+      Object.keys(groupedResults).forEach((position) => {
+        const positionCandidates = groupedResults[position];
+        const winners = getPositionWinners(positionCandidates);
+        
+        winners.forEach((winner) => {
+          allWinners.push({
+            position,
+            name: winner.name || 'Unknown',
+            votes: winner.votes || 0,
+            photo: winner.photo || '',
+            email: winner.email || '',
+            party: winner.party || ''
+          });
+        });
+      });
+
+      // Add winners to CSV
+      allWinners.forEach((winner) => {
+        const photoUrl = winner.photo ? `"${winner.photo}"` : '(No photo)';
+        csv += `"${winner.position}","${sanitizeName(winner.name)}",${winner.votes},${photoUrl},"${winner.email}","${winner.party}"\n`;
+      });
+
+      csv += `\n\nTotal Winners: ${allWinners.length}\n`;
+
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${electionTitle}_results_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `election-winners-${selectedElectionId}-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported ${allWinners.length} winner(s)`,
+        timer: 2000
+      });
+    } catch (err) {
+      console.error('Export winners failed', err);
+      Swal.fire('Error', 'Failed to export winners', 'error');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const exportResultsCSV = async () => {
+    try {
+      setExportLoading(true);
       
+      // Audit log the export action
+      await auditLog('EXPORT_RESULTS', { 
+        format: 'CSV',
+        candidateCount: results.length,
+        positionCount: Object.keys(groupedResults).length
+      });
+      
+      const electionTitle = selectedElection || 'Election Results';
+      let csv = `${electionTitle}\n`;
+      csv += `Exported: ${new Date().toLocaleString()}\n`;
+      csv += `Exported by: ${user?.name || user?.email || 'Admin'}\n\n`;
+
+      Object.keys(groupedResults).forEach((position) => {
+        const positionCandidates = groupedResults[position];
+        const totalVotes = getPositionTotalVotes(positionCandidates);
+
+        csv += `"${position}"\n`;
+        csv += `Position Total Votes,${totalVotes}\n`;
+        csv += `Candidate,Votes,Percentage,Status\n`;
+
+        positionCandidates.forEach((candidate) => {
+          const percent = totalVotes > 0 ? ((candidate.votes || 0) / totalVotes * 100).toFixed(1) : '0.0';
+          const winner = getPositionWinner(positionCandidates);
+          const isWinner = candidate._id === winner?._id;
+          const status = isWinner ? 'WINNER 🏆' : '';
+
+          csv += `"${candidate.name || 'Unknown'}",${candidate.votes || 0},"${percent}%","${status}"\n`;
+        });
+        csv += `\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `election-results-${selectedElectionId}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
       Swal.fire({
         icon: 'success',
         title: 'Export Successful',
@@ -176,7 +414,7 @@ function Results({ user }) {
     Swal.fire({
       icon: 'info',
       title: 'Excel Export',
-      text: 'Excel export functionality will be available soon. Use CSV export for now.',
+      text: 'Excel export will be available soon. Use CSV export for now.',
       confirmButtonText: 'OK'
     });
   };
@@ -185,21 +423,21 @@ function Results({ user }) {
     Swal.fire({
       icon: 'info',
       title: 'PDF Export',
-      text: 'PDF export functionality will be available soon. Use CSV export for now.',
+      text: 'PDF export will be available soon. Use CSV export for now.',
       confirmButtonText: 'OK'
     });
   };
 
-  // Listen for server-side published events and refresh when relevant
+  // Listen for published events
   useEffect(() => {
     const socket = socketRef?.current;
     if (!socket) return;
+
     const onPublished = (payload) => {
       try {
-        // payload = { id: electionId }
-        if (payload && payload.id && payload.id.toString() === String(selectedElectionId)) {
+        if (payload?.id && payload.id.toString() === String(selectedElectionId)) {
           Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Results were published — refreshing' });
-          loadResults(selectedElectionId);
+          if (selectedElectionId) loadResults(selectedElectionId);
         }
       } catch (e) {
         console.error('Error handling election:results:published', e);
@@ -207,253 +445,553 @@ function Results({ user }) {
     };
 
     socket.on('election:results:published', onPublished);
-    return () => {
-      socket.off('election:results:published', onPublished);
-    };
-  }, [socketRef, selectedElectionId]);
+    return () => socket.off('election:results:published', onPublished);
+  }, [socketRef, selectedElectionId, loadResults]);
 
-  // --- Enhancement logic ---
-  // Calculate total votes, single winner (highest votes), percentages, last updated
-  const totalVotes = results.reduce((sum, r) => sum + (r.votes || 0), 0);
-  const maxVotes = Math.max(...results.map(r => r.votes || 0), 0);
-  
-  // Get only ONE winner - the first person with highest votes (in case of tie, first in array)
-  const sortedResults = [...results].sort((a, b) => (b.votes || 0) - (a.votes || 0));
-  const winner = maxVotes > 0 ? sortedResults[0] : null;
-  
-  const lastUpdated = selectedElection?.updatedAt || selectedElection?.lastModified || null;
-  const published = !unpublished;
-  
-  // Helper to check if a candidate is the winner
-  const isWinner = (candidate) => {
-    if (!winner) return false;
-    return (candidate._id === winner._id || candidate.id === winner.id || candidate.name === winner.name);
-  };
-  
-  // Generate unique colors for each candidate
-  const getBarColors = () => {
-    return results.map((r, index) => {
-      if (isWinner(r)) return WINNER_COLOR;
-      return CHART_COLORS[index % CHART_COLORS.length];
-    });
-  };
+  const totalVotesOverall = results.reduce((sum, r) => sum + (r.votes || 0), 0);
+  const positions = Object.keys(groupedResults);
 
   return (
-    <div className="container-fluid">
-      {/* Summary Card */}
-      <div className="row mb-3">
+    <div className="container-fluid py-4">
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
+
+      {/* Authorization Check - render denied message if not admin */}
+      {!isAuthorized && (
+        <div className="alert alert-danger m-4" role="alert">
+          <h4 className="alert-heading">🔒 Access Denied</h4>
+          <p>You do not have permission to view election results. Only administrators can access this page.</p>
+        </div>
+      )}
+
+      {/* Main Content - only show if authorized */}
+      {isAuthorized && (
+      <>
+      {/* Header Summary */}
+      <div className="row mb-4">
         <div className="col-12">
-          <div className="card shadow-sm" style={{
-            background: isDarkMode ? colors.surface : '#f8fafc',
-            borderColor: colors.border,
-            color: colors.text
-          }}>
-            <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div>
-                <h5 className="fw-bold mb-1" style={{ color: colors.text }}>Election Summary</h5>
-                <div className="mb-1">
-                  <span className="me-3"><strong>Status:</strong> <span className={`badge bg-${published ? 'success' : 'warning'}`}>{published ? 'Published' : 'Unpublished'}</span></span>
-                  <span className="me-3"><strong>Candidates:</strong> {results.length}</span>
-                  <span className="me-3"><strong>Total Votes:</strong> {totalVotes}</span>
-                  {lastUpdated && (
-                    <span className="me-3"><strong>Last Updated:</strong> {new Date(lastUpdated).toLocaleString()}</span>
-                  )}
-                </div>
-                {winner && (
-                  <div className="mt-1">
-                    <strong>Winner:</strong> <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{winner.name}</span>
-                    <span className="ms-2 badge bg-success">🏆 {winner.votes} votes</span>
+          <div
+            className="card shadow-sm border-0"
+            style={{
+              background: isDarkMode
+                ? `linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)`
+                : `linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)`,
+              color: '#fff',
+              borderRadius: '5px',
+              padding: '1.5rem'
+            }}
+          >
+            <div className="card-body">
+              <div className="row align-items-center">
+                <div className="col-md-6">
+                  <h3 className="fw-bold mb-1">{selectedElection || 'Election Results'}</h3>
+                  <div className="mt-3">
+                    <div className="mb-2">
+                      <FaVoteYea className="me-2" />
+                      <strong>Total Votes:</strong> {totalVotesOverall}
+                    </div>
+                    <div className="mb-2">
+                      <FaUsers className="me-2" />
+                      <strong>Positions:</strong> {positions.length}
+                    </div>
+                    <div>
+                      <strong>Status:</strong> <span className={`badge bg-${unpublished ? 'warning' : 'success'}`}>{unpublished ? '⏳ Unpublished' : '✅ Published'}</span>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div>
-                <select 
-                  className="form-select me-2 d-inline-block" 
-                  style={{
-                    width: '280px',
-                    backgroundColor: colors.inputBg,
-                    borderColor: colors.inputBorder,
-                    color: colors.text
-                  }} 
-                  onChange={e => { const v = e.target.value; if (v) loadResults(v); }}
-                >
-                  <option value="">Select an election...</option>
-                  {Array.isArray(elections) && elections.length > 0 ? (
-                    elections.map(el => {
-                      const id = el._id || el.id || el;
-                      const label = el.title || el.name || (typeof el === 'string' ? el : `Election ${id}`);
-                      return (
-                        <option key={id} value={id}>{label}</option>
-                      );
-                    })
-                  ) : null}
-                </select>
-                <button 
-                  className="btn btn-sm me-2" 
-                  onClick={exportResultsCSV} 
-                  disabled={!results.length || exportLoading}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    color: 'white',
-                    border: 'none'
-                  }}
-                >
-                  {exportLoading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <FaFileCsv className="me-2" /> CSV
-                    </>
-                  )}
-                </button>
-                <button 
-                  className="btn btn-outline-success btn-sm me-2" 
-                  onClick={exportToExcel}
-                  disabled={!results.length}
-                >
-                  <FaFileExcel className="me-2" /> Excel
-                </button>
-                <button 
-                  className="btn btn-outline-primary btn-sm" 
-                  onClick={exportToPDF}
-                  disabled={!results.length}
-                >
-                  <FaFilePdf className="me-2" /> PDF
-                </button>
+                </div>
+                <div className="col-md-6">
+                  <div className="text-end">
+                    <select
+                      className="form-select mb-3"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        color: '#000',
+                        border: '2px solid white'
+                      }}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v) loadResults(v);
+                      }}
+                      defaultValue=""
+                    >
+                      <option value=""> <FaSearch className="me-2" /> Select an election...</option>
+                      {Array.isArray(elections) && elections.length > 0
+                        ? elections.map(el => {
+                          const id = el._id || el.id || el;
+                          const label = el.title || el.name || `Election ${id}`;
+                          return (
+                            <option key={id} value={id}>
+                              {label}
+                            </option>
+                          );
+                        })
+                        : null}
+                    </select>
+                    <div className="d-flex gap-2 flex-wrap">
+                      <button
+                        className="btn btn-info btn-sm"
+                        onClick={() => {
+                          Object.keys(groupedResults).forEach(async (position) => {
+                            const positionWinners = getPositionWinners(groupedResults[position]);
+                            if (positionWinners.length > 0) {
+                              await notifyWinners(positionWinners, position);
+                            }
+                          });
+                        }}
+                        disabled={!results.length || results.length === 0}
+                        title="Send notifications to all position winners"
+                      >
+                        <FaBell className="me-2" /> Notify Winners
+                      </button>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={exportWinnersOnlyCSV}
+                        disabled={!results.length || exportLoading}
+                        title="Export winners only (with contact details)"
+                      >
+                        {exportLoading ? (
+                          <><span className="spinner-border spinner-border-sm me-2" /> Exporting...</>
+                        ) : (
+                          <><FaTrophy className="me-2" /> Winners Only</>
+                        )}
+                      </button>
+                      <button
+                        className="btn btn-light btn-sm"
+                        onClick={exportResultsCSV}
+                        disabled={!results.length || exportLoading}
+                      >
+                        {exportLoading ? (
+                          <><span className="spinner-border spinner-border-sm me-2" /> Exporting...</>
+                        ) : (
+                          <><FaFileCsv className="me-2" /> CSV</>
+                        )}
+                      </button>
+                      <button className="btn btn-outline-light btn-sm" onClick={exportToExcel} disabled={!results.length}>
+                        <FaFileExcel className="me-2" /> Excel
+                      </button>
+                      <button className="btn btn-outline-light btn-sm" onClick={exportToPDF} disabled={!results.length}>
+                        <FaFilePdf className="me-2" /> PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card shadow-sm" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
-        <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div style={{ color: colors.textMuted }}>Loading results...</div>
-            </div>
-          ) : unpublished ? (
-            <div className="text-center py-4">
-              <div className="mb-3" style={{ color: colors.warning }}>Results are not published for this election.</div>
+      {/* Loading State with Skeletons */}
+      {loading && (
+        <div className="row">
+          {[...Array(2)].map((_, i) => (
+            <PositionCardSkeleton key={i} isDarkMode={isDarkMode} colors={colors} />
+          ))}
+        </div>
+      )}
+
+      {/* Unpublished State */}
+      {unpublished && (
+        <div className="row">
+          <div className="col-12">
+            <div className="alert alert-warning text-center" role="alert">
+              <h5>📊 Results are not published for this election</h5>
+              <p className="mb-3">Publish results to make them visible to all users.</p>
               {user?.role === 'admin' && (
-                <button className="btn btn-primary btn-sm" onClick={publishResults}>Publish Results</button>
+                <button className="btn btn-primary btn-sm" onClick={publishResults}>
+                  🔓 Publish Results Now
+                </button>
               )}
             </div>
-          ) : (
-            <div className="row">
-              <div className="col-md-6">
-                <div style={{ minHeight: 220 }}>
-                  <ThemedTable striped hover bordered>
-                    <thead>
-                      <tr>
-                        <th style={{ padding: '0.75rem', color: colors.text }}>Candidate</th>
-                        <th style={{ padding: '0.75rem', color: colors.text }}>Votes</th>
-                        <th style={{ padding: '0.75rem', color: colors.text }}>Percent</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="text-center" style={{ color: colors.textMuted, padding: '2rem' }}>
-                            <div className="d-flex flex-column align-items-center">
-                              <span className="bg-secondary rounded-circle d-inline-block mb-2" style={{ width: 48, height: 48, lineHeight: '48px', textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: '2rem' }}>?</span>
-                              <div>No candidates/results yet.</div>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : results.map((r, index) => {
-                        const percent = totalVotes > 0 ? ((r.votes || 0) / totalVotes * 100).toFixed(1) : '0.0';
-                        const candidateIsWinner = isWinner(r);
-                        const barColor = candidateIsWinner ? WINNER_COLOR : CHART_COLORS[index % CHART_COLORS.length];
-                        return (
-                          <tr key={r._id || r.id || r.name} style={{ background: candidateIsWinner ? (isDarkMode ? 'rgba(34,197,94,0.15)' : '#e6ffe6') : undefined }}>
-                            <td style={{ padding: '0.75rem', color: colors.text }}>
-                              <div className="d-flex align-items-center gap-2">
-                                {/* Color indicator matching chart */}
-                                <span style={{ 
-                                  width: 12, 
-                                  height: 12, 
-                                  borderRadius: '3px', 
-                                  backgroundColor: barColor,
-                                  flexShrink: 0
-                                }} />
-                                {r.photo ? (
-                                  <img src={r.photo} alt={r.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${candidateIsWinner ? '#22c55e' : colors.border}` }} />
-                                ) : (
-                                  <span className="bg-secondary rounded-circle d-inline-block" style={{ width: 32, height: 32, lineHeight: '32px', textAlign: 'center', color: '#fff', fontWeight: 600 }}>{r.name?.charAt(0) || '?'}</span>
-                                )}
-                                <span style={{ fontWeight: candidateIsWinner ? 'bold' : 'normal', color: candidateIsWinner ? '#22c55e' : colors.text }}>{r.name}</span>
-                                {candidateIsWinner && <span className="badge bg-success ms-2">🏆 Winner</span>}
-                              </div>
-                            </td>
-                            <td style={{ padding: '0.75rem', color: colors.textSecondary }}>{r.votes || 0}</td>
-                            <td style={{ padding: '0.75rem', color: colors.textSecondary }}>{percent}%</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </ThemedTable>
-                </div>
+          </div>
+        </div>
+      )}
+
+      {/* Winners Gallery Section */}
+      {!loading && !unpublished && positions.length > 0 && (
+        <div className="row mb-5">
+          <div className="col-12">
+            <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg }}>
+              <div className="card-header" style={{
+                background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                color: '#fff',
+                padding: '1.5rem',
+                borderRadius: '12px 12px 0 0'
+              }}>
+                <h4 className="mb-0"><FaTrophy className="me-2" /> Election Winners Showcase</h4>
               </div>
-              <div className="col-md-6">
-                <div className="card p-3" style={{ backgroundColor: colors.cardBg, borderColor: colors.border, minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}>
-                  {results.length === 0 ? (
-                    <div className="text-center" style={{ color: colors.textMuted }}>
-                      <span className="bg-secondary rounded-circle d-inline-block mb-2" style={{ width: 48, height: 48, lineHeight: '48px', textAlign: 'center', color: '#fff', fontWeight: 600, fontSize: '2rem' }}>?</span>
-                      <div>No chart data.</div>
-                    </div>
-                  ) : (
-                    <Bar
-                      data={{
-                        labels: results.map(r => r.name || 'Unknown'),
-                        datasets: [
-                          {
-                            label: 'Votes',
-                            data: results.map(r => r.votes || 0),
-                            backgroundColor: getBarColors(),
-                            borderColor: getBarColors().map(c => c.replace('0.8', '1').replace('0.9', '1')),
-                            borderWidth: 2,
-                            borderRadius: 6,
-                          }
-                        ]
-                      }}
-                      options={{
-                        responsive: true,
-                        plugins: { 
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: function(context) {
-                                const votes = context.parsed.y;
-                                const percent = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : '0.0';
-                                const candidateName = context.label;
-                                const isTopCandidate = winner && candidateName === winner.name;
-                                return `${votes} votes (${percent}%)${isTopCandidate ? ' 🏆' : ''}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: { 
-                          y: { beginAtZero: true, grid: { color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' }, ticks: { color: colors.textSecondary } },
-                          x: { grid: { display: false }, ticks: { color: colors.textSecondary } }
-                        }
-                      }}
-                    />
-                  )}
+              <div className="card-body p-4">
+                <div className="row">
+                  {positions.map((position, posIndex) => {
+                    const positionCandidates = groupedResults[position];
+                    const winners = getPositionWinners(positionCandidates);
+                    const posColor = getPositionColor(posIndex);
+
+                    return (
+                      <div key={position} className="col-md-6 col-lg-3 mb-4">
+                        {winners.length > 0 ? (
+                          <div className="text-center">
+                            <h6 style={{ color: posColor, fontWeight: 'bold', marginBottom: '1rem' }}>
+                              {getPositionIcon(position)} {position}
+                            </h6>
+                            {winners.map((winner) => (
+                              <div key={winner._id} className="mb-3">
+                                <div className="position-relative" style={{ display: 'inline-block' }}>
+                                  {winner.photo ? (
+                                    <img
+                                      src={winner.photo}
+                                      alt={winner.name}
+                                      style={{
+                                        width: 120,
+                                        height: 120,
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: `4px solid ${posColor}`,
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: 120,
+                                        height: 120,
+                                        borderRadius: '50%',
+                                        backgroundColor: posColor,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        fontSize: '2.5rem',
+                                        border: '4px solid ' + posColor,
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                      }}
+                                    >
+                                      {winner.name?.charAt(0) || '?'}
+                                    </div>
+                                  )}
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '-8px',
+                                    right: '-8px',
+                                    fontSize: '2rem',
+                                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                                  }}>
+                                    🏆
+                                  </div>
+                                </div>
+                                <div className="mt-3">
+                                  <strong style={{ color: colors.text, display: 'block' }}>
+                                    {sanitizeName(winner.name)}
+                                  </strong>
+                                  {winner.party && (
+                                    <small style={{ color: colors.textSecondary, display: 'block' }}>
+                                      {sanitizeName(winner.party)}
+                                    </small>
+                                  )}
+                                  <small style={{
+                                    color: posColor,
+                                    display: 'block',
+                                    fontWeight: 'bold',
+                                    marginTop: '0.5rem'
+                                  }}>
+                                    {winner.votes} votes
+                                  </small>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{
+                            padding: '2rem 1rem',
+                            textAlign: 'center',
+                            color: colors.textSecondary
+                          }}>
+                            <p style={{ fontSize: '0.9rem' }}>No votes yet</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Position Sections */}
+      {!loading && !unpublished && positions.length > 0 && (
+        <div className="row">
+          {positions.map((position, posIndex) => {
+            const positionCandidates = groupedResults[position];
+            const totalPositionVotes = getPositionTotalVotes(positionCandidates);
+            const winners = getPositionWinners(positionCandidates);
+            const posColor = getPositionColor(posIndex);
+
+            return (
+              <div key={position} className="col-lg-6 mb-4">
+                {/* Position Card */}
+                <div
+                  className="card shadow-sm border-0 h-100"
+                  style={{
+                    backgroundColor: colors.cardBg,
+                    borderLeft: `5px solid ${posColor}`,
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {/* Position Header */}
+                  <div
+                    style={{
+                      background: posColor,
+                      color: '#fff',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div>
+                      <h5 className="fw-bold mb-1" style={{ display: 'flex', alignItems: 'center' }}>
+                        {getPositionIcon(position)} {position}
+                      </h5>
+                      <small>
+                        <FaUsers style={{ marginRight: '0.3rem' }} /> {positionCandidates.length} candidates | <FaVoteYea style={{ marginRight: '0.3rem' }} /> {totalPositionVotes} votes
+                      </small>
+                    </div>
+                    {winners.length > 0 && (
+                      <div className="text-center">
+                        <div style={{ fontSize: '1.8rem' }}><FaTrophy /></div>
+                        <small>{winners.length === 1 ? 'Winner' : `${winners.length} Co-Winners`}</small>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Candidates Table */}
+                  <div className="card-body p-0">
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="table table-hover mb-0" style={{ color: colors.text }}>
+                        <thead>
+                          <tr style={{ backgroundColor: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                            <th style={{ padding: '1rem', color: colors.text }}>Rank</th>
+                            <th style={{ padding: '1rem', color: colors.text }}>Candidate</th>
+                            <th style={{ padding: '1rem', color: colors.text }}>Votes</th>
+                            <th style={{ padding: '1rem', color: colors.text }}>%</th>
+                            <th style={{ padding: '1rem', color: colors.text }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {positionCandidates.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="text-center py-4" style={{ color: colors.textMuted }}>
+                                No candidates
+                              </td>
+                            </tr>
+                          ) : (
+                            positionCandidates.map((candidate, idx) => {
+                              const percent = totalPositionVotes > 0 ? ((candidate.votes || 0) / totalPositionVotes * 100).toFixed(1) : '0.0';
+                              const candidateIsWinner = isPositionWinner(candidate, position);
+                              const rowBg = candidateIsWinner
+                                ? isDarkMode
+                                  ? 'rgba(34, 197, 94, 0.15)'
+                                  : 'rgba(34, 197, 94, 0.08)'
+                                : 'transparent';
+
+                              return (
+                                <tr key={candidate._id || idx} style={{ backgroundColor: rowBg, borderBottomColor: colors.border }}>
+                                  <td style={{ padding: '1rem', fontWeight: 'bold', color: colors.text }}>
+                                    {candidateIsWinner ? '🥇' : ''}
+                                    {idx + 1}
+                                  </td>
+                                  <td style={{ padding: '1rem', color: colors.text }}>
+                                    <div className="d-flex align-items-center gap-2">
+                                      {candidate.photo ? (
+                                        <img
+                                          src={candidate.photo}
+                                          alt={candidate.name}
+                                          style={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            border: `2px solid ${candidateIsWinner ? '#22c55e' : colors.border}`
+                                          }}
+                                        />
+                                      ) : (
+                                        <div
+                                          style={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: '50%',
+                                            backgroundColor: posColor,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#fff',
+                                            fontWeight: 'bold',
+                                            fontSize: '0.9rem'
+                                          }}
+                                        >
+                                          {candidate.name?.charAt(0) || '?'}
+                                        </div>
+                                      )}
+                                      <div>
+                                        <div style={{ fontWeight: candidateIsWinner ? 'bold' : 'normal', color: candidateIsWinner ? '#22c55e' : colors.text }}>
+                                          {sanitizeName(candidate.name)}
+                                        </div>
+                                        {candidate.party && <small style={{ color: colors.textSecondary }}>{sanitizeName(candidate.party)}</small>}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '1rem', fontWeight: 'bold', color: colors.text }}>
+                                    {candidate.votes || 0}
+                                  </td>
+                                  <td style={{ padding: '1rem', color: colors.textSecondary }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      <div
+                                        style={{
+                                          width: '40px',
+                                          height: '24px',
+                                          backgroundColor: isDarkMode ? 'rgba(75,85,99,0.3)' : '#e5e7eb',
+                                          borderRadius: '4px',
+                                          overflow: 'hidden',
+                                          position: 'relative'
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            height: '100%',
+                                            width: `${percent}%`,
+                                            backgroundColor: posColor,
+                                            transition: 'width 0.3s'
+                                          }}
+                                        />
+                                      </div>
+                                      <span>{percent}%</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '1rem' }}>
+                                    {candidateIsWinner && (
+                                      <span
+                                        className="badge"
+                                        style={{
+                                          backgroundColor: '#22c55e',
+                                          color: '#fff',
+                                          fontSize: '0.85rem',
+                                          padding: '0.5rem 0.75rem'
+                                        }}
+                                      >
+                                        🏆 WINNER
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Chart */}
+                  <div style={{ padding: '1.5rem', borderTop: `1px solid ${colors.border}` }}>
+                    <h6 style={{ color: colors.text, marginBottom: '1rem' }}>Vote Distribution</h6>
+                    <div style={{ height: '250px' }}>
+                      <Bar
+                        data={{
+                          labels: positionCandidates.map(c => sanitizeName(c.name)),
+                          datasets: [
+                            {
+                              label: 'Votes',
+                              data: positionCandidates.map(c => c.votes || 0),
+                              backgroundColor: positionCandidates.map((c) =>
+                                isPositionWinner(c, position) ? WINNER_COLOR : posColor
+                              ),
+                              borderColor: positionCandidates.map((c) =>
+                                isPositionWinner(c, position)
+                                  ? 'rgba(34, 197, 94, 1)'
+                                  : posColor.replace('0.8', '1')
+                              ),
+                              borderWidth: 2,
+                              borderRadius: 6,
+                              maxBarThickness: 50
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                              callbacks: {
+                                label: function (context) {
+                                  const votes = context.parsed.y;
+                                  const percent = totalPositionVotes > 0 ? ((votes / totalPositionVotes) * 100).toFixed(1) : '0.0';
+                                  return `${votes} votes (${percent}%)`;
+                                },
+                                afterLabel: function (context) {
+                                  const candidate = positionCandidates[context.dataIndex];
+                                  return isPositionWinner(candidate, position) ? '🏆 WINNER' : '';
+                                }
+                              },
+                              backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)',
+                              padding: 12,
+                              titleFont: { size: 12, weight: 'bold' },
+                              bodyFont: { size: 11 }
+                            }
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              grid: {
+                                color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)'
+                              },
+                              ticks: { color: colors.textSecondary }
+                            },
+                            x: {
+                              grid: { display: false },
+                              ticks: { color: colors.textSecondary }
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !unpublished && positions.length === 0 && results.length === 0 && (
+        <div className="row">
+          <div className="col-12">
+            <div className="alert alert-info text-center py-5" role="alert">
+              <h5>📊 No Results Yet</h5>
+              <p>Select an election from the dropdown above to view results.</p>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
+      )}
     </div>
   );
 }
 
-export default Results;
+export default function ResultsWithErrorBoundary(props) {
+  return (
+    <ErrorBoundary>
+      <Results {...props} />
+    </ErrorBoundary>
+  );
+}

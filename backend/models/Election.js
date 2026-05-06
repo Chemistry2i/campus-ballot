@@ -107,17 +107,38 @@ const ElectionSchema = new mongoose.Schema({
     timestamps: true // Automatically adds createdAt and updatedAt fields
 });
 
-// Create the Election model
-// Add indexes for performance
-// Removed duplicate index for title (already defined in schema)
-ElectionSchema.index({ status: 1 });
+// -------------------------------------------------------------------------
+// Indexes — optimised for election listing, filtering, and eligibility checks
+// -------------------------------------------------------------------------
+
+// Single-field covering basic sorts and filters
+ElectionSchema.index({ status:    1 });
 ElectionSchema.index({ startDate: 1 });
-ElectionSchema.index({ endDate: 1 });
+ElectionSchema.index({ endDate:   1 });
 ElectionSchema.index({ createdBy: 1 });
-ElectionSchema.index({ candidates: 1 });
-ElectionSchema.index({ scope: 1 });
-ElectionSchema.index({ 'eligibility.faculty': 1 });
+ElectionSchema.index({ scope:     1 });
+
+// Compound: org-scoped election list (most common admin + student query)
+// "Find all elections for this organisation that are ongoing"
+ElectionSchema.index({ organization: 1, status: 1 });
+
+// Compound: time-window filtering — used in the student dashboard
+// to bucket elections into upcoming / active / completed
+ElectionSchema.index({ status: 1, startDate: 1, endDate: 1 });
+
+// Compound: federation/custom-scope eligibility check
+ElectionSchema.index({ scope: 1, organization: 1 });
+
+// Eligibility sub-document fields used in isUserEligible()
+ElectionSchema.index({ 'eligibility.faculty':     1 });
 ElectionSchema.index({ 'eligibility.yearOfStudy': 1 });
+
+// Text index: powers the search bar on the student dashboard
+// (searches election title and description)
+ElectionSchema.index({ title: 'text', description: 'text' }, { name: 'election_text_search' });
+
+// Candidates array lookup — used when populating election with candidates
+ElectionSchema.index({ candidates: 1 });
 
 // Method to check if a user is eligible to vote in this election
 ElectionSchema.methods.isUserEligible = async function(user) {

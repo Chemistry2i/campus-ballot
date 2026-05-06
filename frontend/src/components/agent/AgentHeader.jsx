@@ -13,11 +13,13 @@ import {
   FaCog,
   FaCircle,
   FaChevronRight,
+  FaChevronLeft,
   FaHome,
   FaBars
 } from 'react-icons/fa';
 
-const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, isDarkMode: parentIsDarkMode, colors: parentColors }) => {
+
+const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, isDarkMode: parentIsDarkMode, colors: parentColors, sidebarCollapsed, setSidebarCollapsed }) => {
   const { isDarkMode: hookIsDarkMode, colors: hookColors } = useTheme();
   const isDarkMode = parentIsDarkMode !== undefined ? parentIsDarkMode : hookIsDarkMode;
   const colors = parentColors || hookColors;
@@ -90,7 +92,7 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
 
   const getBreadcrumbs = () => {
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const breadcrumbs = [{ label: 'Agent', path: '/agent' }];
+    const breadcrumbs = [{ label: 'Agent Management', path: '/agent' }];
     
     if (pathParts.length > 1) {
       if (pathParts[1] === 'tasks') breadcrumbs.push({ label: 'Tasks', path: '/agent/tasks' });
@@ -108,24 +110,33 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
   };
 
   return (
-    <header style={{
-      background: isDarkMode ? colors.surface : '#ffffff',
-      borderBottom: `1px solid ${colors.border}`,
-      padding: isMobile ? 'clamp(0.5rem, 2vw, 0.75rem)' : 'clamp(0.75rem, 2vw, 1.25rem)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.05)'
-    }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        gap: 'clamp(0.5rem, 2vw, 1.5rem)', 
-        flexWrap: (window.innerWidth <= 480) ? 'nowrap' : 'wrap',
-        overflow: 'visible',
-        position: 'relative'
-      }}>
+    <header
+      style={{
+        background: isDarkMode ? colors.surface : '#ffffff',
+        borderBottom: `1px solid ${colors.border}`,
+        padding: isMobile ? 'clamp(0.5rem, 2vw, 0.75rem)' : 'clamp(0.75rem, 2vw, 1.25rem)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        zIndex: 1200,
+        boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.05)',
+        minWidth: 0
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'clamp(0.5rem, 2vw, 1.5rem)',
+          flexWrap: (window.innerWidth <= 480) ? 'nowrap' : 'wrap',
+          overflow: 'visible',
+          position: 'relative',
+          width: '100%',
+          margin: 0
+        }}
+      >
         
         {/* Mobile Menu Button */}
         {isMobile && (
@@ -154,9 +165,32 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
           </button>
         )}
         
-        {/* Left Section - Breadcrumbs & Time (Hidden on mobile) */}
+        {/* Left Section - Sidebar Toggle + Agent Text + Breadcrumbs (Desktop) */}
         {!isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, minWidth: '200px' }}>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              style={{
+                background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                border: 'none',
+                borderRadius: '6px',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: colors.text,
+                marginRight: '0.5rem',
+                transition: 'all 0.2s'
+              }}
+              title="Toggle sidebar"
+              onMouseEnter={e => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#e5e7eb'}
+              onMouseLeave={e => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'}
+            >
+              {sidebarCollapsed ? <FaChevronRight size={16} /> : <FaChevronLeft size={16} />}
+            </button>
+            {/* Removed duplicate 'Agent' text */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {getBreadcrumbs().map((crumb, index) => (
                 <React.Fragment key={index}>
@@ -167,12 +201,13 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
                       background: 'none',
                       border: 'none',
                       color: index === getBreadcrumbs().length - 1 ? colors.primary : colors.textSecondary,
-                      fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)',
+                      fontSize: index === 0 ? 'clamp(1.35rem, 2.5vw, 1.7rem)' : 'clamp(0.8rem, 1.5vw, 0.9rem)',
                       fontWeight: index === getBreadcrumbs().length - 1 ? 600 : 400,
                       cursor: 'pointer',
                       padding: '0.25rem 0.5rem',
                       borderRadius: '4px',
-                      transition: 'background 0.2s'
+                      transition: 'background 0.2s',
+                      letterSpacing: index === 0 ? '0.01em' : undefined
                     }}
                     onMouseEnter={(e) => e.target.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
                     onMouseLeave={(e) => e.target.style.background = 'none'}
@@ -183,7 +218,6 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
                 </React.Fragment>
               ))}
             </nav>
-            
             <div style={{ 
               marginLeft: 'auto', 
               display: 'flex',
