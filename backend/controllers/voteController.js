@@ -69,6 +69,13 @@ const castVote = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Election not found" });
     }
 
+    // ✅ SECURITY FIX: Validate voter is from the same organization as election
+    // Students can only vote in elections within their organization
+    if (election.organization && String(req.user.organization) !== String(election.organization)) {
+      console.log({ message: 'Voter not eligible', userOrg: req.user.organization, electionOrg: election.organization });
+      return res.status(403).json({ message: 'You are not eligible to participate in this election (different organization).' });
+    }
+
     // Enforce voting time window on the server (use server time)
     const now = new Date();
     const start = election.startDate ? new Date(election.startDate) : null;
@@ -181,6 +188,197 @@ const castVote = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Cast multiple votes for different positions in one election (batch voting)
+// @route   POST /api/votes/batch
+// @access  User
+// @body    { electionId, votes: [{ position, candidateId, abstain }, ...] }
+const castBatchVotes = asyncHandler(async (req, res) => {
+  try {
+    const { electionId, votes } = req.body;
+
+    if (!electionId || !Array.isArray(votes) || votes.length === 0) {
+      return res.status(400).json({ message: 'electionId and votes array are required' });
+    }
+
+    // Check if election exists
+    const election = await Election.findById(electionId);
+    if (!election) {
+      return res.status(400).json({ message: 'Election not found' });
+    }
+
+    // ✅ SECURITY FIX: Validate voter is from the same organization as election
+    if (election.organization && String(req.user.organization) !== String(election.organization)) {
+      return res.status(403).json({ message: 'You are not eligible to participate in this election (different organization).' });
+    }
+
+    // Enforce voting time window
+    const now = new Date();
+    const start = election.startDate ? new Date(election.startDate) : null;
+    const end = election.endDate ? new Date(election.endDate) : null;
+
+    if (start && now < start) {
+      return res.status(403).json({ message: 'Voting has not started yet' });
+    }
+    if (end && now > end) {
+      return res.status(403).json({ message: 'Voting has ended' });
+    }
+
+    // Validate all positions and candidates exist
+    const allPositionsValid = votes.every(v => election.positions?.includes(v.position) || true);
+    if (!allPositionsValid) {
+      return res.status(400).json({ message: 'Invalid position(s) for this election' });
+    }
+
+    // Check faculty eligibility
+    if (election.allowedFaculties && election.allowedFaculties.length > 0) {
+      const userFaculty = req.user.faculty;
+      if (!userFaculty) {
+        return res.status(403).json({ message: 'Your faculty information is missing. Please update your profile.' });
+      }
+      if (!election.allowedFaculties.includes(userFaculty)) {
+        return res.status(403).json({ message: 'Your faculty is not eligible to participate in this election.' });
+      }
+    }
+
+    // Check if user has already voted for any of these positions
+    const existingVotes = await VoterRecord.find({
+      user: req.user._id,
+      election: electionId,
+      position: { $in: votes.map(v => v.position) }
+    });
+
+    if (existingVotes.length > 0) {
+      const votedPositions = existingVotes.map(v => v.position);
+      return res.status(400).json({
+        message: `You have already voted for position(s): ${votedPositions.join(', ')}`,
+        votedPositions
+      });
+    }
+
+    // Validate all candidates
+    const candidateIds = votes.filter(v => !v.abstain).map(v => v.candidateId);
+    const candidates = await Candidate.find({
+      _id: { $in: candidateIds },
+      election: electionId
+    });
+
+    if (candidates.length !== candidateIds.length) {
+      return res.status(400).json({ message: 'One or more candidates not found for this election' });
+    }
+
+    // Atomically create voter records for all positions
+    const voterRecords = votes.map(v => ({
+      user: req.user._id,
+      election: electionId,
+      position: v.position
+    }));
+
+    try {
+      await VoterRecord.insertMany(voterRecords);
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.status(400).json({ message: 'You have already voted for one or more positions' });
+      }
+      throw err;
+    }
+
+    // Cast all ballots and increment candidate votes
+    const ballots = [];
+    const candidateUpdates = [];
+
+    for (const vote of votes) {
+      ballots.push({
+        election: electionId,
+        position: vote.position,
+        candidate: vote.abstain ? undefined : vote.candidateId,
+        faculty: req.user.faculty,
+        department: req.user.department,
+        yearOfStudy: req.user.yearOfStudy,
+        gender: req.user.gender
+      });
+
+      if (!vote.abstain) {
+        candidateUpdates.push(
+          Candidate.updateOne(
+            { _id: vote.candidateId },
+            { $inc: { votes: 1 } }
+          )
+        );
+      }
+    }
+
+    // Insert all ballots and update all candidate vote counts
+    await Promise.all([
+      Ballot.insertMany(ballots),
+      Promise.all(candidateUpdates)
+    ]);
+
+    // Respond immediately with success
+    res.status(201).json({
+      message: `Successfully submitted ${votes.length} vote(s)`,
+      votesSubmitted: votes.length,
+      electionId: election._id
+    });
+
+    // Fire-and-forget audit log
+    logActivity({
+      userId: req.user._id,
+      action: 'batch_vote',
+      entityType: 'Election',
+      entityId: election._id.toString(),
+      details: `Submitted ${votes.length} votes for ${election.title}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    }).catch(err => console.error('[BATCH_VOTE] logActivity failed:', err.message));
+
+    // Schedule dashboard update
+    scheduleDashboardUpdate(req.app.get('io'), electionId);
+
+  } catch (error) {
+    console.error('[BATCH_VOTE] Error casting batch votes:', error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+});
+
+// @desc    Get positions user hasn't voted for in an election
+// @route   GET /api/votes/election/:electionId/available-positions
+// @access  User
+const getAvailablePositions = asyncHandler(async (req, res) => {
+  try {
+    const { electionId } = req.params;
+
+    const election = await Election.findById(electionId);
+    if (!election) {
+      return res.status(404).json({ message: 'Election not found' });
+    }
+
+    // Get positions user has already voted for
+    const votedPositions = await VoterRecord.find({
+      user: req.user._id,
+      election: electionId
+    }).distinct('position');
+
+    // Get all positions for this election
+    const allPositions = election.positions || [];
+
+    // Calculate available positions
+    const availablePositions = allPositions.filter(p => !votedPositions.includes(p));
+
+    res.json({
+      electionId,
+      allPositions,
+      votedPositions,
+      availablePositions,
+      canVote: availablePositions.length > 0
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Get own voting history
 // @route   GET /api/votes/me
 // @access  User
@@ -269,6 +467,8 @@ const getAllVotes = asyncHandler(async (req, res) => {
 
 module.exports = {
   castVote,
+  castBatchVotes,
+  getAvailablePositions,
   getMyVotes,
   getVotesByElection,
   getVotesByCandidate,

@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Election = require("../models/Election");
 const Candidate = require("../models/Candidate");
+const ResultsAuditLog = require("../models/ResultsAuditLog");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 const cache = require("../utils/cache");
 
@@ -286,15 +287,51 @@ const publishResults = asyncHandler(async (req, res) => {
     if (!election) {
       return res.status(404).json({ message: "Election not found" });
     }
+
+    // Get current results before publishing (for audit trail)
+    const candidates = await Candidate.find({ election: election._id }).select("name position votes status");
+    
+    // ✅ SECURITY FIX: Create audit log entry when publishing results
+    // Store snapshot of results for immutability
+    if (!election.resultsPublished) {
+      await ResultsAuditLog.create({
+        election: election._id,
+        action: 'published',
+        performedBy: req.user._id,
+        currentSnapshot: {
+          candidates,
+          publishedAt: new Date(),
+          voteCounts: candidates.map(c => ({ position: c.position, name: c.name, votes: c.votes }))
+        },
+        reason: 'Results published for election',
+        ipAddress: getIpAddress(req),
+        userAgent: getUserAgent(req)
+      });
+    }
+
     election.resultsPublished = true;
     await election.save();
+
     try {
       const io = req.app.get('io');
       if (io) io.emit('election:results:published', { id: election._id });
     } catch (e) {
       console.error('Socket emit error (results published):', e.message);
     }
-    res.json({ message: "Results published" });
+
+    // Fire-and-forget audit log
+    logActivity({
+      userId: req.user._id,
+      action: 'publish_results',
+      entityType: 'Election',
+      entityId: election._id.toString(),
+      details: `Published results for election: ${election.title}`,
+      status: 'success',
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
+    }).catch(err => console.error('[PUBLISH_RESULTS] logActivity failed:', err.message));
+
+    res.json({ message: "Results published", electionId: election._id });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -578,6 +615,53 @@ const getCandidatesRanking = module.exports.getCandidatesRanking = async (req, r
   }
 };
 
+// @desc    Get results audit trail for an election
+// @route   GET /api/elections/:id/audit-trail
+// @access  Admin only
+const getResultsAuditTrail = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50, skip = 0, startDate, endDate } = req.query;
+
+    const election = await Election.findById(id);
+    if (!election) {
+      return res.status(404).json({ message: "Election not found" });
+    }
+
+    const query = { election: id };
+
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) query.timestamp.$gte = new Date(startDate);
+      if (endDate) query.timestamp.$lte = new Date(endDate);
+    }
+
+    const logs = await ResultsAuditLog.find(query)
+      .populate('performedBy', 'name email role')
+      .sort({ timestamp: -1 })
+      .limit(Number(limit))
+      .skip(Number(skip));
+
+    const total = await ResultsAuditLog.countDocuments(query);
+
+    res.json({
+      election: {
+        id: election._id,
+        title: election.title
+      },
+      auditTrail: logs,
+      pagination: {
+        total,
+        limit: Number(limit),
+        skip: Number(skip),
+        hasMore: Number(skip) + Number(limit) < total
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = {
   createElection,
   getAllElections,
@@ -585,6 +669,7 @@ module.exports = {
   updateElection,
   deleteElection,
   publishResults,
+  getResultsAuditTrail,
   getElectionResults,
   getElectionCandidates,
   addPositionToElection,
