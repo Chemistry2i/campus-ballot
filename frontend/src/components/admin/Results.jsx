@@ -649,7 +649,8 @@ function Results({ user }) {
                                         width: 120,
                                         height: 120,
                                         borderRadius: '50%',
-                                        objectFit: 'cover',
+                                        objectFit: 'contain',
+                                        padding: '8px',
                                         border: `4px solid ${posColor}`,
                                         boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
                                       }}
@@ -818,7 +819,8 @@ function Results({ user }) {
                                             width: 36,
                                             height: 36,
                                             borderRadius: '50%',
-                                            objectFit: 'cover',
+                                            objectFit: 'contain',
+                                            padding: '3px',
                                             border: `2px solid ${candidateIsWinner ? '#22c55e' : colors.border}`
                                           }}
                                         />
