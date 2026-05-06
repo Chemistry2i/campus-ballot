@@ -221,9 +221,9 @@ function App() {
       console.error('Socket disconnect error:', err);
     }
     
-    // ===== Step 5: Force full page reload to /login =====
-    // Using replace to clear history + timestamp to prevent browser cache
-    window.location.href = '/login?logout=' + Date.now();
+    // ===== Step 5: Redirect to /login with full page reload =====
+    // Full page reload ensures all JS state is cleared and is a security best practice
+    window.location.replace('/login');
   };
 
 
@@ -249,6 +249,11 @@ function App() {
                 ) : (
                   <Navigate to="/student-dashboard" replace />
                 )
+              ) : (
+                <LandingPage />
+              )
+            }
+          />
               ) : (
                 <LandingPage />
               )

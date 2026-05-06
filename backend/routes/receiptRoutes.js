@@ -9,14 +9,14 @@ const {
     getElectionReceipts,
     getReceiptStatistics
 } = require('../controllers/receiptController');
-const { authenticate } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
 
 /**
  * POST /api/receipts
  * Create a new receipt after votes are cast
  * Called from frontend after voting
  */
-router.post('/', authenticate, async (req, res) => {
+router.post('/', protect, async (req, res) => {
     try {
         const { electionId, votes } = req.body;
         const userId = req.user._id;
@@ -91,7 +91,7 @@ router.get('/:receiptId', async (req, res) => {
  * GET /api/receipts/user/my-receipts
  * Get all receipts for logged-in user
  */
-router.get('/user/my-receipts', authenticate, async (req, res) => {
+router.get('/user/my-receipts', protect, async (req, res) => {
     try {
         const userId = req.user._id;
         const { electionId } = req.query;
@@ -147,7 +147,7 @@ router.post('/:receiptId/verify', async (req, res) => {
  * Send receipt via email to user
  * Requires authentication
  */
-router.post('/:receiptId/email', authenticate, async (req, res) => {
+router.post('/:receiptId/email', protect, async (req, res) => {
     try {
         const { receiptId } = req.params;
         const receipt = await getReceiptById(receiptId);
@@ -178,7 +178,7 @@ router.post('/:receiptId/email', authenticate, async (req, res) => {
  * Get all receipts for an election
  * Requires admin/observer role
  */
-router.get('/election/:electionId', authenticate, async (req, res) => {
+router.get('/election/:electionId', protect, async (req, res) => {
     try {
         const { electionId } = req.params;
         const { verified } = req.query;
@@ -220,7 +220,7 @@ router.get('/election/:electionId', authenticate, async (req, res) => {
  * Get receipt statistics for an election
  * Requires admin/super_admin role
  */
-router.get('/election/:electionId/stats', authenticate, async (req, res) => {
+router.get('/election/:electionId/stats', protect, async (req, res) => {
     try {
         const { electionId } = req.params;
 
