@@ -38,9 +38,29 @@ ChartJS.register(
   Filler
 );
 
-// Ensure API_URL is correctly defined and used for absolute paths
-// It should be set in your .env.production or .env file (e.g., VITE_API_URL=https://api.campusballot.tech)
-const API_URL = import.meta.env.VITE_API_URL || '';
+// Determine the correct API URL
+const getAPIUrl = () => {
+  const env = import.meta.env.VITE_API_URL;
+  if (env && env.trim()) return env;
+  
+  // Fall back to current host's API
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    // Map frontend URL to API URL
+    if (hostname.includes('localhost') || hostname === '127.0.0.1') {
+      return 'http://localhost:5000'; // Local dev
+    }
+    if (hostname.includes('campusballot.tech')) {
+      return 'https://api.campusballot.tech'; // Production
+    }
+  }
+  return ''; // Empty string means use relative paths with axios baseURL
+};
+
+const API_URL = getAPIUrl();
+
+console.log('🔍 ElectionDetailedCharts API_URL:', API_URL, 'ENV:', import.meta.env.VITE_API_URL);
 
 function ElectionDetailedCharts({ electionId }) {
   const { isDarkMode, colors } = useTheme();
@@ -49,6 +69,7 @@ function ElectionDetailedCharts({ electionId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [exportFormat, setExportFormat] = useState('csv');
+  const [apiDebug, setApiDebug] = useState(null);
 
   useEffect(() => {
     const fetchElectionData = async () => {
@@ -60,6 +81,7 @@ function ElectionDetailedCharts({ electionId }) {
 
       setLoading(true);
       setError(null);
+      setApiDebug(null);
       
       try {
         const token = localStorage.getItem('token');
@@ -70,25 +92,50 @@ function ElectionDetailedCharts({ electionId }) {
           return;
         }
 
+        const apiEndpoint = `${API_URL}/api/admin/election/${electionId}/detailed-stats`;
+        console.log('📡 Fetching from:', apiEndpoint);
+        
         const response = await axios.get(
-          `${API_URL}/api/admin/election/${electionId}/detailed-stats`, // Corrected: only one URL argument
+          apiEndpoint,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
         
-        console.log('Election detailed stats:', response.data);
+        console.log('✅ Full API Response:', response.data);
+        
+        // Validate response structure
+        if (!response.data || !response.data.positionStats) {
+          console.warn('⚠️ Response missing expected structure:', response.data);
+          setApiDebug({
+            received: response.data,
+            missing: 'positionStats'
+          });
+        }
+        
         setElectionData(response.data);
         
         // Set first position as default selection
         if (response.data.positions && response.data.positions.length > 0) {
+          console.log('📍 Setting default position to:', response.data.positions[0]);
           setSelectedPosition(response.data.positions[0]);
+        } else {
+          console.warn('⚠️ No positions found in response');
         }
       } catch (err) {
-        console.error('Error fetching election stats:', err);
+        console.error('❌ Error fetching election stats:', err);
         console.error('Error details:', err.response?.data || err.message);
+        console.error('Error status:', err.response?.status);
+        console.error('Full error:', err);
+        
         const errorMsg = err.response?.data?.message || err.message;
         setError(`Failed to load election data: ${errorMsg}`);
+        setApiDebug({
+          error: true,
+          message: errorMsg,
+          status: err.response?.status,
+          endpoint: `${API_URL}/api/admin/election/${electionId}/detailed-stats`
+        });
       } finally {
         setLoading(false);
       }
@@ -105,6 +152,20 @@ function ElectionDetailedCharts({ electionId }) {
     } else if (exportFormat === 'json') {
       exportToJSON();
     }
+  };
+
+  // Helper function to get proper image URL
+  const getImageUrl = (candidate) => {
+    if (!candidate.photo) return null;
+    
+    // If it's already an absolute URL, return as-is
+    if (candidate.photo.startsWith('http://') || candidate.photo.startsWith('https://')) {
+      return candidate.photo;
+    }
+    
+    // Otherwise construct the full URL
+    const baseUrl = API_URL || window.location.origin;
+    return `${baseUrl}${candidate.photo.startsWith('/') ? candidate.photo : '/' + candidate.photo}`;
   };
 
   const exportToCSV = () => {
@@ -168,6 +229,14 @@ function ElectionDetailedCharts({ electionId }) {
         <FontAwesomeIcon icon={faExclamationTriangle} size="2x" className="mb-3" />
         <h5>Error Loading Data</h5>
         <p>{error}</p>
+        {apiDebug && (
+          <div style={{ backgroundColor: '#f8d7da', padding: '10px', borderRadius: '5px', marginTop: '10px', textAlign: 'left', fontSize: '0.85rem', fontFamily: 'monospace' }}>
+            <strong>Debug Info:</strong>
+            <pre style={{ marginTop: '5px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {JSON.stringify(apiDebug, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     );
   }
@@ -176,6 +245,11 @@ function ElectionDetailedCharts({ electionId }) {
     return (
       <div className="alert alert-info text-center" role="alert">
         <p>No election data available. Please select an election.</p>
+        {apiDebug && (
+          <div style={{ backgroundColor: '#cfe2ff', padding: '10px', borderRadius: '5px', marginTop: '10px', fontSize: '0.85rem' }}>
+            API Debug: {JSON.stringify(apiDebug, null, 2)}
+          </div>
+        )}
       </div>
     );
   }
@@ -184,12 +258,17 @@ function ElectionDetailedCharts({ electionId }) {
     ? electionData.positionStats.find(p => p.position === selectedPosition)
     : null;
     
+  // Safely get chart data with validation
+  console.log('📊 positionStats available:', !!electionData?.positionStats, 'Count:', electionData?.positionStats?.length);
+  console.log('📌 selectedPosition:', selectedPosition);
+  console.log('📍 currentPositionData:', currentPositionData);
+  
   // Prepare data for positions overview bar chart (all positions, total votes)
-  const positionsOverviewData = {
-    labels: electionData.positionStats.map(p => p.position),
+  const positionsOverviewData = electionData?.positionStats && electionData.positionStats.length > 0 ? {
+    labels: electionData.positionStats.map(p => p.position || 'Unknown'),
     datasets: [{
       label: 'Total Votes Per Position',
-      data: electionData.positionStats.map(p => p.totalVotes),
+      data: electionData.positionStats.map(p => p.totalVotes || 0),
       backgroundColor: [
         'rgba(13, 110, 253, 0.8)',
         'rgba(25, 135, 84, 0.8)',
@@ -209,14 +288,23 @@ function ElectionDetailedCharts({ electionId }) {
       borderWidth: 2,
       borderRadius: 4,
     }]
+  } : {
+    labels: [],
+    datasets: [{
+      label: 'Total Votes Per Position',
+      data: [],
+      backgroundColor: 'rgba(13, 110, 253, 0.8)',
+    }]
   };
 
+  console.log('📈 positionsOverviewData:', positionsOverviewData);
+
   // Prepare data for selected position candidates chart
-  const selectedPositionCandidatesData = currentPositionData ? {
-    labels: currentPositionData.candidates.map(c => c.name),
+  const selectedPositionCandidatesData = currentPositionData && currentPositionData.candidates && currentPositionData.candidates.length > 0 ? {
+    labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
       label: `Votes in ${selectedPosition}`,
-      data: currentPositionData.candidates.map(c => c.voteCount),
+      data: currentPositionData.candidates.map(c => c.voteCount || 0),
       backgroundColor: 'rgba(220, 53, 69, 0.8)',
       borderColor: '#dc3545',
       borderWidth: 2,
@@ -225,10 +313,10 @@ function ElectionDetailedCharts({ electionId }) {
   } : null;
 
   // Doughnut chart for vote distribution in selected position
-  const voteDoughnutData = currentPositionData && currentPositionData.candidates.length > 0 ? {
-    labels: currentPositionData.candidates.map(c => c.name),
+  const voteDoughnutData = currentPositionData && currentPositionData.candidates && currentPositionData.candidates.length > 0 ? {
+    labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
-      data: currentPositionData.candidates.map(c => c.voteCount),
+      data: currentPositionData.candidates.map(c => c.voteCount || 0),
       backgroundColor: [
         'rgba(13, 110, 253, 0.8)',
         'rgba(25, 135, 84, 0.8)',
@@ -240,6 +328,9 @@ function ElectionDetailedCharts({ electionId }) {
       borderWidth: 2,
     }]
   } : null;
+
+  console.log('🎯 selectedPositionCandidatesData:', selectedPositionCandidatesData);
+  console.log('🥧 voteDoughnutData:', voteDoughnutData);
 
   return (
     <div className="row g-4">
@@ -541,12 +632,34 @@ function ElectionDetailedCharts({ electionId }) {
                               <strong>#{idx + 1}</strong>
                             </td>
                             <td style={{ color: colors.text }}>
-                              <div>{candidate.name}</div>
-                              {candidate.photo && (
-                                <small style={{ color: colors.textSecondary }}>
-                                  Has Photo
-                                </small>
-                              )}
+                              <div className="d-flex align-items-center gap-2">
+                                {candidate.photo ? (
+                                  <img
+                                    src={getImageUrl(candidate)}
+                                    alt={candidate.name}
+                                    style={{
+                                      width: '32px',
+                                      height: '32px',
+                                      borderRadius: '50%',
+                                      objectFit: 'cover',
+                                      backgroundColor: '#e2e8f0',
+                                      border: `1px solid ${colors.border}`
+                                    }}
+                                    onError={(e) => {
+                                      console.warn('⚠️ Image load failed for', candidate.name, 'URL:', getImageUrl(candidate));
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                ) : null}
+                                <div>
+                                  <div>{candidate.name}</div>
+                                  {candidate.photo && (
+                                    <small style={{ color: colors.textSecondary, fontSize: '0.75rem' }}>
+                                      📷 {getImageUrl(candidate)?.substring(0, 30)}...
+                                    </small>
+                                  )}
+                                </div>
+                              </div>
                             </td>
                             <td style={{ color: colors.textSecondary }}>
                               {candidate.party || '-'}
