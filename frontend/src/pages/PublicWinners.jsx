@@ -44,7 +44,40 @@ function PublicWinners() {
     })).filter(e => e.winners && e.winners.length > 0);
   }, [winners, positionFilter, sortOption]);
 
-  if (loading) return <div className="p-4">Loading winners...</div>;
+  if (loading) {
+    return (
+      <div className="container py-4">
+        <div className="mb-4 p-4 rounded-4 border shadow-sm text-center" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%)' }}>
+          <div className="spinner-border text-success mb-3" role="status" aria-label="Loading winners"></div>
+          <h2 className="mb-1 fw-bold" style={{ fontSize: 'clamp(1.6rem, 2.5vw, 2.2rem)', letterSpacing: '-0.03em', color: '#0f172a' }}>
+            Loading Election Winners
+          </h2>
+          <p className="mb-0 text-muted">Fetching official results and winner details...</p>
+        </div>
+
+        <div className="row g-3">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="col-12 col-md-6 col-lg-4">
+              <div className="card shadow-sm h-100 placeholder-glow">
+                <div className="card-body">
+                  <div className="d-flex align-items-start gap-3">
+                    <div className="placeholder rounded-circle" style={{ width: 96, height: 96 }}></div>
+                    <div className="flex-grow-1">
+                      <div className="placeholder col-7 mb-2" style={{ height: 16 }}></div>
+                      <div className="placeholder col-5 mb-3" style={{ height: 12 }}></div>
+                      <div className="placeholder col-4 mb-2" style={{ height: 12 }}></div>
+                      <div className="placeholder col-6 mb-3" style={{ height: 12 }}></div>
+                      <div className="placeholder col-12" style={{ height: 8 }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   const getWinnerPercentage = (winner) => {
@@ -68,13 +101,19 @@ function PublicWinners() {
           </div>
         </div>
       </div>
-      {winners.length === 0 && <div className="alert alert-info">No published winners yet.</div>}
+      {winners.length === 0 && (
+        <div className="card border-0 shadow-sm text-center py-5 px-3 mb-4">
+          <div className="mb-3" style={{ fontSize: '2.5rem' }}>🏆</div>
+          <h4 className="fw-bold mb-2">No published winners yet</h4>
+          <p className="text-muted mb-0">Once results are published, winners will appear here automatically.</p>
+        </div>
+      )}
 
       {/* Controls: Position dropdown and Sort dropdown (responsive) */}
-      <div className="row g-2 align-items-center mb-3">
+      <div className="row g-3 g-md-4 align-items-end mb-4 mb-md-4">
         <div className="col-12 col-md-6">
-          <label className="form-label small mb-1">Filter by position</label>
-          <select className="form-select" value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)} aria-label="Filter by position">
+          <label className="form-label small mb-2">Filter by position</label>
+          <select className="form-select py-2" value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)} aria-label="Filter by position">
             {allPositions.map(pos => (
               <option key={pos} value={pos}>{pos === 'all' ? 'All Positions' : pos}</option>
             ))}
@@ -82,8 +121,8 @@ function PublicWinners() {
         </div>
 
         <div className="col-12 col-md-6">
-          <label className="form-label small mb-1">Sort winners</label>
-          <select className="form-select" value={sortOption} onChange={(e) => setSortOption(e.target.value)} aria-label="Sort winners">
+          <label className="form-label small mb-2">Sort winners</label>
+          <select className="form-select py-2" value={sortOption} onChange={(e) => setSortOption(e.target.value)} aria-label="Sort winners">
             <option value="election">Default (by election)</option>
             <option value="votes">Votes (high → low)</option>
             <option value="name">Name (A → Z)</option>
@@ -110,8 +149,8 @@ function PublicWinners() {
                         <div
                           className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center"
                           style={{
-                            width: 38,
-                            height: 38,
+                            width: 30,
+                            height: 30,
                             borderRadius: '999px',
                             background: 'linear-gradient(135deg, #ffd54a 0%, #f4b400 100%)',
                             boxShadow: '0 4px 12px rgba(244, 180, 0, 0.35)',
