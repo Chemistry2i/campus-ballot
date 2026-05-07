@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from '../utils/axiosInstance';
 import getImageUrl from '../utils/getImageUrl';
 
@@ -24,13 +24,13 @@ function PublicWinners() {
   const [sortOption, setSortOption] = useState('election'); // 'election' | 'votes' | 'name'
 
   // derive positions and filtered/sorted winners
-  const allPositions = React.useMemo(() => {
+  const allPositions = useMemo(() => {
     const setPos = new Set();
     winners.forEach(e => e.winners && e.winners.forEach(w => setPos.add(w.position)));
     return ['all', ...Array.from(setPos)];
   }, [winners]);
 
-  const filtered = React.useMemo(() => {
+  const filtered = useMemo(() => {
     return winners.map(election => ({
       ...election,
       winners: (election.winners || [])
@@ -46,6 +46,11 @@ function PublicWinners() {
 
   if (loading) return <div className="p-4">Loading winners...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
+
+  const getWinnerPercentage = (winner) => {
+    const percentage = Number(winner?.candidate?.percentage);
+    return Number.isFinite(percentage) ? percentage : 0;
+  };
 
   return (
     <div className="container py-4">
@@ -88,14 +93,31 @@ function PublicWinners() {
                 <div className="row g-3">
                   {e.winners.map((w, idx) => (
                     <div key={`${e._id}-${w.position}-${idx}`} className="col-12 col-md-6 col-lg-4">
-                      <div className="card h-100 shadow-sm" role="button" tabIndex={0} onKeyPress={(ev) => { if (ev.key === 'Enter') {/* noop */} }}>
-                        <div className="card-body d-flex align-items-start gap-3">
+                      <div className="card h-100 shadow-sm position-relative overflow-hidden" role="button" tabIndex={0} onKeyPress={(ev) => { if (ev.key === 'Enter') {/* noop */} }}>
+                        <div
+                          className="position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center"
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: '999px',
+                            background: 'linear-gradient(135deg, #ffd54a 0%, #f4b400 100%)',
+                            boxShadow: '0 4px 12px rgba(244, 180, 0, 0.35)',
+                            zIndex: 2,
+                            border: '2px solid #fff'
+                          }}
+                          title="Winner"
+                          aria-label="Winner medal"
+                        >
+                          <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>🏅</span>
+                        </div>
+
+                        <div className="card-body d-flex align-items-start gap-3 pe-4">
                           <div>
                             <img
                               src={getImageUrl((w.candidate && w.candidate.photo) || '')}
                               alt={w.candidate?.name || ''}
                               onError={(ev) => { ev.target.style.display = 'none'; }}
-                              style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', marginRight: 12 }}
+                              style={{ width: 108, height: 108, borderRadius: '50%', objectFit: 'cover', marginRight: 12 }}
                             />
                           </div>
 
@@ -106,6 +128,22 @@ function PublicWinners() {
                             </div>
                             <div className="small text-muted mb-2">{w.candidate?.party || 'Independent'}</div>
                             <div className="small text-secondary">Votes: {w.candidate?.votes || w.candidate?.voteCount || 0}</div>
+                            <div className="mt-3">
+                              <div className="d-flex justify-content-between align-items-center small mb-1">
+                                <span className="text-muted">Winning percentage</span>
+                                <span className="fw-bold text-success">{getWinnerPercentage(w).toFixed(1)}%</span>
+                              </div>
+                              <div className="progress" style={{ height: 8 }}>
+                                <div
+                                  className="progress-bar bg-success"
+                                  role="progressbar"
+                                  style={{ width: `${Math.min(getWinnerPercentage(w), 100)}%` }}
+                                  aria-valuenow={getWinnerPercentage(w)}
+                                  aria-valuemin="0"
+                                  aria-valuemax="100"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
