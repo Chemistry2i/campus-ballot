@@ -66,6 +66,45 @@ const getOrdinal = (n) => {
   const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 };
+
+// Helper component to display candidate image with fallback to initials
+function CandidateImageDisplay({ src, name, size, colors, isDarkMode, posColor, isWinner }) {
+  const [failed, setFailed] = useState(false);
+  const resolvedSrc = src ? getImageUrl(src) : '';
+
+  const effectiveBorderColor = isWinner ? '#22c55e' : colors.border;
+
+  if (!resolvedSrc || failed) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        backgroundColor: posColor || '#6b7280', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', color: '#fff',
+        fontWeight: 'bold', fontSize: size >= 80 ? '2.5rem' : '0.9rem',
+        border: `${size >= 80 ? '4px' : '2px'} solid ${effectiveBorderColor}`,
+        boxShadow: size >= 80 ? '0 4px 15px rgba(0,0,0,0.2)' : 'none'
+      }}>
+        {name?.charAt(0) || '?'}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={resolvedSrc}
+      alt={name || 'Candidate'}
+      style={{
+        width: size, height: size, objectFit: 'cover', borderRadius: '50%',
+        padding: size >= 80 ? '8px' : '3px',
+        border: `${size >= 80 ? '4px' : '2px'} solid ${effectiveBorderColor}`,
+        boxShadow: size >= 80 ? '0 4px 15px rgba(0,0,0,0.2)' : 'none',
+        backgroundColor: isDarkMode ? colors.surfaceHover : '#fff'
+      }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Results({ user }) {
