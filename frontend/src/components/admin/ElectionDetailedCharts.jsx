@@ -313,13 +313,19 @@ function ElectionDetailedCharts({ electionId }) {
     }]
   };
 
+  // Candidate-level color palette (keeps colors consistent between bar and doughnut)
+  const PALETTE = ['#6d28d9', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#f97316', '#14b8a6', '#e11d48', '#0ea5e9'];
+
+  const candidateColors = (currentPositionData?.candidates || []).map((_, i) => PALETTE[i % PALETTE.length]);
+
   const selectedPositionCandidatesData = currentPositionData && currentPositionData.candidates?.length > 0 ? {
     labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
       label: `Votes in ${selectedPosition}`,
       data: currentPositionData.candidates.map(c => c.voteCount || 0),
-      backgroundColor: 'rgba(220, 53, 69, 0.8)',
-      borderColor: '#dc3545',
+      // Use same order/colors as doughnut
+      backgroundColor: candidateColors.map(col => col + 'cc'), // add slight transparency for bars
+      borderColor: candidateColors,
       borderWidth: 2,
       borderRadius: 4,
     }]
@@ -329,8 +335,8 @@ function ElectionDetailedCharts({ electionId }) {
     labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
       data: currentPositionData.candidates.map(c => c.voteCount || 0),
-      backgroundColor: ['rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)', 'rgba(111, 66, 193, 0.8)'],
-      borderColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'],
+      backgroundColor: candidateColors,
+      borderColor: candidateColors.map(() => '#ffffff'),
       borderWidth: 2,
     }]
   } : null;
