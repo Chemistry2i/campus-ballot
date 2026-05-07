@@ -137,7 +137,7 @@ function PublicWinners() {
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-3">
                   <div>
-                    <h5 className="card-title mb-0">{e.title}</h5>
+                    <h3 className="card-title mb-0">{e.title}</h3>
                     <p className="small text-muted">Ended: {new Date(e.endDate).toLocaleDateString()}</p>
                   </div>
                 </div>
