@@ -227,7 +227,7 @@ function ReceiptVerification() {
                     { label: 'Receipt ID:', value: receipt.receiptId, isCode: true },
                     { label: 'Election:', value: receipt.election?.title },
                     { label: 'Date:', value: new Date(receipt.createdAt).toLocaleString() },
-                    { label: 'Votes Cast:', value: receipt.votes?.length || 0 },
+                    { label: 'Expires:', value: new Date(receipt.expiresAt).toLocaleDateString() },
                     { label: 'Status:', value: receipt.isExpired ? '⏰ Expired' : '✓ Active', status: !receipt.isExpired }
                   ].map((row, idx, arr) => (
                     <div
@@ -258,32 +258,25 @@ function ReceiptVerification() {
                     </div>
                   ))}
 
-                  {/* Votes List */}
-                  {receipt.votes && receipt.votes.length > 0 && (
-                    <div style={{
-                      marginTop: '16px',
-                      paddingTop: '16px',
-                      borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#e9ecef'}`
+                  {/* Anonymity Notice */}
+                  <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#e9ecef'}`,
+                    padding: '12px',
+                    background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#dbeafe',
+                    borderRadius: '6px',
+                    color: isDarkMode ? '#10b981' : '#0284c7'
+                  }}>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '0.9rem',
+                      lineHeight: '1.5'
                     }}>
-                      <h4 style={{
-                        margin: '0 0 12px 0',
-                        color: isDarkMode ? colors.text : colors.text,
-                        fontSize: '1rem'
-                      }}>Votes:</h4>
-                      <ul style={{
-                        margin: '0',
-                        paddingLeft: '20px',
-                        color: isDarkMode ? colors.textSecondary : colors.textSecondary
-                      }}>
-                        {receipt.votes.map((vote, idx) => (
-                          <li key={idx} style={{ marginBottom: '8px' }}>
-                            <strong>{vote.position}:</strong>{' '}
-                            {vote.candidateName || <em>Abstained</em>}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                      <strong>🔒 Note:</strong> This receipt confirms your vote was recorded and counted. 
+                      Your voting choices are kept confidential to ensure voter anonymity.
+                    </p>
+                  </div>
                 </div>
               </div>
 

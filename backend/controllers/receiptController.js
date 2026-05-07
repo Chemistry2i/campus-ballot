@@ -121,7 +121,8 @@ const getUserReceipts = async (userId, electionId = null) => {
 };
 
 /**
- * Verify a receipt signature
+ * Verify a receipt signature - ANONYMOUSLY
+ * Returns verification status WITHOUT vote details to maintain voter anonymity
  */
 const verifyReceipt = async (receiptId) => {
     try {
@@ -130,88 +131,145 @@ const verifyReceipt = async (receiptId) => {
         if (!receipt) {
             return {
                 valid: false,
-                message: 'Receipt not found',
-                receipt: null
+                message: 'Receipt not found or verification code is invalid',
+                receiptId: receiptId,
+                timestamp: new Date(),
+                // NO VOTE DETAILS - maintain anonymity
             };
         }
 
         const secret = getReceiptSecret();
         const isValid = receipt.verifySignature(secret);
 
+        // Check if receipt is expired
+        const now = new Date();
+        const expiresAt = new Date(receipt.createdAt);
+        expiresAt.setDate(expiresAt.getDate() + 30); // 30-day expiration
+        const isExpired = now > expiresAt;
+
+        if (isExpired) {
+            return {
+                valid: false,
+                message: 'Receipt has expired (30-day validity period)',
+                receiptId: receiptId,
+                createdAt: receipt.createdAt,
+                expiresAt: expiresAt,
+                isExpired: true,
+                timestamp: new Date(),
+                // NO VOTE DETAILS - maintain anonymity
+            };
+        }
+
+        // Return anonymized verification response
         return {
             valid: isValid,
-            message: isValid ? 'Receipt is valid' : 'Receipt signature verification failed',
-            receipt: isValid ? receipt : null,
+            message: isValid 
+                ? 'Receipt verified successfully. Your vote was recorded.' 
+                : 'Receipt verification failed. This code may be invalid or tampered with.',
             receiptId: receiptId,
-            verifiedAt: receipt.verifiedAt,
-            isExpired: receipt.isExpired
+            createdAt: receipt.createdAt,
+            expiresAt: expiresAt,
+            isExpired: false,
+            timestamp: new Date(),
+            // IMPORTANT: NO VOTE DETAILS returned to maintain voter anonymity
+            // The receipt details (who/what you voted for) are NEVER disclosed during verification
         };
     } catch (error) {
         console.error('Error verifying receipt:', error);
         return {
             valid: false,
-            message: error.message,
-            receipt: null
+            message: 'An error occurred during verification. Please try again.',
+            receiptId: receiptId,
+            timestamp: new Date()
+            // NO VOTE DETAILS - maintain anonymity
         };
     }
 };
 
 /**
- * Send receipt via email
+ * Send receipt via email - ANONYMIZED
+ * Does NOT include vote details to maintain voter anonymity
  */
 const sendReceiptEmail = async (receiptId, recipientEmail) => {
     try {
         const receipt = await Receipt.findOne({ receiptId })
             .populate('user', 'name email')
-            .populate('election', 'title')
-            .populate('votes.candidate', 'name');
+            .populate('election', 'title');
 
         if (!receipt) {
             throw new Error('Receipt not found');
         }
 
-        // Format votes for email display
-        const votesHTML = receipt.votes.map(v => `
-            <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${v.position}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #ddd;">
-                    ${v.candidateName || '<em>Abstained</em>'}
-                </td>
-            </tr>
-        `).join('');
+        // Calculate expiration date (30 days from creation)
+        const expiresAt = new Date(receipt.createdAt);
+        expiresAt.setDate(expiresAt.getDate() + 30);
 
+        // Anonymous receipt email - NO vote details
         const emailHTML = `
-            <h2>Election Receipt - ${receipt.election.title}</h2>
-            <p>Dear ${receipt.user.name},</p>
-            <p>Your votes have been successfully recorded. Below is your receipt for verification purposes.</p>
-            
-            <h3>Receipt Details</h3>
-            <p><strong>Receipt ID:</strong> ${receipt.receiptId}</p>
-            <p><strong>Election:</strong> ${receipt.election.title}</p>
-            <p><strong>Date:</strong> ${receipt.createdAt.toLocaleDateString()}</p>
-            
-            <h3>Your Votes</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background-color: #f0f0f0;">
-                        <th style="padding: 8px; text-align: left; border-bottom: 2px solid #333;">Position</th>
-                        <th style="padding: 8px; text-align: left; border-bottom: 2px solid #333;">Vote</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${votesHTML}
-                </tbody>
-            </table>
-            
-            <h3>Verification</h3>
-            <p>You can verify this receipt at any time by providing the Receipt ID to election observers or through our verification portal.</p>
-            <p><strong>Receipt expires on:</strong> ${receipt.expiresAt.toLocaleDateString()}</p>
-            
-            <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
-            <p style="font-size: 12px; color: #666;">
-                This is an automated email. Please keep this receipt for your records.
-                Do not share this receipt ID with anyone.
-            </p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 40px 20px;">
+                <div style="background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    
+                    <div style="text-align: center; margin-bottom: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🗳️</div>
+                        <h1 style="color: #10b981; margin: 0; font-size: 28px;">Campus Ballot</h1>
+                        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Official Vote Confirmation</p>
+                    </div>
+                    
+                    <div style="background: #dbeafe; border-left: 4px solid #0284c7; padding: 15px; margin: 20px 0; border-radius: 4px; color: #075985;">
+                        <strong>✓ Your vote has been successfully recorded</strong>
+                    </div>
+                    
+                    <h2 style="color: #212529; font-size: 18px; margin: 30px 0 15px 0; border-bottom: 2px solid #10b981; padding-bottom: 10px;">Receipt Information</h2>
+                    
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="padding: 10px 0; color: #666;">Election:</td>
+                            <td style="padding: 10px 0; font-weight: 600; color: #212529;">${receipt.election.title}</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 10px; color: #666;">Verification Code:</td>
+                            <td style="padding: 10px; font-weight: 600; color: #10b981; font-family: monospace; letter-spacing: 2px;">${receipt.receiptId}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 0; color: #666;">Date:</td>
+                            <td style="padding: 10px 0; font-weight: 600; color: #212529;">${receipt.createdAt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 10px; color: #666;">Time:</td>
+                            <td style="padding: 10px; font-weight: 600; color: #212529;">${receipt.createdAt.toLocaleTimeString()}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 0; color: #666;">Valid Until:</td>
+                            <td style="padding: 10px 0; font-weight: 600; color: #212529;">${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="background: #eef4ff; border-left: 4px solid #10b981; padding: 20px; margin: 30px 0; border-radius: 4px; color: #059669;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 14px;">🔒 Your Vote is Anonymous</h3>
+                        <p style="margin: 0; font-size: 13px; line-height: 1.6;">
+                            This email does NOT contain details of who or what you voted for. Your voting preferences are completely confidential. 
+                            Only you have this verification code, which proves you participated and your votes were recorded.
+                        </p>
+                    </div>
+                    
+                    <h3 style="color: #212529; font-size: 16px; margin: 30px 0 10px 0;">How to Use Your Receipt:</h3>
+                    <ol style="margin: 0; padding-left: 20px; color: #495057; line-height: 1.8;">
+                        <li>Save this email and your verification code for your records</li>
+                        <li>Use the verification code to confirm your vote was recorded in the system</li>
+                        <li>The verification code is personal to you - do not share it with others</li>
+                        <li>This receipt proves you voted but maintains complete anonymity</li>
+                    </ol>
+                    
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+                    
+                    <p style="color: #666; font-size: 12px; margin: 0;">
+                        For questions about your receipt or the election process, contact the election observers or administration.
+                    </p>
+                    <p style="color: #999; font-size: 11px; margin: 10px 0 0 0;">
+                        This is an automated message from Campus Ballot Election System. Please keep this receipt for your records.
+                    </p>
+                </div>
+            </div>
         `;
 
         // Configure email transporter

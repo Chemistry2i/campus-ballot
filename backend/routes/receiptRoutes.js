@@ -53,8 +53,9 @@ router.post('/', protect, async (req, res) => {
 
 /**
  * GET /api/receipts/:receiptId
- * Get receipt by receipt ID (public - no auth required for display)
- * Allows users to retrieve their receipt
+ * Get receipt by receipt ID (ANONYMOUS - no vote details)
+ * Returns only basic receipt information without revealing voting choices
+ * This maintains voter anonymity during verification
  */
 router.get('/:receiptId', async (req, res) => {
     try {
@@ -62,21 +63,21 @@ router.get('/:receiptId', async (req, res) => {
 
         const receipt = await getReceiptById(receiptId);
 
+        // Calculate expiration date
+        const expiresAt = new Date(receipt.createdAt);
+        expiresAt.setDate(expiresAt.getDate() + 30);
+
         res.json({
             success: true,
             receipt: {
                 receiptId: receipt.receiptId,
-                user: {
-                    name: receipt.user.name,
-                    email: receipt.user.email
-                },
                 election: receipt.election,
-                votes: receipt.votes,
                 verified: receipt.verified,
-                verifiedAt: receipt.verifiedAt,
                 createdAt: receipt.createdAt,
-                expiresAt: receipt.expiresAt,
-                isExpired: receipt.isExpired
+                expiresAt: expiresAt,
+                isExpired: receipt.isExpired,
+                // IMPORTANT: votes and user details are NOT included to maintain voter anonymity
+                // During verification, users only need to confirm the receipt exists and is valid
             }
         });
     } catch (error) {
