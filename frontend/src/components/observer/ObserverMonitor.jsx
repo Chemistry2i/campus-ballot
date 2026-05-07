@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { FaBinoculars, FaCheckCircle, FaClock, FaUsers, FaVoteYea } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 

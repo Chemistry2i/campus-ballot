@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { confirmLogout } from '../../utils/sweetAlerts';
 
 const ObserverHeader = ({ user, isMobile, sidebarCollapsed, setSidebarCollapsed }) => {

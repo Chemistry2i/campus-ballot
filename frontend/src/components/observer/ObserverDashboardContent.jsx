@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { useTheme } from '../../contexts/ThemeContext';
 import { showWelcomeToast, showNetworkError } from '../../utils/sweetAlerts';
 import ObserverCharts from './ObserverCharts';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { FaCog, FaBell, FaLock, FaUser, FaSave } from 'react-icons/fa';
 
 const ObserverSettings = () => {

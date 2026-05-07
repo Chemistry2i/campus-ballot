@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import ThemedTable from '../common/ThemedTable';
 import { useTheme } from '../../contexts/ThemeContext';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import ThemedTable from '../common/ThemedTable';
 import { FaCalendar, FaCheckCircle, FaHourglass, FaClock } from 'react-icons/fa';
 
