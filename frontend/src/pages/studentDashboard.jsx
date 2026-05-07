@@ -19,7 +19,7 @@ import CandidateComparison from '../components/student/CandidateComparison';
 import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
 import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
-import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
+import { generateVoteReceipt } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 import kyuLogo from "../assets/kyucsa.png";
 // baseURL is set centrally in axiosInstance.js — do not override here
@@ -257,8 +257,7 @@ function StudentDashboard({ user: initialUser }) {
     fetchNotifications();
     loadReceipts();
     
-    // Debug localStorage on load
-    console.log('All localStorage voteReceipts:', JSON.parse(localStorage.getItem('voteReceipts') || '[]'));
+    // Debug receipt loading
     console.log('Current user:', user);
     // setup socket listeners for real-time notifications
     let socketCleanup;
@@ -338,6 +337,7 @@ function StudentDashboard({ user: initialUser }) {
     fetchElections();
     fetchMyVotes();
     fetchNotifications();
+    loadReceipts();
     setLastRefresh(new Date());
   };
 
@@ -581,12 +581,13 @@ function StudentDashboard({ user: initialUser }) {
     }
   };
 
-  const loadReceipts = () => {
+  const loadReceipts = async () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('voteReceipts') || '[]');
-      const userReceipts = saved.filter(receipt => receipt.userId === (user._id || user.id));
-      setSavedReceipts(userReceipts);
-      console.log('Loaded receipts:', userReceipts.length, userReceipts);
+      const response = await axios.get('/api/receipts/user/my-receipts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSavedReceipts(response.data.receipts || []);
+      console.log('Loaded receipts from database:', response.data.receipts?.length);
     } catch (err) {
       console.error("Failed to load receipts:", err);
       setSavedReceipts([]);
@@ -882,6 +883,40 @@ function StudentDashboard({ user: initialUser }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Save receipt to database after successful vote
+      try {
+        const receiptResponse = await axios.post(
+          `/api/receipts`,
+          {
+            electionId: electionId,
+            votes: [{
+              position: finalPosition,
+              candidate: candidateId,
+              abstained: false
+            }]
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const receipt = receiptResponse.data.receipt;
+        
+        // Update component state with database receipt
+        setSavedReceipts(prev => [...prev, receipt]);
+        setSelectedReceipt(receipt);
+        setShowReceiptModal(true);
+        
+        success(`Receipt generated with code: ${receipt.receiptId}`);
+        
+        // Also refresh receipts from database to ensure sync
+        loadReceipts();
+      } catch (receiptErr) {
+        console.error('Failed to save receipt:', receiptErr);
+        // Don't fail the vote if receipt creation fails, but log it
+        error('Vote was saved but receipt generation failed: ' + (receiptErr.response?.data?.error || receiptErr.message));
+        // Still try to load any receipts that were created
+        loadReceipts();
+      }
+      
       return true; // Vote successful
       
     } catch (error) {
@@ -897,6 +932,7 @@ function StudentDashboard({ user: initialUser }) {
         // Refresh vote data to ensure UI is updated
         fetchMyVotes();
         fetchElections();
+        loadReceipts();
         
         Swal.fire({
           title: 'Already Voted',
@@ -937,9 +973,37 @@ function StudentDashboard({ user: initialUser }) {
       );
 
       success('Votes submitted successfully');
-      // Refresh local data so UI reflects new voted positions
+      
+      // Save batch receipt to database
+      try {
+        const receiptResponse = await axios.post(
+          `/api/receipts`,
+          {
+            electionId: multi.electionId,
+            votes: votes.map(v => ({
+              position: v.position,
+              candidate: v.candidateId,
+              abstained: v.abstain || false
+            }))
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const receipt = receiptResponse.data.receipt;
+        setSavedReceipts(prev => [...prev, receipt]);
+        setSelectedReceipt(receipt);
+        setShowReceiptModal(true);
+        
+        success(`Batch receipt generated with code: ${receipt.receiptId}`);
+      } catch (receiptErr) {
+        console.error('Failed to save batch receipt:', receiptErr);
+        error('Votes saved but receipt generation failed: ' + (receiptErr.response?.data?.error || receiptErr.message));
+      }
+      
+      // Refresh all data including receipts from database
       fetchMyVotes();
       fetchElections();
+      loadReceipts();
       setCurrentMultiVoting(null);
     } catch (err) {
       console.error('Batch submit error:', err);
@@ -1457,9 +1521,9 @@ function StudentDashboard({ user: initialUser }) {
         ) : (
           <div className="row g-3">
             {savedReceipts
-              .sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt))
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((receipt, index) => (
-              <div className="col-md-6 col-lg-4" key={receipt.id || index}>
+              <div className="col-md-6 col-lg-4" key={receipt._id || receipt.receiptId || index}>
                 <div 
                   className="card border h-100 receipt-card"
                   style={{ 
@@ -1496,15 +1560,15 @@ function StudentDashboard({ user: initialUser }) {
                           {receipt.election?.title || 'Unknown Election'}
                         </div>
                         <small className="text-muted">
-                          {new Date(receipt.votedAt).toLocaleDateString()}
+                          {new Date(receipt.createdAt).toLocaleDateString()}
                         </small>
                       </div>
                     </div>
                     
                     <div className="mb-2">
-                      <small className="text-muted d-block">Verification Code</small>
-                      <code className="bg-light px-2 py-1 rounded small" style={{ color: '#0d6efd', fontFamily: 'monospace' }}>
-                        {receipt.verificationCode}
+                      <small className="text-muted d-block">Receipt Code</small>
+                      <code className="bg-light px-2 py-1 rounded small" style={{ color: '#0d6efd', fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                        {receipt.receiptId}
                       </code>
                     </div>
                     
@@ -1523,8 +1587,8 @@ function StudentDashboard({ user: initialUser }) {
                         className="btn btn-outline-success btn-sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigator.clipboard.writeText(receipt.verificationCode);
-                          success('Verification code copied to clipboard!');
+                          navigator.clipboard.writeText(receipt.receiptId);
+                          success('Receipt code copied to clipboard!');
                         }}
                       >
                         <FaStar className="me-1" />
