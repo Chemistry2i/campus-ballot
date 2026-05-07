@@ -178,14 +178,21 @@ router.get('/winners', async (req, res) => {
 
       // For each position, find the candidate with highest votes
       for (const position of (election.positions || [])) {
-        const top = await Candidate.findOne({ election: election._id, position })
+        const candidatesInPosition = await Candidate.find({ election: election._id, position })
           .sort({ votes: -1 })
           .select('name position votes party photo status');
 
+        const top = candidatesInPosition[0];
+
         if (top) {
+          const totalVotes = candidatesInPosition.reduce((sum, candidate) => sum + (candidate.votes || 0), 0);
+          const percentage = totalVotes > 0 ? ((top.votes || 0) / totalVotes) * 100 : 0;
+
           electionEntry.winners.push({
             position,
-            candidate: top
+            percentage,
+            totalVotes,
+            candidate: top.toObject ? { ...top.toObject() } : top
           });
         }
       }

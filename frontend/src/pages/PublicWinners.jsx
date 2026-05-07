@@ -48,13 +48,26 @@ function PublicWinners() {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   const getWinnerPercentage = (winner) => {
-    const percentage = Number(winner?.candidate?.percentage);
+    const percentage = Number(winner?.percentage ?? winner?.candidate?.percentage ?? winner?.candidate?.votePercentage ?? winner?.candidate?.percentageOfVotes);
     return Number.isFinite(percentage) ? percentage : 0;
   };
 
   return (
     <div className="container py-4">
-      <h2 className="mb-3">Election Winners</h2>
+      <div className="mb-4 p-4 rounded-4 border shadow-sm" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%)' }}>
+        <div className="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2">
+          <div>
+            <div className="d-inline-flex align-items-center gap-2 mb-2 px-3 py-1 rounded-pill" style={{ backgroundColor: '#fff4cc', color: '#9a6b00', fontSize: '0.82rem', fontWeight: 700 }}>
+              <span>🏆</span>
+              <span>Official Results</span>
+            </div>
+            <h2 className="mb-1 fw-bold" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', letterSpacing: '-0.03em', color: '#0f172a' }}>
+              Election Winners
+            </h2>
+            <p className="mb-0 text-muted">Published winners from completed elections</p>
+          </div>
+        </div>
+      </div>
       {winners.length === 0 && <div className="alert alert-info">No published winners yet.</div>}
 
       {/* Controls: Position dropdown and Sort dropdown (responsive) */}
@@ -95,7 +108,7 @@ function PublicWinners() {
                     <div key={`${e._id}-${w.position}-${idx}`} className="col-12 col-md-6 col-lg-4">
                       <div className="card h-100 shadow-sm position-relative overflow-hidden" role="button" tabIndex={0} onKeyPress={(ev) => { if (ev.key === 'Enter') {/* noop */} }}>
                         <div
-                          className="position-absolute top-0 end-0 m-2 d-flex align-items-center justify-content-center"
+                          className="position-absolute top-0 start-0 m-2 d-flex align-items-center justify-content-center"
                           style={{
                             width: 38,
                             height: 38,
@@ -111,7 +124,7 @@ function PublicWinners() {
                           <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>🏅</span>
                         </div>
 
-                        <div className="card-body d-flex align-items-start gap-3 pe-4">
+                        <div className="card-body d-flex align-items-start gap-3 pe-4 pt-4">
                           <div>
                             <img
                               src={getImageUrl((w.candidate && w.candidate.photo) || '')}
@@ -124,10 +137,15 @@ function PublicWinners() {
                           <div className="flex-grow-1">
                             <div className="d-flex align-items-center justify-content-between mb-1">
                               <div className="fw-bold" style={{ fontSize: '0.98rem' }}>🏆 {w.candidate?.name}</div>
-                              <span className="badge bg-success" style={{ fontSize: '0.75rem' }}>{w.position}</span>
+                              <span className="badge rounded-pill bg-success px-3 py-2" style={{ fontSize: '0.75rem' }}>{w.position}</span>
                             </div>
                             <div className="small text-muted mb-2">{w.candidate?.party || 'Independent'}</div>
-                            <div className="small text-secondary">Votes: {w.candidate?.votes || w.candidate?.voteCount || 0}</div>
+                            <div className="d-flex flex-wrap align-items-center gap-2 small text-secondary">
+                              <span>Votes: {w.candidate?.votes || w.candidate?.voteCount || 0}</span>
+                              <span className="badge rounded-pill text-bg-light border text-success px-3 py-2">
+                                {getWinnerPercentage(w).toFixed(1)}% win share
+                              </span>
+                            </div>
                             <div className="mt-3">
                               <div className="d-flex justify-content-between align-items-center small mb-1">
                                 <span className="text-muted">Winning percentage</span>
