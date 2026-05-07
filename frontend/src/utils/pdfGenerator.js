@@ -1,13 +1,30 @@
 // Anonymous Vote Receipt Generator - No vote details shown
 // Generates printable HTML receipt with verification code but NO candidate/vote information
 export const generateVoteReceipt = (voteData) => {
-  const { election, votedAt, receiptId } = voteData;
+  // Handle both direct receipt objects and vote data passed to function
+  let election = voteData?.election;
+  let votedAt = voteData?.votedAt || voteData?.createdAt;
+  let receiptId = voteData?.receiptId;
   
-  // Validate input data
-  if (!election || !votedAt || !receiptId) {
+  // If election is an object with title property (populated), use it as-is
+  // If election is just an ID string or nested object, handle gracefully
+  const electionTitle = election?.title || election?.name || 'Election';
+  
+  // Validate that we have the minimum required data
+  if (!receiptId) {
     console.error('Invalid vote data for receipt generation:', voteData);
-    alert('Error: Unable to generate receipt. Missing receipt information.');
+    console.error('Missing receiptId. Available fields:', Object.keys(voteData || {}));
+    alert('Error: Unable to generate receipt. Missing verification code.');
     return;
+  }
+  
+  if (!votedAt) {
+    console.warn('Missing votedAt, using current time');
+    votedAt = new Date();
+  }
+  
+  if (!electionTitle || electionTitle === 'Election') {
+    console.warn('Missing election title, using default');
   }
   
   // Create a professional HTML receipt with campus ballot branding
@@ -16,7 +33,7 @@ export const generateVoteReceipt = (voteData) => {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Vote Receipt - ${election.title}</title>
+      <title>Vote Receipt - ${electionTitle}</title>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
@@ -291,7 +308,7 @@ export const generateVoteReceipt = (voteData) => {
           <div class="receipt-details">
             <div class="detail-row">
               <span class="detail-label">📊 Election</span>
-              <span class="detail-value">${election.title || 'Unknown Election'}</span>
+              <span class="detail-value">${electionTitle}</span>
             </div>
             
             <div class="detail-row">

@@ -10,6 +10,7 @@ const {
     getReceiptStatistics
 } = require('../controllers/receiptController');
 const { protect } = require('../middleware/authMiddleware');
+const Receipt = require('../models/Receipt');
 
 /**
  * POST /api/receipts
@@ -31,16 +32,23 @@ router.post('/', protect, async (req, res) => {
 
         const receipt = await createReceipt(userId, electionId, votes, ipAddress, userAgent);
 
+        // Populate receipt data before returning to ensure frontend has all needed info
+        const populatedReceipt = await Receipt.findById(receipt._id)
+            .populate('election', 'title startDate endDate')
+            .populate('votes.candidate', 'name party photo position');
+
         res.status(201).json({
             success: true,
             message: 'Receipt created successfully',
             receipt: {
-                receiptId: receipt.receiptId,
-                electionId: receipt.election,
-                createdAt: receipt.createdAt,
-                expiresAt: receipt.expiresAt,
-                verified: receipt.verified,
-                votes: receipt.votes
+                receiptId: populatedReceipt.receiptId,
+                election: populatedReceipt.election,
+                electionId: populatedReceipt.election?._id || electionId,
+                createdAt: populatedReceipt.createdAt,
+                expiresAt: populatedReceipt.expiresAt,
+                verified: populatedReceipt.verified,
+                votes: populatedReceipt.votes,
+                _id: populatedReceipt._id
             }
         });
     } catch (error) {

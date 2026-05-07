@@ -284,12 +284,13 @@ function ReceiptVerification() {
               <div style={{
                 display: 'flex',
                 gap: '12px',
-                marginTop: '20px'
+                marginTop: '20px',
+                flexWrap: 'wrap'
               }}>
                 <button
                   onClick={handleShowReceipt}
                   style={{
-                    flex: 1,
+                    flex: '1 1 calc(50% - 6px)',
                     padding: '12px 24px',
                     background: isDarkMode ? colors.primary : colors.primary,
                     color: 'white',
@@ -299,7 +300,8 @@ function ReceiptVerification() {
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: `0 4px 12px ${isDarkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(37, 99, 235, 0.3)'}`
+                    boxShadow: `0 4px 12px ${isDarkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(37, 99, 235, 0.3)'}`,
+                    minWidth: '150px'
                   }}
                 >
                   View Full Receipt
@@ -311,7 +313,7 @@ function ReceiptVerification() {
                     setReceiptId('');
                   }}
                   style={{
-                    flex: 1,
+                    flex: '1 1 calc(50% - 6px)',
                     padding: '12px 24px',
                     background: isDarkMode ? colors.surfaceHover : colors.surfaceHover,
                     color: isDarkMode ? colors.text : colors.text,
@@ -320,7 +322,8 @@ function ReceiptVerification() {
                     fontSize: '1rem',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    minWidth: '150px'
                   }}
                 >
                   Search Another Receipt

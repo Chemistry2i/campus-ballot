@@ -4209,12 +4209,18 @@ function StudentDashboard({ user: initialUser }) {
                     <button 
                       className="btn btn-outline-primary"
                       onClick={() => {
-                        generateVoteReceipt({
-                          election: selectedElection,
-                          candidate: selectedCandidateForVoting,
-                          votedAt: new Date(),
-                          verificationCode: voteVerificationCode
-                        });
+                        // Use the actual receipt from the database with receiptId
+                        if (selectedReceipt && selectedReceipt.receiptId) {
+                          generateVoteReceipt(selectedReceipt);
+                        } else {
+                          console.warn('Receipt data not available yet');
+                          Swal.fire({
+                            icon: 'warning',
+                            title: 'Receipt Pending',
+                            text: 'Receipt data is still being processed. Please try again in a moment.',
+                            confirmButtonText: 'OK'
+                          });
+                        }
                       }}
                     >
                       <FaDownload className="me-2" />
