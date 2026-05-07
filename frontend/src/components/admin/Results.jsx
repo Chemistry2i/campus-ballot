@@ -44,8 +44,28 @@ const POSITION_COLORS = {
 };
 
 const WINNER_COLOR = 'rgba(34, 197, 94, 0.95)'; // Green for winner
-const CHART_COLORS = Object.values(POSITION_COLORS);
 
+// Ensure API_URL is correctly defined and used for absolute paths
+// It should be set in your .env.production or .env file (e.g., VITE_API_URL=https://api.campusballot.tech)
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.campusballot.tech';
+
+// Helper function to get image URLs, prepending API_URL if it's a relative path
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  // Ensure path starts with /
+  const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${API_URL.replace(/\/$/, '')}${path}`;
+};
+
+// Helper for ordinal suffixes (1st, 2nd, 3rd, etc.)
+const getOrdinal = (n) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Results({ user }) {
@@ -115,7 +135,7 @@ function Results({ user }) {
     if (!positionCandidates || positionCandidates.length === 0) return [];
     const maxVotes = Math.max(...positionCandidates.map(c => c.votes || 0), 0);
     if (maxVotes === 0) return [];
-    return positionCandidates.filter(c => c.votes === maxVotes);
+    return positionCandidates.filter(c => Number(c.votes) === maxVotes);
   };
 
   // Get winner for a specific position (returns first winner, kept for backward compat)
@@ -641,9 +661,9 @@ function Results({ user }) {
                             {winners.map((winner) => (
                               <div key={winner._id} className="mb-3">
                                 <div className="position-relative" style={{ display: 'inline-block' }}>
-                                  {winner.photo ? (
+                                  {winner.photo && getImageUrl(winner.photo) ? (
                                     <img
-                                      src={winner.photo}
+                                      src={getImageUrl(winner.photo)}
                                       alt={winner.name}
                                       style={{
                                         width: 120,
@@ -797,7 +817,7 @@ function Results({ user }) {
                             positionCandidates.map((candidate, idx) => {
                               const percent = totalPositionVotes > 0 ? ((candidate.votes || 0) / totalPositionVotes * 100).toFixed(1) : '0.0';
                               const candidateIsWinner = isPositionWinner(candidate, position);
-                              const rowBg = candidateIsWinner
+                              const rowBg = candidateIsWinner && totalPositionVotes > 0
                                 ? isDarkMode
                                   ? 'rgba(34, 197, 94, 0.15)'
                                   : 'rgba(34, 197, 94, 0.08)'
@@ -806,14 +826,14 @@ function Results({ user }) {
                               return (
                                 <tr key={candidate._id || idx} style={{ backgroundColor: rowBg, borderBottomColor: colors.border }}>
                                   <td style={{ padding: '1rem', fontWeight: 'bold', color: colors.text }}>
-                                    {candidateIsWinner ? '🥇' : ''}
-                                    {idx + 1}
+                                    {candidateIsWinner && totalPositionVotes > 0 ? '🥇 ' : ''}
+                                    {getOrdinal(idx + 1)}
                                   </td>
                                   <td style={{ padding: '1rem', color: colors.text }}>
                                     <div className="d-flex align-items-center gap-2">
-                                      {candidate.photo ? (
+                                      {candidate.photo && getImageUrl(candidate.photo) ? (
                                         <img
-                                          src={candidate.photo}
+                                          src={getImageUrl(candidate.photo)}
                                           alt={candidate.name}
                                           style={{
                                             width: 36,
@@ -854,7 +874,7 @@ function Results({ user }) {
                                     {candidate.votes || 0}
                                   </td>
                                   <td style={{ padding: '1rem', color: colors.textSecondary }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '100px' }}>
                                       <div
                                         style={{
                                           width: '40px',
@@ -878,7 +898,7 @@ function Results({ user }) {
                                     </div>
                                   </td>
                                   <td style={{ padding: '1rem' }}>
-                                    {candidateIsWinner && (
+                                    {candidateIsWinner && totalPositionVotes > 0 && (
                                       <span
                                         className="badge"
                                         style={{
