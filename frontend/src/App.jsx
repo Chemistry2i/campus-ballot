@@ -19,6 +19,7 @@ const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const VotingPage = lazy(() => import("./pages/VotingPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const PublicCandidates = lazy(() => import("./pages/PublicCandidates"));
+const PublicWinners = lazy(() => import("./pages/PublicWinners"));
 const CandidateApplication = lazy(() => import("./pages/CandidateApplication"));
 
 // Legal Pages
@@ -337,6 +338,7 @@ function App() {
           
           {/* Public Routes - No Authentication Required */}
           <Route path="/candidates" element={<PublicCandidates />} />
+          <Route path="/winners" element={<PublicWinners />} />
           
           {/* Legal Pages - Public Routes */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

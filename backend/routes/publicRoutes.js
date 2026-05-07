@@ -156,6 +156,50 @@ router.get('/elections/:id/candidates', async (req, res) => {
   }
 });
 
+// @desc    Get winners for completed elections (public)
+// @route   GET /api/public/winners
+// @access  Public
+router.get('/winners', async (req, res) => {
+  try {
+    // Only include elections that have completed and have published results
+    const elections = await Election.find({ status: 'completed', resultsPublished: true })
+      .sort({ endDate: -1 })
+      .select('title endDate positions');
+
+    const winners = [];
+
+    for (const election of elections) {
+      const electionEntry = {
+        _id: election._id,
+        title: election.title,
+        endDate: election.endDate,
+        winners: []
+      };
+
+      // For each position, find the candidate with highest votes
+      for (const position of (election.positions || [])) {
+        const top = await Candidate.findOne({ election: election._id, position })
+          .sort({ votes: -1 })
+          .select('name position votes party photo status');
+
+        if (top) {
+          electionEntry.winners.push({
+            position,
+            candidate: top
+          });
+        }
+      }
+
+      winners.push(electionEntry);
+    }
+
+    res.json(winners);
+  } catch (error) {
+    console.error('Error fetching public winners:', error);
+    res.status(500).json({ message: 'Failed to fetch winners' });
+  }
+});
+
 // @desc    Submit a question to a candidate
 // @route   POST /api/public/candidates/:candidateId/questions
 // @access  Protected (Student)
