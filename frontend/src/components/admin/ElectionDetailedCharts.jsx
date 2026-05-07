@@ -38,30 +38,6 @@ ChartJS.register(
   Filler
 );
 
-// Determine the correct API URL
-const getAPIUrl = () => {
-  const env = import.meta.env.VITE_API_URL;
-  if (env && env.trim()) return env;
-  
-  // Fall back to current host's API
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    // Map frontend URL to API URL
-    if (hostname.includes('localhost') || hostname === '127.0.0.1') {
-      return 'http://localhost:5000'; // Local dev
-    }
-    if (hostname.includes('campusballot.tech')) {
-      return 'https://api.campusballot.tech'; // Production
-    }
-  }
-  return ''; // Empty string means use relative paths with axios baseURL
-};
-
-const API_URL = getAPIUrl();
-
-console.log('🔍 ElectionDetailedCharts API_URL:', API_URL, 'ENV:', import.meta.env.VITE_API_URL);
-
 function ElectionDetailedCharts({ electionId }) {
   const { isDarkMode, colors } = useTheme();
   const [electionData, setElectionData] = useState(null);
@@ -70,6 +46,7 @@ function ElectionDetailedCharts({ electionId }) {
   const [error, setError] = useState(null);
   const [exportFormat, setExportFormat] = useState('csv');
   const [apiDebug, setApiDebug] = useState(null);
+  const [dataSource, setDataSource] = useState('unknown');
 
   useEffect(() => {
     const fetchElectionData = async () => {
@@ -92,25 +69,104 @@ function ElectionDetailedCharts({ electionId }) {
           return;
         }
 
-        const apiEndpoint = `${API_URL}/api/admin/election/${electionId}/detailed-stats`;
-        console.log('📡 Fetching from:', apiEndpoint);
+        // Try the Results endpoint first (proven to work with Results.jsx)
+        const resultsEndpoint = `https://api.campusballot.tech/api/elections/${electionId}/results`;
+        console.log('📡 Attempting Results endpoint:', resultsEndpoint);
         
-        const response = await axios.get(
-          apiEndpoint,
-          {
+        try {
+          const resultsResponse = await axios.get(resultsEndpoint, {
             headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        
-        console.log('✅ Full API Response:', response.data);
-        
-        // Validate response structure
-        if (!response.data || !response.data.positionStats) {
-          console.warn('⚠️ Response missing expected structure:', response.data);
-          setApiDebug({
-            received: response.data,
-            missing: 'positionStats'
           });
+          
+          console.log('✅ Got Results data:', resultsResponse.data);
+          setDataSource('results');
+          
+          // Transform Results data to match our expected structure
+          if (resultsResponse.data.results) {
+            const candidates = resultsResponse.data.results;
+            console.log('📋 Candidates received:', candidates.length);
+            
+            // Get all unique positions
+            const positions = [...new Set(candidates.map(c => c.position))];
+            console.log('📍 Positions found:', positions);
+            
+            // Group candidates by position
+            const positionStats = positions.map(position => {
+              const positionCandidates = candidates.filter(c => c.position === position);
+              const totalVotes = positionCandidates.reduce((sum, c) => {
+                const votes = Number(c.votes) || 0;
+                console.log(`  - ${c.name}: ${votes} votes`);
+                return sum + votes;
+              }, 0);
+              
+              return {
+                position,
+                totalCandidates: positionCandidates.length,
+                totalVotes,
+                candidates: positionCandidates.map(c => ({
+                  _id: c._id,
+                  name: c.name,
+                  position: c.position,
+                  photo: c.photo,
+                  party: c.party,
+                  status: c.status,
+                  voteCount: Number(c.votes) || 0
+                }))
+              };
+            });
+            
+            console.log('📊 positionStats calculated:', positionStats);
+            
+            // Get election details
+            const electionRes = await axios.get(
+              `https://api.campusballot.tech/api/elections/${electionId}`, 
+              {
+                headers: { Authorization: `Bearer ${token}` }
+              }
+            );
+            
+            const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
+            
+            setElectionData({
+              election: {
+                _id: electionRes.data._id,
+                title: electionRes.data.title,
+                description: electionRes.data.description,
+                status: electionRes.data.status,
+                startDate: electionRes.data.startDate,
+                endDate: electionRes.data.endDate
+              },
+              positions,
+              positionStats,
+              totalVotes,
+              totalCandidates: candidates.length
+            });
+            
+            // Set first position as default selection
+            if (positions && positions.length > 0) {
+              console.log('📌 Setting default position to:', positions[0]);
+              setSelectedPosition(positions[0]);
+            }
+            return;
+          }
+        } catch (resultsErr) {
+          console.warn('⚠️ Results endpoint failed:', resultsErr.message);
+          console.warn('   Trying fallback endpoint...');
+        }
+        
+        // Fallback to detailed-stats endpoint
+        const detailedEndpoint = `/api/admin/election/${electionId}/detailed-stats`;
+        console.log('📡 Fetching from detailed-stats:', detailedEndpoint);
+        setDataSource('detailed-stats');
+        
+        const response = await axios.get(detailedEndpoint, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('✅ Got detailed-stats data:', response.data);
+        
+        if (!response.data || !response.data.positionStats) {
+          throw new Error('Response missing positionStats field');
         }
         
         setElectionData(response.data);
@@ -119,14 +175,10 @@ function ElectionDetailedCharts({ electionId }) {
         if (response.data.positions && response.data.positions.length > 0) {
           console.log('📍 Setting default position to:', response.data.positions[0]);
           setSelectedPosition(response.data.positions[0]);
-        } else {
-          console.warn('⚠️ No positions found in response');
         }
       } catch (err) {
         console.error('❌ Error fetching election stats:', err);
         console.error('Error details:', err.response?.data || err.message);
-        console.error('Error status:', err.response?.status);
-        console.error('Full error:', err);
         
         const errorMsg = err.response?.data?.message || err.message;
         setError(`Failed to load election data: ${errorMsg}`);
@@ -134,7 +186,7 @@ function ElectionDetailedCharts({ electionId }) {
           error: true,
           message: errorMsg,
           status: err.response?.status,
-          endpoint: `${API_URL}/api/admin/election/${electionId}/detailed-stats`
+          attempted: dataSource
         });
       } finally {
         setLoading(false);
@@ -146,37 +198,31 @@ function ElectionDetailedCharts({ electionId }) {
 
   const exportData = () => {
     if (!electionData) return;
-
-    if (exportFormat === 'csv') {
-      exportToCSV();
-    } else if (exportFormat === 'json') {
-      exportToJSON();
-    }
+    if (exportFormat === 'csv') exportToCSV();
+    else if (exportFormat === 'json') exportToJSON();
   };
 
-  // Helper function to get proper image URL
   const getImageUrl = (candidate) => {
     if (!candidate.photo) return null;
-    
-    // If it's already an absolute URL, return as-is
     if (candidate.photo.startsWith('http://') || candidate.photo.startsWith('https://')) {
       return candidate.photo;
     }
-    
-    // Otherwise construct the full URL
-    const baseUrl = API_URL || window.location.origin;
-    return `${baseUrl}${candidate.photo.startsWith('/') ? candidate.photo : '/' + candidate.photo}`;
+    return `https://api.campusballot.tech${candidate.photo.startsWith('/') ? candidate.photo : '/' + candidate.photo}`;
   };
 
   const exportToCSV = () => {
     try {
       let csv = `Election: ${electionData.election.title}\n`;
+      csv += `Data Source: ${dataSource}\n`;
       csv += `Date: ${new Date().toLocaleString()}\n\n`;
-      csv += `Position,Candidate Name,Party,Vote Count,Status\n`;
+      csv += `Position,Candidate Name,Party,Vote Count,Percentage,Status\n`;
 
       electionData.positionStats.forEach(positionData => {
         positionData.candidates.forEach(candidate => {
-          csv += `"${positionData.position}","${candidate.name}","${candidate.party || 'N/A'}",${candidate.voteCount},"${candidate.status}"\n`;
+          const percentage = positionData.totalVotes > 0 
+            ? ((candidate.voteCount / positionData.totalVotes) * 100).toFixed(1)
+            : 0;
+          csv += `"${positionData.position}","${candidate.name}","${candidate.party || 'N/A'}",${candidate.voteCount},${percentage}%,"${candidate.status}"\n`;
         });
       });
 
@@ -184,7 +230,7 @@ function ElectionDetailedCharts({ electionId }) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `election-results-${electionData.election._id}.csv`);
+      link.setAttribute('download', `election-results-${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -197,6 +243,7 @@ function ElectionDetailedCharts({ electionId }) {
     try {
       const jsonData = {
         election: electionData.election,
+        dataSource,
         exportDate: new Date().toISOString(),
         positions: electionData.positionStats
       };
@@ -205,7 +252,7 @@ function ElectionDetailedCharts({ electionId }) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `election-results-${electionData.election._id}.json`);
+      link.setAttribute('download', `election-results-${new Date().toISOString().split('T')[0]}.json`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -245,11 +292,6 @@ function ElectionDetailedCharts({ electionId }) {
     return (
       <div className="alert alert-info text-center" role="alert">
         <p>No election data available. Please select an election.</p>
-        {apiDebug && (
-          <div style={{ backgroundColor: '#cfe2ff', padding: '10px', borderRadius: '5px', marginTop: '10px', fontSize: '0.85rem' }}>
-            API Debug: {JSON.stringify(apiDebug, null, 2)}
-          </div>
-        )}
       </div>
     );
   }
@@ -257,50 +299,21 @@ function ElectionDetailedCharts({ electionId }) {
   const currentPositionData = selectedPosition 
     ? electionData.positionStats.find(p => p.position === selectedPosition)
     : null;
-    
-  // Safely get chart data with validation
-  console.log('📊 positionStats available:', !!electionData?.positionStats, 'Count:', electionData?.positionStats?.length);
-  console.log('📌 selectedPosition:', selectedPosition);
-  console.log('📍 currentPositionData:', currentPositionData);
   
-  // Prepare data for positions overview bar chart (all positions, total votes)
-  const positionsOverviewData = electionData?.positionStats && electionData.positionStats.length > 0 ? {
-    labels: electionData.positionStats.map(p => p.position || 'Unknown'),
+  // Chart data
+  const positionsOverviewData = {
+    labels: (electionData.positionStats || []).map(p => p.position || 'Unknown'),
     datasets: [{
       label: 'Total Votes Per Position',
-      data: electionData.positionStats.map(p => p.totalVotes || 0),
-      backgroundColor: [
-        'rgba(13, 110, 253, 0.8)',
-        'rgba(25, 135, 84, 0.8)',
-        'rgba(255, 193, 7, 0.8)',
-        'rgba(220, 53, 69, 0.8)',
-        'rgba(111, 66, 193, 0.8)',
-        'rgba(13, 202, 240, 0.8)',
-      ],
-      borderColor: [
-        '#0d6efd',
-        '#198754',
-        '#ffc107',
-        '#dc3545',
-        '#6f42c1',
-        '#0dcaf0',
-      ],
+      data: (electionData.positionStats || []).map(p => p.totalVotes || 0),
+      backgroundColor: ['rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)', 'rgba(111, 66, 193, 0.8)', 'rgba(13, 202, 240, 0.8)'],
+      borderColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#0dcaf0'],
       borderWidth: 2,
       borderRadius: 4,
     }]
-  } : {
-    labels: [],
-    datasets: [{
-      label: 'Total Votes Per Position',
-      data: [],
-      backgroundColor: 'rgba(13, 110, 253, 0.8)',
-    }]
   };
 
-  console.log('📈 positionsOverviewData:', positionsOverviewData);
-
-  // Prepare data for selected position candidates chart
-  const selectedPositionCandidatesData = currentPositionData && currentPositionData.candidates && currentPositionData.candidates.length > 0 ? {
+  const selectedPositionCandidatesData = currentPositionData && currentPositionData.candidates?.length > 0 ? {
     labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
       label: `Votes in ${selectedPosition}`,
@@ -312,44 +325,25 @@ function ElectionDetailedCharts({ electionId }) {
     }]
   } : null;
 
-  // Doughnut chart for vote distribution in selected position
-  const voteDoughnutData = currentPositionData && currentPositionData.candidates && currentPositionData.candidates.length > 0 ? {
+  const voteDoughnutData = currentPositionData && currentPositionData.candidates?.length > 0 ? {
     labels: currentPositionData.candidates.map(c => c.name || 'Unknown'),
     datasets: [{
       data: currentPositionData.candidates.map(c => c.voteCount || 0),
-      backgroundColor: [
-        'rgba(13, 110, 253, 0.8)',
-        'rgba(25, 135, 84, 0.8)',
-        'rgba(255, 193, 7, 0.8)',
-        'rgba(220, 53, 69, 0.8)',
-        'rgba(111, 66, 193, 0.8)',
-      ],
+      backgroundColor: ['rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(220, 53, 69, 0.8)', 'rgba(111, 66, 193, 0.8)'],
       borderColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1'],
       borderWidth: 2,
     }]
   } : null;
 
-  console.log('🎯 selectedPositionCandidatesData:', selectedPositionCandidatesData);
-  console.log('🥧 voteDoughnutData:', voteDoughnutData);
+  console.log('🎯 Selected position data:', currentPositionData);
+  console.log('📊 Chart data ready:', { positionsOverviewData, selectedPositionCandidatesData, voteDoughnutData });
 
   return (
     <div className="row g-4">
       {/* Election Header */}
       <div className="col-12">
-        <div
-          className="card shadow-sm border-0"
-          style={{
-            backgroundColor: colors.cardBg,
-            borderColor: colors.border
-          }}
-        >
-          <div
-            className="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center"
-            style={{
-              backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
-              borderBottomColor: colors.border
-            }}
-          >
+        <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+          <div className="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent', borderBottomColor: colors.border }}>
             <div>
               <h4 className="mb-1 fw-bold" style={{ color: colors.text }}>
                 {electionData.election.title}
@@ -357,24 +351,16 @@ function ElectionDetailedCharts({ electionId }) {
               <p className="mb-0" style={{ color: colors.textSecondary, fontSize: '0.9rem' }}>
                 Status: <strong>{electionData.election.status}</strong> | 
                 Total Votes: <strong>{electionData.totalVotes}</strong> | 
-                Total Candidates: <strong>{electionData.totalCandidates}</strong>
+                Total Candidates: <strong>{electionData.totalCandidates}</strong> |
+                Data Source: <strong>{dataSource}</strong>
               </p>
             </div>
             <div className="d-flex gap-2">
-              <select
-                className="form-select form-select-sm"
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value)}
-                style={{ width: '120px' }}
-              >
+              <select className="form-select form-select-sm" value={exportFormat} onChange={(e) => setExportFormat(e.target.value)} style={{ width: '120px' }}>
                 <option value="csv">CSV</option>
                 <option value="json">JSON</option>
               </select>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={exportData}
-                title="Export results"
-              >
+              <button className="btn btn-primary btn-sm" onClick={exportData} title="Export results">
                 <FontAwesomeIcon icon={faDownload} className="me-1" />
                 Export
               </button>
@@ -385,56 +371,15 @@ function ElectionDetailedCharts({ electionId }) {
 
       {/* Positions Overview - Bar Chart */}
       <div className="col-12">
-        <div
-          className="card shadow-sm border-0"
-          style={{
-            backgroundColor: colors.cardBg,
-            borderColor: colors.border
-          }}
-        >
-          <div
-            className="card-header bg-transparent border-0 py-3"
-            style={{
-              backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
-              borderBottomColor: colors.border
-            }}
-          >
+        <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+          <div className="card-header bg-transparent border-0 py-3" style={{ backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent', borderBottomColor: colors.border }}>
             <h5 className="mb-0 fw-bold d-flex align-items-center" style={{ color: colors.text }}>
               <FontAwesomeIcon icon={faChartBar} className="text-primary me-2" />
               Votes by Position Overview
             </h5>
           </div>
           <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
-            <Bar
-              data={positionsOverviewData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { 
-                    display: true,
-                    labels: { color: colors.text }
-                  },
-                  tooltip: {
-                    backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)',
-                  }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    grid: {
-                      color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)'
-                    },
-                    ticks: { color: colors.textSecondary }
-                  },
-                  x: {
-                    grid: { display: false },
-                    ticks: { color: colors.textSecondary }
-                  }
-                }
-              }}
-              height={300}
-            />
+            <Bar data={positionsOverviewData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { color: colors.text } }, tooltip: { backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)' } }, scales: { y: { beginAtZero: true, grid: { color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' }, ticks: { color: colors.textSecondary } }, x: { grid: { display: false }, ticks: { color: colors.textSecondary } } } }} height={300} />
           </div>
         </div>
       </div>
@@ -443,12 +388,7 @@ function ElectionDetailedCharts({ electionId }) {
       <div className="col-12">
         <div className="d-flex gap-2 flex-wrap mb-2">
           {electionData.positions.map(position => (
-            <button
-              key={position}
-              className={`btn ${selectedPosition === position ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setSelectedPosition(position)}
-              size="sm"
-            >
+            <button key={position} className={`btn ${selectedPosition === position ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setSelectedPosition(position)} size="sm">
               {position}
             </button>
           ))}
@@ -458,20 +398,8 @@ function ElectionDetailedCharts({ electionId }) {
       {/* Selected Position - Candidates Bar Chart */}
       {selectedPositionCandidatesData && (
         <div className="col-md-6">
-          <div
-            className="card shadow-sm border-0"
-            style={{
-              backgroundColor: colors.cardBg,
-              borderColor: colors.border
-            }}
-          >
-            <div
-              className="card-header bg-transparent border-0 py-3"
-              style={{
-                backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
-                borderBottomColor: colors.border
-              }}
-            >
+          <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+            <div className="card-header bg-transparent border-0 py-3" style={{ backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent', borderBottomColor: colors.border }}>
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
                 {selectedPosition} - Candidates Votes
               </h5>
@@ -481,34 +409,7 @@ function ElectionDetailedCharts({ electionId }) {
             </div>
             <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
               {currentPositionData.candidates.length > 0 ? (
-                <Bar
-                  data={selectedPositionCandidatesData}
-                  options={{
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: {
-                        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)',
-                      }
-                    },
-                    scales: {
-                      x: {
-                        beginAtZero: true,
-                        grid: {
-                          color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)'
-                        },
-                        ticks: { color: colors.textSecondary }
-                      },
-                      y: {
-                        grid: { display: false },
-                        ticks: { color: colors.textSecondary }
-                      }
-                    }
-                  }}
-                  height={300}
-                />
+                <Bar data={selectedPositionCandidatesData} options={{ indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)' } }, scales: { x: { beginAtZero: true, grid: { color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0,0,0,0.1)' }, ticks: { color: colors.textSecondary } }, y: { grid: { display: false }, ticks: { color: colors.textSecondary } } } }} height={300} />
               ) : (
                 <div className="text-center py-5" style={{ color: colors.textMuted }}>
                   <FontAwesomeIcon icon={faUsers} size="3x" className="mb-3 opacity-25" />
@@ -523,47 +424,14 @@ function ElectionDetailedCharts({ electionId }) {
       {/* Vote Distribution Doughnut */}
       {voteDoughnutData && (
         <div className="col-md-6">
-          <div
-            className="card shadow-sm border-0"
-            style={{
-              backgroundColor: colors.cardBg,
-              borderColor: colors.border
-            }}
-          >
-            <div
-              className="card-header bg-transparent border-0 py-3"
-              style={{
-                backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
-                borderBottomColor: colors.border
-              }}
-            >
+          <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+            <div className="card-header bg-transparent border-0 py-3" style={{ backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent', borderBottomColor: colors.border }}>
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
                 {selectedPosition} - Vote Distribution
-              </h5> 
+              </h5>
             </div>
             <div className="card-body" style={{ backgroundColor: colors.cardBg }}>
-              <Doughnut
-                data={voteDoughnutData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: 'bottom',
-                      labels: {
-                        color: colors.text,
-                        usePointStyle: true,
-                        padding: 15
-                      }
-                    },
-                    tooltip: {
-                      backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)',
-                    }
-                  }
-                }}
-                height={300}
-              />
+              <Doughnut data={voteDoughnutData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: colors.text, usePointStyle: true, padding: 15 } }, tooltip: { backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.9)' : 'rgba(0,0,0,0.8)' } } }} height={300} />
             </div>
           </div>
         </div>
@@ -572,40 +440,22 @@ function ElectionDetailedCharts({ electionId }) {
       {/* Detailed Candidates Table */}
       {currentPositionData && (
         <div className="col-12">
-          <div
-            className="card shadow-sm border-0"
-            style={{
-              backgroundColor: colors.cardBg,
-              borderColor: colors.border
-            }}
-          >
-            <div
-              className="card-header bg-transparent border-0 py-3"
-              style={{
-                backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent',
-                borderBottomColor: colors.border
-              }}
-            >
+          <div className="card shadow-sm border-0" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+            <div className="card-header bg-transparent border-0 py-3" style={{ backgroundColor: isDarkMode ? colors.surfaceHover : 'transparent', borderBottomColor: colors.border }}>
               <h5 className="mb-0 fw-bold" style={{ color: colors.text }}>
                 {selectedPosition} - Detailed Results
               </h5>
             </div>
             <div className="card-body table-responsive" style={{ backgroundColor: colors.cardBg }}>
               {currentPositionData.candidates.length > 0 ? (
-                <table
-                  className="table table-hover mb-0"
-                  style={{
-                    borderColor: colors.border,
-                    color: colors.text
-                  }}
-                >
+                <table className="table table-hover mb-0" style={{ borderColor: colors.border, color: colors.text }}>
                   <thead style={{ borderBottomColor: colors.border }}>
                     <tr style={{ backgroundColor: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
                       <th style={{ color: colors.text }}>Rank</th>
-                      <th style={{ color: colors.text }}>Candidate Name</th>
+                      <th style={{ color: colors.text }}>Candidate</th>
                       <th style={{ color: colors.text }}>Party</th>
                       <th style={{ color: colors.text }}>Votes</th>
-                      <th style={{ color: colors.text }}>% of Position Votes</th>
+                      <th style={{ color: colors.text }}>%</th>
                       <th style={{ color: colors.text }}>Status</th>
                     </tr>
                   </thead>
@@ -617,71 +467,21 @@ function ElectionDetailedCharts({ electionId }) {
                           ? ((candidate.voteCount / currentPositionData.totalVotes) * 100).toFixed(1)
                           : 0;
                         return (
-                          <tr
-                            key={candidate._id}
-                            style={{
-                              borderColor: colors.border,
-                              backgroundColor: idx === 0 
-                                ? isDarkMode 
-                                  ? 'rgba(220, 53, 69, 0.15)' 
-                                  : 'rgba(220, 53, 69, 0.05)'
-                                : 'transparent'
-                            }}
-                          >
-                            <td style={{ color: colors.text }}>
-                              <strong>#{idx + 1}</strong>
-                            </td>
+                          <tr key={candidate._id} style={{ borderColor: colors.border, backgroundColor: idx === 0 ? (isDarkMode ? 'rgba(220, 53, 69, 0.15)' : 'rgba(220, 53, 69, 0.05)') : 'transparent' }}>
+                            <td style={{ color: colors.text }}><strong>#{idx + 1}</strong></td>
                             <td style={{ color: colors.text }}>
                               <div className="d-flex align-items-center gap-2">
-                                {candidate.photo ? (
-                                  <img
-                                    src={getImageUrl(candidate)}
-                                    alt={candidate.name}
-                                    style={{
-                                      width: '32px',
-                                      height: '32px',
-                                      borderRadius: '50%',
-                                      objectFit: 'cover',
-                                      backgroundColor: '#e2e8f0',
-                                      border: `1px solid ${colors.border}`
-                                    }}
-                                    onError={(e) => {
-                                      console.warn('⚠️ Image load failed for', candidate.name, 'URL:', getImageUrl(candidate));
-                                      e.target.style.display = 'none';
-                                    }}
-                                  />
-                                ) : null}
-                                <div>
-                                  <div>{candidate.name}</div>
-                                  {candidate.photo && (
-                                    <small style={{ color: colors.textSecondary, fontSize: '0.75rem' }}>
-                                      📷 {getImageUrl(candidate)?.substring(0, 30)}...
-                                    </small>
-                                  )}
-                                </div>
+                                {candidate.photo && (
+                                  <img src={getImageUrl(candidate)} alt={candidate.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#e2e8f0', border: `1px solid ${colors.border}` }} onError={(e) => { console.warn('⚠️ Image failed:', candidate.name); e.target.style.display = 'none'; }} />
+                                )}
+                                <span>{candidate.name}</span>
                               </div>
                             </td>
-                            <td style={{ color: colors.textSecondary }}>
-                              {candidate.party || '-'}
-                            </td>
+                            <td style={{ color: colors.textSecondary }}>{candidate.party || '-'}</td>
+                            <td><strong style={{ color: '#dc3545' }}>{candidate.voteCount}</strong></td>
+                            <td style={{ color: colors.textSecondary }}><strong>{percentage}%</strong></td>
                             <td>
-                              <strong style={{ color: '#dc3545' }}>
-                                {candidate.voteCount}
-                              </strong>
-                            </td>
-                            <td style={{ color: colors.textSecondary }}>
-                              {percentage}%
-                            </td>
-                            <td>
-                              <span
-                                className="badge"
-                                style={{
-                                  backgroundColor:
-                                    candidate.status === 'approved'
-                                      ? '#198754'
-                                      : '#ffc107'
-                                }}
-                              >
+                              <span className="badge" style={{ backgroundColor: candidate.status === 'approved' ? '#198754' : '#ffc107' }}>
                                 {candidate.status}
                               </span>
                             </td>
