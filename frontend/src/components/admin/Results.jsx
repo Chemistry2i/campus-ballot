@@ -118,6 +118,7 @@ function Results({ user }) {
   const [loading, setLoading] = useState(false);
   const [unpublished, setUnpublished] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [failedImages, setFailedImages] = useState(new Set()); // Track failed image loads by candidate ID
 
   // Authorization check - must happen but not early return (hooks rule violation)
   const isAuthorized = user?.role === 'admin';
@@ -697,10 +698,14 @@ function Results({ user }) {
                             <h6 style={{ color: posColor, fontWeight: 'bold', marginBottom: '1rem' }}>
                               {getPositionIcon(position)} {position}
                             </h6>
-                            {winners.map((winner) => (
+                            {winners.map((winner) => {
+                              const winnerId = winner._id || winner.id;
+                              const imageFailedForWinner = failedImages.has(winnerId);
+                              
+                              return (
                               <div key={winner._id} className="mb-3">
                                 <div className="position-relative" style={{ display: 'inline-block' }}>
-                                  {winner.photo && getImageUrl(winner.photo) ? (
+                                  {winner.photo && getImageUrl(winner.photo) && !imageFailedForWinner ? (
                                     <img
                                       src={getImageUrl(winner.photo)}
                                       alt={winner.name}
@@ -708,10 +713,13 @@ function Results({ user }) {
                                         width: 120,
                                         height: 120,
                                         borderRadius: '50%',
-                                        objectFit: 'contain',
-                                        padding: '8px',
+                                        objectFit: 'cover',
+                                        padding: '0px',
                                         border: `4px solid ${posColor}`,
                                         boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                                      }}
+                                      onError={() => {
+                                        setFailedImages(prev => new Set([...prev, winnerId]));
                                       }}
                                     />
                                   ) : (
@@ -763,7 +771,8 @@ function Results({ user }) {
                                   </small>
                                 </div>
                               </div>
-                            ))}
+                            );
+                            })}
                           </div>
                         ) : (
                           <div style={{
@@ -859,6 +868,8 @@ function Results({ user }) {
                             positionCandidates.map((candidate, idx) => {
                               const percent = totalPositionVotes > 0 ? ((candidate.votes || 0) / totalPositionVotes * 100).toFixed(1) : '0.0';
                               const candidateIsWinner = isPositionWinner(candidate, position);
+                              const candidateId = candidate._id || candidate.id || idx;
+                              const imageFailedForCandidate = failedImages.has(candidateId);
                               const rowBg = candidateIsWinner && totalPositionVotes > 0
                                 ? isDarkMode
                                   ? 'rgba(34, 197, 94, 0.15)'
@@ -873,7 +884,7 @@ function Results({ user }) {
                                   </td>
                                   <td style={{ padding: '1rem', color: colors.text }}>
                                     <div className="d-flex align-items-center gap-2">
-                                      {candidate.photo && getImageUrl(candidate.photo) ? (
+                                      {candidate.photo && getImageUrl(candidate.photo) && !imageFailedForCandidate ? (
                                         <img
                                           src={getImageUrl(candidate.photo)}
                                           alt={candidate.name}
@@ -881,9 +892,12 @@ function Results({ user }) {
                                             width: 36,
                                             height: 36,
                                             borderRadius: '50%',
-                                            objectFit: 'contain',
-                                            padding: '3px',
+                                            objectFit: 'cover',
+                                            padding: '0px',
                                             border: `2px solid ${candidateIsWinner ? '#22c55e' : colors.border}`
+                                          }}
+                                          onError={() => {
+                                            setFailedImages(prev => new Set([...prev, candidateId]));
                                           }}
                                         />
                                       ) : (
@@ -898,7 +912,8 @@ function Results({ user }) {
                                             justifyContent: 'center',
                                             color: '#fff',
                                             fontWeight: 'bold',
-                                            fontSize: '0.9rem'
+                                            fontSize: '0.9rem',
+                                            border: `2px solid ${candidateIsWinner ? '#22c55e' : posColor}`
                                           }}
                                         >
                                           {candidate.name?.charAt(0) || '?'}
@@ -940,7 +955,7 @@ function Results({ user }) {
                                     </div>
                                   </td>
                                   <td style={{ padding: '1rem' }}>
-                                    {candidateIsWinner && totalPositionVotes > 0 && (
+                                    {candidateIsWinner && totalPositionVotes > 0 ? (
                                       <span
                                         className="badge"
                                         style={{
@@ -951,6 +966,18 @@ function Results({ user }) {
                                         }}
                                       >
                                         🏆 WINNER
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className="badge"
+                                        style={{
+                                          backgroundColor: colors.textSecondary,
+                                          color: isDarkMode ? '#000' : '#fff',
+                                          fontSize: '0.85rem',
+                                          padding: '0.5rem 0.75rem'
+                                        }}
+                                      >
+                                        {getOrdinal(idx + 1)}
                                       </span>
                                     )}
                                   </td>

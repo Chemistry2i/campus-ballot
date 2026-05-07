@@ -5,8 +5,7 @@ function getImageUrl(imagePath) {
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
-  // Otherwise, return null (do not fallback to /uploads)
-  return null;
+  // Otherwise, prepend API URL to create full path
   return `https://api.campusballot.tech${imagePath}`;
 }
 
