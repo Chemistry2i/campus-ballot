@@ -350,7 +350,7 @@ const getElectionResults = asyncHandler(async (req, res) => {
       return res.status(403).json({ message: "Results not published yet" });
     }
     // Get candidates and their votes
-    const candidates = await Candidate.find({ election: election._id }).select("name position votes status");
+    const candidates = await Candidate.find({ election: election._id }).select("name position votes status party photo email");
     res.json({ election: election.title, results: candidates });
   } catch (error) {
     res.status(500).json({ message: error.message });

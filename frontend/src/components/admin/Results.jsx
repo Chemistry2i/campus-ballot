@@ -162,8 +162,13 @@ function Results({ user }) {
     });
 
     // Sort candidates within each position by votes (descending)
+    // Convert votes to numbers to handle string values from API
     Object.keys(grouped).forEach(position => {
-      grouped[position].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+      grouped[position].sort((a, b) => {
+        const votesA = Number(a.votes) || 0;
+        const votesB = Number(b.votes) || 0;
+        return votesB - votesA;
+      });
     });
 
     setGroupedResults(grouped);
@@ -173,9 +178,11 @@ function Results({ user }) {
   // Get ALL winners for a position (handles ties - multiple candidates with same highest votes)
   const getPositionWinners = (positionCandidates) => {
     if (!positionCandidates || positionCandidates.length === 0) return [];
-    const maxVotes = Math.max(...positionCandidates.map(c => c.votes || 0), 0);
+    // Convert all votes to numbers for consistent comparison
+    const numericVotes = positionCandidates.map(c => Number(c.votes) || 0);
+    const maxVotes = Math.max(...numericVotes, 0);
     if (maxVotes === 0) return [];
-    return positionCandidates.filter(c => Number(c.votes) === maxVotes);
+    return positionCandidates.filter(c => (Number(c.votes) || 0) === maxVotes);
   };
 
   // Get winner for a specific position (returns first winner, kept for backward compat)
@@ -192,7 +199,7 @@ function Results({ user }) {
 
   // Calculate total votes for a position
   const getPositionTotalVotes = (positionCandidates) => {
-    return positionCandidates.reduce((sum, c) => sum + (c.votes || 0), 0);
+    return positionCandidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
   };
 
   useEffect(() => {
@@ -508,7 +515,7 @@ function Results({ user }) {
     return () => socket.off('election:results:published', onPublished);
   }, [socketRef, selectedElectionId, loadResults]);
 
-  const totalVotesOverall = results.reduce((sum, r) => sum + (r.votes || 0), 0);
+  const totalVotesOverall = results.reduce((sum, r) => sum + (Number(r.votes) || 0), 0);
   const positions = Object.keys(groupedResults);
 
   return (
@@ -866,7 +873,8 @@ function Results({ user }) {
                             </tr>
                           ) : (
                             positionCandidates.map((candidate, idx) => {
-                              const percent = totalPositionVotes > 0 ? ((candidate.votes || 0) / totalPositionVotes * 100).toFixed(1) : '0.0';
+                              const candidateVotes = Number(candidate.votes) || 0;
+                              const percent = totalPositionVotes > 0 ? ((candidateVotes / totalPositionVotes) * 100).toFixed(1) : '0.0';
                               const candidateIsWinner = isPositionWinner(candidate, position);
                               const candidateId = candidate._id || candidate.id || idx;
                               const imageFailedForCandidate = failedImages.has(candidateId);
@@ -928,7 +936,7 @@ function Results({ user }) {
                                     </div>
                                   </td>
                                   <td style={{ padding: '1rem', fontWeight: 'bold', color: colors.text }}>
-                                    {candidate.votes || 0}
+                                    {candidateVotes}
                                   </td>
                                   <td style={{ padding: '1rem', color: colors.textSecondary }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '100px' }}>
