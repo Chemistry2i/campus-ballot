@@ -193,8 +193,18 @@ function Results({ user }) {
 
   // Check if candidate is winner in their position (handles ties)
   const isPositionWinner = (candidate, position) => {
-    const winners = getPositionWinners(groupedResults[position]);
-    return winners.some(w => candidate._id === w._id || candidate.id === w.id || candidate.name === w.name);
+    const positionCandidates = groupedResults[position];
+    if (!positionCandidates || positionCandidates.length === 0) return false;
+    
+    // Get the candidate's vote count
+    const candidateVotes = Number(candidate.votes) || 0;
+    
+    // Check if this is the 1st place (highest votes)
+    // Since candidates are sorted by votes descending, 1st place should be first
+    const firstPlaceVotes = Number(positionCandidates[0]?.votes) || 0;
+    
+    // Candidate is a winner if they have the same votes as first place (handles ties)
+    return candidateVotes === firstPlaceVotes && firstPlaceVotes > 0;
   };
 
   // Calculate total votes for a position
