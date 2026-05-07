@@ -90,7 +90,8 @@ router.get('/:receiptId', async (req, res) => {
 
 /**
  * GET /api/receipts/user/my-receipts
- * Get all receipts for logged-in user
+ * Get all receipts for logged-in user - FULL DETAILS for their own receipts
+ * Authenticated users can see their own voting history
  */
 router.get('/user/my-receipts', protect, async (req, res) => {
     try {
@@ -105,6 +106,7 @@ router.get('/user/my-receipts', protect, async (req, res) => {
             receipts: receipts.map(r => ({
                 receiptId: r.receiptId,
                 election: r.election,
+                votes: r.votes,  // User can see their own votes
                 createdAt: r.createdAt,
                 expiresAt: r.expiresAt,
                 verified: r.verified,

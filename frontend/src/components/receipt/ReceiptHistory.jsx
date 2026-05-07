@@ -35,18 +35,11 @@ function ReceiptHistory() {
     }
   };
 
-  const handleViewReceipt = async (receipt) => {
-    try {
-      const response = await axios.get(`/api/receipts/${receipt.receiptId}`);
-      setSelectedReceipt(response.data.receipt);
-      setShowDetail(true);
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error Loading Receipt',
-        text: error.response?.data?.error || error.message
-      });
-    }
+  const handleViewReceipt = (receipt) => {
+    // Use the receipt data we already have from the my-receipts endpoint
+    // This way we don't need to call the public endpoint which doesn't return votes
+    setSelectedReceipt(receipt);
+    setShowDetail(true);
   };
 
   const handleCloseDetail = () => {
