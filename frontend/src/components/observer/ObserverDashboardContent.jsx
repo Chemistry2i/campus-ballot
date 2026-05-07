@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { useTheme } from '../../contexts/ThemeContext';
 import { showWelcomeToast, showNetworkError } from '../../utils/sweetAlerts';
 import ObserverCharts from './ObserverCharts';
@@ -36,13 +36,29 @@ const ObserverDashboardContent = () => {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
       });
+      // Validate response structure
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid dashboard data received');
+      }
+      // Ensure data property exists and is an object
+      if (!response.data.data || typeof response.data.data !== 'object') {
+        throw new Error('Dashboard data malformed');
+      }
+      // Validate required properties
+      const dashData = response.data.data;
+      if (!dashData.overview || !dashData.elections) {
+        throw new Error('Missing required dashboard properties');
+      }
       setDashboardData(response.data.data);
       setError(null);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to load dashboard';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load dashboard';
       setError(errorMessage);
       console.error('Error fetching dashboard:', err);
-      if (!err.response) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else if (!err.response) {
         showNetworkError(isDarkMode);
       }
     } finally {
@@ -78,6 +94,21 @@ const ObserverDashboardContent = () => {
         <div className="text-center">
           <i className="fas fa-exclamation-circle text-danger mb-3" style={{ fontSize: '3rem' }}></i>
           <p className="text-danger mb-3">{error}</p>
+          <button className="btn btn-success" onClick={fetchDashboardData}>
+            <i className="fas fa-redo me-2"></i>Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Safely check if dashboardData exists and has required properties
+  if (!dashboardData || !dashboardData.overview || !dashboardData.elections) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+        <div className="text-center">
+          <i className="fas fa-exclamation-triangle text-warning mb-3" style={{ fontSize: '3rem' }}></i>
+          <p className="text-warning mb-3">Dashboard data is unavailable</p>
           <button className="btn btn-success" onClick={fetchDashboardData}>
             <i className="fas fa-redo me-2"></i>Retry
           </button>

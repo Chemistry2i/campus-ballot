@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);

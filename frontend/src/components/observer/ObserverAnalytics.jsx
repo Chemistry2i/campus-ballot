@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { FaChartLine, FaChartBar, FaChartPie, FaUsers, FaVoteYea } from 'react-icons/fa';
 
 const ObserverAnalytics = () => {

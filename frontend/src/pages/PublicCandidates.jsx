@@ -800,7 +800,8 @@ const PublicCandidates = () => {
                           style={{
                             width: '100%',
                             height: '100%',
-                            objectFit: 'cover'
+                            objectFit: 'contain',
+                            padding: '10px'
                           }}
                         />
                       ) : (
@@ -1071,7 +1072,7 @@ const PublicCandidates = () => {
                         <img
                           src={getImageUrl(selectedCandidate.photo)}
                           alt={selectedCandidate.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }}
                         />
                       ) : (
                         <span style={{ fontSize: window.innerWidth < 768 ? '2rem' : '2.5rem', color: '#fff', fontWeight: 'bold' }}>
@@ -1895,7 +1896,7 @@ const PublicCandidates = () => {
                           <img
                             src={getImageUrl(selectedCandidate.user.profilePicture)}
                             alt={selectedCandidate.user.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           />
                         ) : (
                           <span style={{ color: '#fff', fontWeight: 'bold' }}>

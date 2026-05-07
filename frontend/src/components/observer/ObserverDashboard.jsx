@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { useTheme } from '../../contexts/ThemeContext';
 import ObserverSidebar from './ObserverSidebar';
 
@@ -41,12 +41,20 @@ const ObserverDashboard = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/user/profile', {
+      const response = await axios.get('/api/users/me/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // Validate response
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid user data received');
+      }
       setUser(response.data);
     } catch (err) {
-      console.error('Error fetching user data:', err);
+      console.error('Error fetching user data:', err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -58,11 +66,29 @@ const ObserverDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
       });
+      // Validate response structure
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid dashboard data received');
+      }
+      // Ensure data property exists and is an object
+      if (!response.data.data || typeof response.data.data !== 'object') {
+        throw new Error('Dashboard data malformed');
+      }
+      // Validate required properties
+      const dashData = response.data.data;
+      if (!dashData.overview || !dashData.elections) {
+        throw new Error('Missing required dashboard properties');
+      }
       setDashboardData(response.data.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load dashboard');
-      console.error('Error fetching dashboard:', err);
+      console.error('Error fetching dashboard:', err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return;
+      }
+      setError(err.response?.data?.message || err.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
@@ -84,6 +110,21 @@ const ObserverDashboard = () => {
         <div className="text-center">
           <i className="fas fa-exclamation-circle text-danger mb-3" style={{ fontSize: '3rem' }}></i>
           <p className="text-danger">{error}</p>
+          <button className="btn btn-primary" onClick={fetchDashboardData}>
+            <i className="fas fa-redo me-2"></i>Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Safely destructure with null check
+  if (!dashboardData || !dashboardData.overview || !dashboardData.elections) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="text-center">
+          <i className="fas fa-exclamation-triangle text-warning mb-3" style={{ fontSize: '3rem' }}></i>
+          <p className="text-warning">Dashboard data is unavailable</p>
           <button className="btn btn-primary" onClick={fetchDashboardData}>
             <i className="fas fa-redo me-2"></i>Retry
           </button>

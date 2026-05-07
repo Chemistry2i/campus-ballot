@@ -28,6 +28,7 @@ const EULA = lazy(() => import('./pages/EULA'));
 const SecurityPolicy = lazy(() => import('./pages/SecurityPolicy'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
+const ReceiptVerificationPage = lazy(() => import('./pages/ReceiptVerificationPage'));
 const TechnicalSupport = lazy(() => import('./pages/TechnicalSupport'));
 
 // Lazy load complex components
@@ -120,11 +121,51 @@ function ProtectedRoute({ user, requiredRole, children }) {
 
 function App() {
   // Get user from localStorage or set to null
+  // IMPORTANT: Validate both currentUser AND token exist and are valid
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const user = localStorage.getItem("currentUser");
-      return user ? JSON.parse(user) : null;
-    } catch {
+      const token = localStorage.getItem("token");
+      
+      // BOTH must exist for user to be logged in
+      if (!user || !token) {
+        return null;
+      }
+      
+      // Token must be valid JWT format (3 parts separated by dots)
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.warn('Invalid token format detected at init, clearing storage');
+        // Aggressive clear: wipe everything on invalid token
+        localStorage.clear();
+        sessionStorage.clear();
+        return null;
+      }
+      
+      // Additional check: token parts should be base64-like strings
+      try {
+        // Try to decode payload (middle part)
+        const decoded = JSON.parse(atob(tokenParts[1]));
+        // If no exp or exp is in the past, consider invalid
+        if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+          console.warn('Token has expired, clearing storage');
+          localStorage.clear();
+          sessionStorage.clear();
+          return null;
+        }
+      } catch (e) {
+        console.warn('Cannot decode token payload, clearing storage');
+        localStorage.clear();
+        sessionStorage.clear();
+        return null;
+      }
+      
+      return JSON.parse(user);
+    } catch (err) {
+      console.warn('Failed to initialize user from storage:', err.message);
+      // Clear potentially corrupt data
+      localStorage.clear();
+      sessionStorage.clear();
       return null;
     }
   });
@@ -138,19 +179,127 @@ function App() {
     }
   }, [currentUser]);
 
-  // Function to handle logout
+  // Function to handle logout - Clear ALL sensitive data from localStorage
   const { reconnectWithToken } = useSocket();
 
   const handleLogout = () => {
+    // ===== Step 1: Set state to null immediately =====
     setCurrentUser(null);
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("token");
+    
+    // ===== Step 2: Clear EVERYTHING from localStorage (not just specific keys) =====
+    // This is more thorough - clears any key we might have missed
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(key => {
+      // Only remove app-specific keys (don't remove browser extensions data)
+      if (!key.startsWith('chrome-extension') && !key.startsWith('moz-extension')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // As backup, also remove the specific keys we know about
+    const keysToRemove = [
+      "currentUser",
+      "token",
+      "user",
+      "voteReceipts",
+      "votingStatus",
+      "archivedNotifications",
+      "notifications",
+      "candidateProfile",
+      "candidateApplicationDraft",
+      "candidateInfo",
+      "observerSettings",
+      "observerDashboard",
+      "selectedElection",
+      "selectedCandidate",
+      "comparisonCandidates",
+      "adminDarkMode",
+      "adminWelcomeShown",
+      "theme",
+      "userPreferences",
+      "lastRefresh",
+      "autoRefresh",
+      "currentPage",
+      "scrollPosition",
+      "cachedElections",
+      "cachedCandidates",
+      "cachedResults"
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // ===== Step 3: Clear sessionStorage completely =====
+    sessionStorage.clear();
+    
+    // ===== Step 4: Disconnect socket =====
     try {
       reconnectWithToken(null);
-    } catch {
-      // ignore if socket not initialized
+    } catch (err) {
+      console.error('Socket disconnect error:', err);
     }
+    
+    // ===== Step 5: Redirect to /login with full page reload =====
+    // Full page reload ensures all JS state is cleared and is a security best practice
+    window.location.replace('/login');
   };
+
+  // Validate session with backend on app init - prevents stale sessions across windows
+  useEffect(() => {
+    if (currentUser) {
+      const validateSessionWithBackend = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            // No token, clear state
+            setCurrentUser(null);
+            return;
+          }
+
+          // Call backend to verify session is still valid
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/validate-session`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            // Backend says session invalid - clear everything
+            console.warn('Backend validation failed, clearing session');
+            localStorage.clear();
+            sessionStorage.clear();
+            setCurrentUser(null);
+            return;
+          }
+
+          const data = await response.json();
+          if (!data.isValid) {
+            // Session not valid on backend
+            console.warn('Backend reports invalid session, clearing storage');
+            localStorage.clear();
+            sessionStorage.clear();
+            setCurrentUser(null);
+            return;
+          }
+
+          // Session is valid, user can proceed
+          console.log('Session validated with backend');
+        } catch (error) {
+          // Network error - don't immediately logout, but log it
+          console.error('Error validating session with backend:', error);
+          // On network error, don't clear session - user might be offline
+          // The JWT validation on client-side is still active as a backup
+        }
+      };
+
+      // Call validation after a slight delay to avoid race conditions on app startup
+      const timer = setTimeout(validateSessionWithBackend, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser]);
 
 
   return (
@@ -197,6 +346,9 @@ function App() {
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/contact-support" element={<ContactSupport />} />
           <Route path="/technical-support" element={<TechnicalSupport />} />
+          
+          {/* Receipt Verification - Public Route */}
+          <Route path="/verify-receipt" element={<ReceiptVerificationPage />} />
           
           <Route
             path="/admin/*"

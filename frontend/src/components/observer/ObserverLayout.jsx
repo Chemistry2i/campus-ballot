@@ -33,30 +33,55 @@ const ObserverLayout = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch('/api/auth/profile', {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('No auth token found');
+        return;
+      }
+
+      const response = await fetch('/api/users/me/profile', {
         headers: { 
-          Authorization: `Bearer ${localStorage.getItem('token')}` 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
       
+      // Handle 401 - token expired/invalid
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/login';
+        return;
+      }
+
       if (!response.ok) {
         console.error('Failed to fetch user data:', response.status);
         return;
       }
       
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid response type:', contentType);
+        return;
+      }
+
       const data = await response.json();
       
-      // API returns { message: "Profile fetched", user: {...} }
+      // API returns { message: "Profile fetched", user: {...} } or directly user data
       const userData = data.user || data;
       
       // Only update if we got valid data with _id
-      if (userData && userData._id) {
+      if (userData && userData._id && typeof userData === 'object') {
         setUser(userData);
         // Update localStorage with fresh data
         localStorage.setItem('currentUser', JSON.stringify(userData));
       }
     } catch (err) {
-      console.error('Error fetching user data:', err);
+      console.error('Error fetching user data:', err.message);
+      // Check if it's a JSON parse error (HTML response instead of JSON)
+      if (err instanceof SyntaxError) {
+        console.error('Server returned non-JSON response - possible auth error');
+      }
       // Don't clear user state on error - keep the localStorage data
     }
   };

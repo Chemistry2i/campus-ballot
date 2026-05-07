@@ -20,6 +20,62 @@ function Login({ setCurrentUser }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is already logged in - redirect to appropriate dashboard
+    const currentUser = localStorage.getItem("currentUser");
+    const token = localStorage.getItem("token");
+    
+    // BOTH must exist and be valid for user to be considered logged in
+    if (currentUser && token) {
+      try {
+        const user = JSON.parse(currentUser);
+        
+        // IMPORTANT: Validate token format (JWT should have 3 parts separated by dots)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          // Invalid token format - clear it and stay on login
+          console.warn('Invalid token format detected, clearing storage');
+          localStorage.clear();
+          sessionStorage.clear();
+          return;
+        }
+        
+        // Decode and check expiration
+        try {
+          const decoded = JSON.parse(atob(tokenParts[1]));
+          if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+            console.warn('Token expired, clearing storage');
+            localStorage.clear();
+            sessionStorage.clear();
+            return;
+          }
+        } catch (e) {
+          // Can't decode token, clear it
+          console.warn('Cannot decode token, clearing storage');
+          localStorage.clear();
+          sessionStorage.clear();
+          return;
+        }
+        
+        // User is already authenticated, redirect to their dashboard
+        if (user.role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (user.role === "super_admin") {
+          navigate("/super-admin/system-health", { replace: true });
+        } else if (user.role === "candidate") {
+          navigate("/candidate", { replace: true });
+        } else if (user.role === "observer") {
+          navigate("/observer/dashboard", { replace: true });
+        } else {
+          navigate("/student-dashboard", { replace: true });
+        }
+      } catch (e) {
+        console.error("Failed to parse stored user or validate token:", e);
+        // Clear invalid data
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+    }
+    
     // Remove dark mode classes on mount
     const loginContainer = document.querySelector(`.${styles["login-inner-container"]}`);
     if (loginContainer) {
@@ -36,7 +92,7 @@ function Login({ setCurrentUser }) {
       document.body.style.backgroundColor = '';
       document.body.style.color = '';
     };
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

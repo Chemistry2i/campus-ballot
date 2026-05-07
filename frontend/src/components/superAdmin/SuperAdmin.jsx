@@ -19,7 +19,7 @@ import OrganizationManagement from './OrganizationManagement';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../admin/ThemeToggle';
 import '../../styles/darkmode.css';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 
 // Responsive sidebar state is managed here and passed to Sidebar
 const SIDEBAR_WIDTH = 240;
@@ -40,6 +40,7 @@ const SuperAdmin = ({ user, onLogout }) => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const profileMenuRef = useRef(null);
 
   // Close profile menu on outside click
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import { CSVLink } from 'react-csv';

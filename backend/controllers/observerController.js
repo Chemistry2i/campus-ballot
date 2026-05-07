@@ -37,146 +37,220 @@ const calculateElectionStatus = (election) => {
 // @route   GET /api/observer/dashboard
 // @access  Private (Observer)
 const getObserverDashboard = asyncHandler(async (req, res) => {
-  const observer = req.user;
+  try {
+    const observer = req.user;
+    
+    if (!observer) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
 
-  // Get assigned elections or all if full access
-  let electionsQuery = {};
-  if (observer.observerInfo?.accessLevel === 'election-specific') {
-    electionsQuery = {
-      _id: { $in: observer.observerInfo.assignedElections || [] }
-    };
-  }
+    // Get assigned elections or all if full access
+    let electionsQuery = {};
+    if (observer.observerInfo?.accessLevel === 'election-specific') {
+      electionsQuery = {
+        _id: { $in: observer.observerInfo.assignedElections || [] }
+      };
+    }
 
-  const elections = await Election.find(electionsQuery)
-    .select('title description status startDate endDate positions')
-    .sort('-createdAt')
-    .populate('positions.candidates', 'name status');
+    const elections = await Election.find(electionsQuery)
+      .select('title description status startDate endDate positions')
+      .sort('-createdAt')
+      .populate('positions.candidates', 'name status');
 
-  // Get counts - use actual status calculation from dates
-  const activeElections = elections.filter(e => calculateElectionStatus(e) === 'ongoing').length;
-  const upcomingElections = elections.filter(e => calculateElectionStatus(e) === 'upcoming').length;
-  const completedElections = elections.filter(e => calculateElectionStatus(e) === 'completed').length;
-
-  // Get voting statistics for all assigned elections
-  const assignedElectionIds = elections.map(e => e._id);
-
-  // Get voting activity by hour for today (all assigned elections) in EAT (UTC+3)
-  const now = new Date();
-  // Calculate EAT offset
-  const eatOffsetMs = 3 * 60 * 60 * 1000;
-  const eatToday = new Date(now.getTime() + eatOffsetMs);
-  eatToday.setHours(0, 0, 0, 0);
-  // Get UTC start of EAT day
-  const utcStartOfEatDay = new Date(eatToday.getTime() - eatOffsetMs);
-
-  const hourlyActivity = await Ballot.aggregate([
-    {
-      $match: {
-        election: { $in: assignedElectionIds },
-        createdAt: { $gte: utcStartOfEatDay }
-      }
-    },
-    {
-      $addFields: {
-        eatHour: {
-          $mod: [
-            { $add: [ { $hour: '$createdAt' }, 3 ] },
-            24
-          ]
+    if (!elections || !Array.isArray(elections)) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          overview: {
+            totalElections: 0,
+            activeElections: 0,
+            upcomingElections: 0,
+            completedElections: 0,
+            accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
+            assignedElectionsCount: 0,
+            totalVotes: 0,
+            totalUniqueVoters: 0,
+            organization: observer.observerInfo?.organization || ''
+          },
+          elections: [],
+          votingStats: {
+            hourlyActivity: [],
+            totalVotesToday: 0,
+            peakHour: { hour: 0, time: '00:00', count: 0 }
+          },
+          positionStats: []
         }
-      }
-    },
-    {
-      $group: {
-        _id: { hour: '$eatHour' },
-        count: { $sum: 1 }
-      }
-    },
-    { $sort: { '_id.hour': 1 } }
-  ]);
+      });
+    }
 
-  // Format hourly activity data (create array for all hours 0-23 in EAT)
-  const formattedHourlyActivity = [];
-  for (let hour = 0; hour < 24; hour++) {
-    const hourData = hourlyActivity.find(item => item._id.hour === hour);
-    formattedHourlyActivity.push({
-      hour: hour,
-      time: `${hour.toString().padStart(2, '0')}:00`,
-      count: hourData ? hourData.count : 0
-    });
-  }
+    // Get counts - use actual status calculation from dates
+    const activeElections = elections.filter(e => calculateElectionStatus(e) === 'ongoing').length;
+    const upcomingElections = elections.filter(e => calculateElectionStatus(e) === 'upcoming').length;
+    const completedElections = elections.filter(e => calculateElectionStatus(e) === 'completed').length;
 
-  // Get position statistics (candidates per position)
-  const positionStatsMap = new Map();
-  
-  // Aggregate candidates per position using correct schema fields
-  for (const election of elections) {
-    if (Array.isArray(election.positions) && election.positions.length > 0) {
-      for (const positionName of election.positions) {
-        // Count candidates for this position in this election
-        const candidateCount = await Candidate.countDocuments({
-          election: election._id,
-          position: positionName
-        });
-        if (candidateCount > 0) {
-          if (positionStatsMap.has(positionName)) {
-            positionStatsMap.get(positionName).candidateCount += candidateCount;
-          } else {
-            positionStatsMap.set(positionName, {
-              positionName,
-              candidateCount
+    // Get voting statistics for all assigned elections
+    const assignedElectionIds = elections.map(e => e._id);
+
+    // Get voting activity by hour for today (all assigned elections) in EAT (UTC+3)
+    const now = new Date();
+    // Calculate EAT offset
+    const eatOffsetMs = 3 * 60 * 60 * 1000;
+    const eatToday = new Date(now.getTime() + eatOffsetMs);
+    eatToday.setHours(0, 0, 0, 0);
+    // Get UTC start of EAT day
+    const utcStartOfEatDay = new Date(eatToday.getTime() - eatOffsetMs);
+
+    let hourlyActivity = [];
+    try {
+      hourlyActivity = await Ballot.aggregate([
+        {
+          $match: {
+            election: { $in: assignedElectionIds },
+            createdAt: { $gte: utcStartOfEatDay }
+          }
+        },
+        {
+          $addFields: {
+            eatHour: {
+              $mod: [
+                { $add: [ { $hour: '$createdAt' }, 3 ] },
+                24
+              ]
+            }
+          }
+        },
+        {
+          $group: {
+            _id: { hour: '$eatHour' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.hour': 1 } }
+      ]);
+    } catch (aggErr) {
+      console.error('Hourly activity aggregation error:', aggErr);
+      hourlyActivity = [];
+    }
+
+    // Format hourly activity data (create array for all hours 0-23 in EAT)
+    const formattedHourlyActivity = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const hourData = hourlyActivity.find(item => item._id?.hour === hour);
+      formattedHourlyActivity.push({
+        hour: hour,
+        time: `${hour.toString().padStart(2, '0')}:00`,
+        count: hourData ? hourData.count : 0
+      });
+    }
+
+    // Get position statistics (candidates per position)
+    const positionStatsMap = new Map();
+    
+    // Aggregate candidates per position using correct schema fields
+    for (const election of elections) {
+      if (Array.isArray(election.positions) && election.positions.length > 0) {
+        for (const positionName of election.positions) {
+          try {
+            // Count candidates for this position in this election
+            const candidateCount = await Candidate.countDocuments({
+              election: election._id,
+              position: positionName
             });
+            if (candidateCount > 0) {
+              if (positionStatsMap.has(positionName)) {
+                positionStatsMap.get(positionName).candidateCount += candidateCount;
+              } else {
+                positionStatsMap.set(positionName, {
+                  positionName,
+                  candidateCount
+                });
+              }
+            }
+          } catch (err) {
+            console.error('Error counting candidates for position:', err);
           }
         }
       }
     }
-  }
-  
-  const positionStats = Array.from(positionStatsMap.values());
+    
+    const positionStats = Array.from(positionStatsMap.values());
 
-  // Calculate total votes cast
-  const totalVotes = await Ballot.countDocuments({
-    electionId: { $in: elections.map(e => e._id) }
-  });
-
-  // Get unique voters across all elections
-  const uniqueVoters = await VoterRecord.distinct('user', {
-    election: { $in: elections.map(e => e._id) }
-  });
-
-  res.json({
-    success: true,
-    data: {
-      overview: {
-        totalElections: elections.length,
-        activeElections,
-        upcomingElections,
-        completedElections,
-        accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
-        assignedElectionsCount: observer.observerInfo?.assignedElections?.length || 0,
-        totalVotes: totalVotes,
-        totalUniqueVoters: uniqueVoters.length,
-        organization: observer.observerInfo?.organization || observer.organization || observer.observerOrganization || observer.orgName || observer.companyName || observer.organizationName || ''
-      },
-      elections: elections.map(e => ({
-        id: e._id,
-        title: e.title,
-        status: e.status,
-        startDate: e.startDate,
-        endDate: e.endDate,
-        positionsCount: e.positions?.length || 0
-      })),
-      votingStats: {
-        hourlyActivity: formattedHourlyActivity,
-        totalVotesToday: formattedHourlyActivity.reduce((sum, item) => sum + item.count, 0),
-        peakHour: formattedHourlyActivity.reduce((max, item) => 
-          item.count > max.count ? item : max, 
-          { hour: 0, time: '00:00', count: 0 }
-        )
-      },
-      positionStats: positionStats.slice(0, 10) // Limit to top 10 positions for chart
+    // Calculate total votes cast - try multiple possible field names
+    let totalVotes = 0;
+    try {
+      // Try with 'election' field first
+      totalVotes = await Ballot.countDocuments({
+        election: { $in: assignedElectionIds }
+      });
+    } catch (err1) {
+      try {
+        // Fallback to 'electionId'
+        totalVotes = await Ballot.countDocuments({
+          electionId: { $in: assignedElectionIds }
+        });
+      } catch (err2) {
+        console.error('Error counting votes:', err2);
+        totalVotes = 0;
+      }
     }
-  });
+
+    // Get unique voters across all elections
+    let uniqueVoters = [];
+    try {
+      uniqueVoters = await VoterRecord.distinct('user', {
+        election: { $in: assignedElectionIds }
+      });
+    } catch (err1) {
+      try {
+        uniqueVoters = await VoterRecord.distinct('studentId', {
+          electionId: { $in: assignedElectionIds }
+        });
+      } catch (err2) {
+        console.error('Error getting unique voters:', err2);
+        uniqueVoters = [];
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalElections: elections.length,
+          activeElections,
+          upcomingElections,
+          completedElections,
+          accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
+          assignedElectionsCount: observer.observerInfo?.assignedElections?.length || 0,
+          totalVotes: totalVotes,
+          totalUniqueVoters: Array.isArray(uniqueVoters) ? uniqueVoters.length : 0,
+          organization: observer.observerInfo?.organization || observer.organization || observer.observerOrganization || observer.orgName || observer.companyName || observer.organizationName || ''
+        },
+        elections: elections.map(e => ({
+          id: e._id,
+          title: e.title,
+          status: e.status,
+          startDate: e.startDate,
+          endDate: e.endDate,
+          positionsCount: e.positions?.length || 0
+        })),
+        votingStats: {
+          hourlyActivity: formattedHourlyActivity,
+          totalVotesToday: formattedHourlyActivity.reduce((sum, item) => sum + item.count, 0),
+          peakHour: formattedHourlyActivity.reduce((max, item) => 
+            item.count > max.count ? item : max, 
+            { hour: 0, time: '00:00', count: 0 }
+          )
+        },
+        positionStats: positionStats.slice(0, 10) // Limit to top 10 positions for chart
+      }
+    });
+  } catch (error) {
+    console.error('getObserverDashboard error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch dashboard data'
+    });
+  }
 });
 
 // @desc    Get real-time election statistics

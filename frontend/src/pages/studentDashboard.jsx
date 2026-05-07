@@ -19,7 +19,7 @@ import CandidateComparison from '../components/student/CandidateComparison';
 import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
 import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
-import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
+import { generateVoteReceipt } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 import kyuLogo from "../assets/kyucsa.png";
 // baseURL is set centrally in axiosInstance.js — do not override here
@@ -206,6 +206,13 @@ function StudentDashboard({ user: initialUser }) {
         const res = await axios.get('/api/users/me/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        // Validate response is actual data and not an error page
+        if (!res.data || typeof res.data !== 'object' || typeof res.data === 'string') {
+          console.error('Invalid response data received:', res.data);
+          throw new Error('Invalid user data format received from server');
+        }
+        
         if (res.data) {
           let updatedUser = res.data;
           
@@ -243,7 +250,15 @@ function StudentDashboard({ user: initialUser }) {
           console.log('User data updated with department:', updatedUser.department);
         }
       } catch (err) {
-        console.error('Failed to fetch user data:', err);
+        console.error('Error fetching user data:', err.message);
+        
+        // If token is invalid, log user out
+        if (err.response?.status === 401 || err.message.includes('401')) {
+          console.error('Authentication failed - token may be expired');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
       }
     };
     
@@ -257,8 +272,7 @@ function StudentDashboard({ user: initialUser }) {
     fetchNotifications();
     loadReceipts();
     
-    // Debug localStorage on load
-    console.log('All localStorage voteReceipts:', JSON.parse(localStorage.getItem('voteReceipts') || '[]'));
+    // Debug receipt loading
     console.log('Current user:', user);
     // setup socket listeners for real-time notifications
     let socketCleanup;
@@ -307,6 +321,7 @@ function StudentDashboard({ user: initialUser }) {
         fetchElections();
         fetchMyVotes();
         fetchNotifications();
+        loadReceipts();
         setLastRefresh(new Date());
       }, refreshInterval);
     }
@@ -338,6 +353,7 @@ function StudentDashboard({ user: initialUser }) {
     fetchElections();
     fetchMyVotes();
     fetchNotifications();
+    loadReceipts();
     setLastRefresh(new Date());
   };
 
@@ -348,10 +364,19 @@ function StudentDashboard({ user: initialUser }) {
       headers: { Authorization: `Bearer ${token}` },
     });
     //  my backend returns { elections: [...] }
+    if (!res.data || typeof res.data !== 'object') {
+      throw new Error('Invalid elections data received');
+    }
     setElections(Array.isArray(res.data.elections) ? res.data.elections : []);
     calculateElectionStats(Array.isArray(res.data.elections) ? res.data.elections : []);
   } catch (err) {
-    Swal.fire("Error", "Failed to load elections", "error");
+    console.error('Elections fetch error:', err.message);
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    } else {
+      Swal.fire("Error", "Failed to load elections", "error");
+    }
   } finally {
     setLoading(false);
   }
@@ -512,12 +537,21 @@ function StudentDashboard({ user: initialUser }) {
       const res = await axios.get("/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Validate response is an array
+      if (!Array.isArray(res.data)) {
+        throw new Error('Invalid notifications format');
+      }
       // Filter out archived notifications
       const archivedIds = persistedArchivedNotifs || [];
       const filteredNotifications = res.data.filter(n => !archivedIds.includes(n._id));
       setNotifications(filteredNotifications);
     } catch (err) {
-      console.error("Failed to fetch notifications:", err);
+      console.error("Failed to fetch notifications:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setNotifications([]);
     }
   };
 
@@ -575,20 +609,38 @@ function StudentDashboard({ user: initialUser }) {
       const res = await axios.get("/api/votes/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Validate response
+      if (!Array.isArray(res.data)) {
+        throw new Error('Invalid votes format');
+      }
       setMyVotes(res.data);
     } catch (err) {
-      console.error("Failed to fetch votes:", err);
+      console.error("Failed to fetch votes:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setMyVotes([]);
     }
   };
 
-  const loadReceipts = () => {
+  const loadReceipts = async () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('voteReceipts') || '[]');
-      const userReceipts = saved.filter(receipt => receipt.userId === (user._id || user.id));
-      setSavedReceipts(userReceipts);
-      console.log('Loaded receipts:', userReceipts.length, userReceipts);
+      const response = await axios.get('/api/receipts/user/my-receipts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Validate response
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid receipts data');
+      }
+      setSavedReceipts(Array.isArray(response.data.receipts) ? response.data.receipts : []);
+      console.log('Loaded receipts from database:', Array.isArray(response.data.receipts) ? response.data.receipts.length : 0);
     } catch (err) {
-      console.error("Failed to load receipts:", err);
+      console.error("Failed to load receipts:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       setSavedReceipts([]);
     }
   };
@@ -882,6 +934,40 @@ function StudentDashboard({ user: initialUser }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Save receipt to database after successful vote
+      try {
+        const receiptResponse = await axios.post(
+          `/api/receipts`,
+          {
+            electionId: electionId,
+            votes: [{
+              position: finalPosition,
+              candidate: candidateId,
+              abstained: false
+            }]
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const receipt = receiptResponse.data.receipt;
+        
+        // Update component state with database receipt
+        setSavedReceipts(prev => [...prev, receipt]);
+        setSelectedReceipt(receipt);
+        setShowReceiptModal(true);
+        
+        success(`Receipt generated with code: ${receipt.receiptId}`);
+        
+        // Also refresh receipts from database to ensure sync
+        loadReceipts();
+      } catch (receiptErr) {
+        console.error('Failed to save receipt:', receiptErr);
+        // Don't fail the vote if receipt creation fails, but log it
+        error('Vote was saved but receipt generation failed: ' + (receiptErr.response?.data?.error || receiptErr.message));
+        // Still try to load any receipts that were created
+        loadReceipts();
+      }
+      
       return true; // Vote successful
       
     } catch (error) {
@@ -897,6 +983,7 @@ function StudentDashboard({ user: initialUser }) {
         // Refresh vote data to ensure UI is updated
         fetchMyVotes();
         fetchElections();
+        loadReceipts();
         
         Swal.fire({
           title: 'Already Voted',
@@ -937,9 +1024,37 @@ function StudentDashboard({ user: initialUser }) {
       );
 
       success('Votes submitted successfully');
-      // Refresh local data so UI reflects new voted positions
+      
+      // Save batch receipt to database
+      try {
+        const receiptResponse = await axios.post(
+          `/api/receipts`,
+          {
+            electionId: multi.electionId,
+            votes: votes.map(v => ({
+              position: v.position,
+              candidate: v.candidateId,
+              abstained: v.abstain || false
+            }))
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const receipt = receiptResponse.data.receipt;
+        setSavedReceipts(prev => [...prev, receipt]);
+        setSelectedReceipt(receipt);
+        setShowReceiptModal(true);
+        
+        success(`Batch receipt generated with code: ${receipt.receiptId}`);
+      } catch (receiptErr) {
+        console.error('Failed to save batch receipt:', receiptErr);
+        error('Votes saved but receipt generation failed: ' + (receiptErr.response?.data?.error || receiptErr.message));
+      }
+      
+      // Refresh all data including receipts from database
       fetchMyVotes();
       fetchElections();
+      loadReceipts();
       setCurrentMultiVoting(null);
     } catch (err) {
       console.error('Batch submit error:', err);
@@ -1457,9 +1572,9 @@ function StudentDashboard({ user: initialUser }) {
         ) : (
           <div className="row g-3">
             {savedReceipts
-              .sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt))
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((receipt, index) => (
-              <div className="col-md-6 col-lg-4" key={receipt.id || index}>
+              <div className="col-md-6 col-lg-4" key={receipt._id || receipt.receiptId || index}>
                 <div 
                   className="card border h-100 receipt-card"
                   style={{ 
@@ -1496,15 +1611,15 @@ function StudentDashboard({ user: initialUser }) {
                           {receipt.election?.title || 'Unknown Election'}
                         </div>
                         <small className="text-muted">
-                          {new Date(receipt.votedAt).toLocaleDateString()}
+                          {new Date(receipt.createdAt).toLocaleDateString()}
                         </small>
                       </div>
                     </div>
                     
                     <div className="mb-2">
-                      <small className="text-muted d-block">Verification Code</small>
-                      <code className="bg-light px-2 py-1 rounded small" style={{ color: '#0d6efd', fontFamily: 'monospace' }}>
-                        {receipt.verificationCode}
+                      <small className="text-muted d-block">Receipt Code</small>
+                      <code className="bg-light px-2 py-1 rounded small" style={{ color: '#0d6efd', fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                        {receipt.receiptId}
                       </code>
                     </div>
                     
@@ -1523,8 +1638,8 @@ function StudentDashboard({ user: initialUser }) {
                         className="btn btn-outline-success btn-sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigator.clipboard.writeText(receipt.verificationCode);
-                          success('Verification code copied to clipboard!');
+                          navigator.clipboard.writeText(receipt.receiptId);
+                          success('Receipt code copied to clipboard!');
                         }}
                       >
                         <FaStar className="me-1" />
@@ -4094,12 +4209,18 @@ function StudentDashboard({ user: initialUser }) {
                     <button 
                       className="btn btn-outline-primary"
                       onClick={() => {
-                        generateVoteReceipt({
-                          election: selectedElection,
-                          candidate: selectedCandidateForVoting,
-                          votedAt: new Date(),
-                          verificationCode: voteVerificationCode
-                        });
+                        // Use the actual receipt from the database with receiptId
+                        if (selectedReceipt && selectedReceipt.receiptId) {
+                          generateVoteReceipt(selectedReceipt);
+                        } else {
+                          console.warn('Receipt data not available yet');
+                          Swal.fire({
+                            icon: 'warning',
+                            title: 'Receipt Pending',
+                            text: 'Receipt data is still being processed. Please try again in a moment.',
+                            confirmButtonText: 'OK'
+                          });
+                        }
                       }}
                     >
                       <FaDownload className="me-2" />

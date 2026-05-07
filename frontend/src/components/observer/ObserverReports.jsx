@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { FaFileExport, FaChartBar, FaDownload, FaFilePdf, FaFileCsv, FaFileExcel } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 

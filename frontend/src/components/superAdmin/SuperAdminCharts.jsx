@@ -12,7 +12,7 @@ import {
   Legend,
   RadialLinearScale,
 } from 'chart.js';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import { useTheme } from '../../contexts/ThemeContext';
 
 ChartJS.register(
