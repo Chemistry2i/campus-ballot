@@ -814,7 +814,9 @@ function Results({ user }) {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      borderRadius: '12px',
+                      borderTopLeftRadius: '12px',
+                      borderTopRightRadius: '12px'
+                      
                     }}
                   >
                     <div>
