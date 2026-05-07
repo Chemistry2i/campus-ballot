@@ -813,7 +813,8 @@ function Results({ user }) {
                       padding: '1.5rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                      borderRadius: '12px',
                     }}
                   >
                     <div>
