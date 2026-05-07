@@ -206,6 +206,13 @@ function StudentDashboard({ user: initialUser }) {
         const res = await axios.get('/api/users/me/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        // Validate response is actual data and not an error page
+        if (!res.data || typeof res.data !== 'object' || typeof res.data === 'string') {
+          console.error('Invalid response data received:', res.data);
+          throw new Error('Invalid user data format received from server');
+        }
+        
         if (res.data) {
           let updatedUser = res.data;
           
@@ -243,7 +250,15 @@ function StudentDashboard({ user: initialUser }) {
           console.log('User data updated with department:', updatedUser.department);
         }
       } catch (err) {
-        console.error('Failed to fetch user data:', err);
+        console.error('Error fetching user data:', err.message);
+        
+        // If token is invalid, log user out
+        if (err.response?.status === 401 || err.message.includes('401')) {
+          console.error('Authentication failed - token may be expired');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
       }
     };
     
@@ -306,6 +321,7 @@ function StudentDashboard({ user: initialUser }) {
         fetchElections();
         fetchMyVotes();
         fetchNotifications();
+        loadReceipts();
         setLastRefresh(new Date());
       }, refreshInterval);
     }
@@ -348,10 +364,19 @@ function StudentDashboard({ user: initialUser }) {
       headers: { Authorization: `Bearer ${token}` },
     });
     //  my backend returns { elections: [...] }
+    if (!res.data || typeof res.data !== 'object') {
+      throw new Error('Invalid elections data received');
+    }
     setElections(Array.isArray(res.data.elections) ? res.data.elections : []);
     calculateElectionStats(Array.isArray(res.data.elections) ? res.data.elections : []);
   } catch (err) {
-    Swal.fire("Error", "Failed to load elections", "error");
+    console.error('Elections fetch error:', err.message);
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    } else {
+      Swal.fire("Error", "Failed to load elections", "error");
+    }
   } finally {
     setLoading(false);
   }
@@ -512,12 +537,21 @@ function StudentDashboard({ user: initialUser }) {
       const res = await axios.get("/api/notifications", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Validate response is an array
+      if (!Array.isArray(res.data)) {
+        throw new Error('Invalid notifications format');
+      }
       // Filter out archived notifications
       const archivedIds = persistedArchivedNotifs || [];
       const filteredNotifications = res.data.filter(n => !archivedIds.includes(n._id));
       setNotifications(filteredNotifications);
     } catch (err) {
-      console.error("Failed to fetch notifications:", err);
+      console.error("Failed to fetch notifications:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setNotifications([]);
     }
   };
 
@@ -575,9 +609,18 @@ function StudentDashboard({ user: initialUser }) {
       const res = await axios.get("/api/votes/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      // Validate response
+      if (!Array.isArray(res.data)) {
+        throw new Error('Invalid votes format');
+      }
       setMyVotes(res.data);
     } catch (err) {
-      console.error("Failed to fetch votes:", err);
+      console.error("Failed to fetch votes:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setMyVotes([]);
     }
   };
 
@@ -586,10 +629,18 @@ function StudentDashboard({ user: initialUser }) {
       const response = await axios.get('/api/receipts/user/my-receipts', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSavedReceipts(response.data.receipts || []);
-      console.log('Loaded receipts from database:', response.data.receipts?.length);
+      // Validate response
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid receipts data');
+      }
+      setSavedReceipts(Array.isArray(response.data.receipts) ? response.data.receipts : []);
+      console.log('Loaded receipts from database:', Array.isArray(response.data.receipts) ? response.data.receipts.length : 0);
     } catch (err) {
-      console.error("Failed to load receipts:", err);
+      console.error("Failed to load receipts:", err.message);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
       setSavedReceipts([]);
     }
   };
